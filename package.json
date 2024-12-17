@@ -1,0 +1,41 @@
+{
+  "name": "BaliFit-client",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --fix --ignore-path .gitignore"
+  },
+  "dependencies": {
+    "@mdi/font": "7.0.96",
+    "@types/three": "^0.160.0",
+    "axios": "^1.4.0",
+    "chart.js": "^4.4.1",
+    "imagesloaded": "^5.0.0",
+    "isotope-layout": "^3.0.6",
+    "masonry-layout": "^4.2.2",
+    "pinia": "^2.0.23",
+    "roboto-fontface": "*",
+    "three": "^0.160.1",
+    "vue": "^3.2.0",
+    "vue-router": "^4.0.0",
+    "vuetify": "^3.0.0",
+    "webfontloader": "^1.0.0"
+  },
+  "devDependencies": {
+    "@babel/types": "^7.21.4",
+    "@types/isotope-layout": "^3.0.12",
+    "@types/masonry-layout": "^4.2.7",
+    "@types/node": "^18.15.0",
+    "@types/webfontloader": "^1.6.35",
+    "@vitejs/plugin-vue": "^4.0.0",
+    "@vue/eslint-config-typescript": "^11.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-vue": "^9.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^4.2.0",
+    "vite-plugin-vuetify": "^1.0.0",
+    "vue-tsc": "^1.2.0"
+  }
+}

@@ -1,0 +1,88 @@
+import { defineStore } from 'pinia';
+import User from '@/types/User'
+import http from '@/axios'
+import { useSeanceStore } from '@/store/AdminStore/SeanceStore'
+
+export const useUserStore = defineStore('userAdmin', {
+  state: () => ({
+    message: '',
+    users: [] as User[],
+    coachs: [] as User[],
+    challengers: [] as User[],
+    loading: true,
+    currentUser: null as User | null,
+    alert: false
+  }),
+  getters: {
+    allCoachs() : String[]{
+      return this.coachs.map(function(item) {
+        return item.name;
+      });
+    },
+    usersWithRole: (state) => (roleName: string) => {
+      return state.users.filter((user) => {
+        return user.roles?.some((role: any) => role.name === roleName);
+      });
+    },
+  },
+  actions: {
+    async getUsers() {
+      const response = await http.get('/admin/user');
+      this.users = response.data.users;
+      this.loading = false
+    },
+    async showUser(id: number) {
+      const seanceStore = useSeanceStore()
+      const response = await http.get('/admin/user/'+id);
+      this.currentUser = response.data.user
+      if(response.data.user.seances){
+        seanceStore.userSeances = response.data.user.seances
+      }
+      if(response.data.user.challenger_seances){
+        seanceStore.userSeances = response.data.user.challenger_seances
+      }
+      if(response.data.user.coach_seances){
+        seanceStore.userSeances = response.data.user.coach_seances
+      }
+      this.loading = false
+    },
+    async assignRole(userId : number , role : Object) {
+      const response = await http.post('admin/user/'+userId+'/assign-role', role)
+      this.message = response.data.message;
+      this.alert = true;
+    },
+    async getAllCoachs() {
+      const response = await http.get('/admin/coach');
+      this.coachs = response.data.coachs;
+    },
+    async getAllChallengers() {
+      const response = await http.get('/admin/challenger');
+      this.challengers = response.data.challengers;
+    },
+    async updateChallengers(userId : number , data : Object){
+      const response = await http.post('admin/user/'+userId+'/challengers-update', data)
+      this.message = response.data.message;
+      this.alert = true;
+    },
+    async updateCoachs(userId : number , data : Object){
+      const response = await http.post('admin/user/'+userId+'/coachs-update', data)
+      this.message = response.data.message;
+      this.alert = true;
+    },
+    async removeChallenger(coachId: number, challengerId : number){
+      const response = await http.delete('admin/user/'+coachId+'/remove-challenger/'+challengerId)
+      this.message = response.data.message;
+      this.alert = true;
+    },
+    async removeCoach(challengerId: number, coachId : number){
+      const response = await http.delete('admin/user/'+challengerId+'/remove-coach/'+coachId)
+      this.message = response.data.message;
+      this.alert = true;
+    },
+    async deleteUser(id: number) {
+      const response = await http.delete('/admin/user/'+id);
+      this.message = response.data.message;
+      this.alert = true
+    },
+  }
+});
