@@ -23,11 +23,9 @@
                       </v-col>
                     </v-row>
                   </v-col>
-                  <v-col cols="12">
+                  <v-col cols="8">
                     <h4>Trainings</h4>
                     <v-btn color="purple" @click="addInput">Ajouter un champ</v-btn>
-                  </v-col>
-                  <v-col cols="12">
                     <div id="all-data" >
                       <div v-for="(input, index) in inputs" :key="index" class="list-input">
                         <v-row>
@@ -40,6 +38,7 @@
                                 item-value="id"
                                 label="Training"
                                 required
+                                @update:model-value="onTrainingChange(input.training)"
                               ></v-select>
                             </div>
                           </v-col>
@@ -69,6 +68,10 @@
                         </v-row>
                       </div>
                     </div>
+                  </v-col>
+                  <v-col cols="4">
+                    <h4>Aperçu des muscles</h4>
+                    <div ref="createContainer" id="create-container" style="height: 300px; width: 100%;"></div>
                   </v-col>
                 </v-row>
               </v-container>
@@ -376,6 +379,17 @@ export default defineComponent({
     const renderer = new THREE.WebGLRenderer();
     renderer.setClearColor('#EEEEEE')
     const container = ref<HTMLDivElement | null>(null);
+    
+    // Nouvelle scène pour le dialog de création
+    const createScene = new THREE.Scene();
+    const createCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const createRenderer = new THREE.WebGLRenderer();
+    createRenderer.setClearColor('#EEEEEE')
+    const createContainer = ref<HTMLDivElement | null>(null);
+    const createGltf = ref<any>(null)
+    const createLoader = new GLTFLoader();
+    const originalMaterials = new Map<string, number>(); // Stocker les couleurs originales
+    
     const doughnutChart = ref<HTMLCanvasElement | null>(null);
     let chartInstance : any;
     const chartData = ref<{
@@ -390,12 +404,20 @@ export default defineComponent({
     });
     const loader = new GLTFLoader();
 
-    const gltf = ref(null)
+    const gltf = ref<any>(null)
+    const originalMainMaterials = new Map<string, number>(); // Stocker les couleurs originales de la scène principale
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
     controls.dampingFactor = 0.25; // inertia
     controls.screenSpacePanning = false;
     controls.maxPolarAngle = Math.PI;
+    
+    // Controls pour la scène de création
+    const createControls = new OrbitControls(createCamera, createRenderer.domElement);
+    createControls.enableDamping = true;
+    createControls.dampingFactor = 0.25;
+    createControls.screenSpacePanning = false;
+    createControls.maxPolarAngle = Math.PI;
 
     const init = () => {
       //camera.position.z = 3;
@@ -412,6 +434,15 @@ export default defineComponent({
       loader.load('http://localhost:3000/src/assets/Muscle.gltf', (loadedGltf : any) => {
         gltf.value = loadedGltf
         console.log(loadedGltf.scene)
+        
+        // Sauvegarder les couleurs originales des matériaux pour la scène principale
+        loadedGltf.scene.traverse((child: any) => {
+          if (child.isMesh && child.material && child.name) {
+            originalMainMaterials.set(child.name, child.material.color.getHex());
+          }
+        });
+        console.log('Couleurs originales sauvegardées (scène principale):', Object.fromEntries(originalMainMaterials));
+        
         //loadedGltf.scene.getObjectByName('Biceps').material.color.setHex(0xFF0000)
         //loadedGltf.scene.getObjectByName('Triceps').material.color.setHex(0x0000FF)
         //loadedGltf.scene.position.set(0, 1, -5)
@@ -430,14 +461,61 @@ export default defineComponent({
         container.value.appendChild(renderer.domElement);
       }
     };
+    
+    // Initialisation de la scène de création
+    const initCreateScene = () => {
+      if (!createContainer.value) return;
+      
+      createCamera.position.z = 7;
+      const light1 = new THREE.AmbientLight(0xFFFFFF)
+      const light2 = new THREE.DirectionalLight(0xFFFFFF, 5.0)
+      light1.position.set(100,100,100)
+      const lightx = new THREE.PointLight(0xFF0000, 1, 500)
+      lightx.position.set(10, 0, 25)
+      createScene.add(lightx)
+      createScene.add(light1)
+      createScene.add(light2)
+
+      createLoader.load('http://localhost:3000/src/assets/Muscle.gltf', (loadedGltf : any) => {
+        createGltf.value = loadedGltf
+        console.log('Create scene - model loaded:', loadedGltf.scene)
+        
+        // Sauvegarder les couleurs originales des matériaux
+        loadedGltf.scene.traverse((child: any) => {
+          if (child.isMesh && child.material && child.name) {
+            originalMaterials.set(child.name, child.material.color.getHex());
+          }
+        });
+        console.log('Couleurs originales sauvegardées:', Object.fromEntries(originalMaterials));
+        
+        createScene.add(loadedGltf.scene);
+      });
+
+      // Définir une taille fixe pour le conteneur de création
+      const width = 350; // Largeur fixe
+      const height = 300; // Hauteur fixe
+      createRenderer.setSize(width, height);
+      createCamera.aspect = width / height;
+      createCamera.updateProjectionMatrix()
+      
+      if (createContainer.value) {
+        createContainer.value.appendChild(createRenderer.domElement);
+        console.log('Create scene initialized and added to DOM');
+      }
+    };
 
     const animate = () => {
       requestAnimationFrame(animate);
       if(gltf.value && gltf.value.scene){
         gltf.value.scene.rotation.y += 0.003
       }
+      if(createGltf.value && createGltf.value.scene){
+        createGltf.value.scene.rotation.y += 0.003
+      }
       controls.update();
+      createControls.update();
       renderer.render(scene, camera);
+      createRenderer.render(createScene, createCamera);
     };
 
     onMounted(() => {
@@ -492,29 +570,144 @@ export default defineComponent({
           };
         }
       }
+      
       loader.load('http://localhost:3000/src/assets/Muscle.gltf', (loadedGltf : any) => {
         gltf.value = loadedGltf
         console.log(loadedGltf.scene)
-        for(const key in seanceStore.counts){
-          if(loadedGltf.scene.getObjectByName(key)){
-            loadedGltf.scene.getObjectByName(key).material.color.setHex(0x0000FF)
-            console.log(key)
-          }
+        
+        // Sauvegarder les couleurs originales si pas encore fait
+        if (originalMainMaterials.size === 0) {
+          loadedGltf.scene.traverse((child: any) => {
+            if (child.isMesh && child.material && child.name) {
+              originalMainMaterials.set(child.name, child.material.color.getHex());
+            }
+          });
         }
-        console.log(seanceStore.counts)
-        //loadedGltf.scene.position.set(0, 1, -5)
+        
+        // Nouvelle logique : compter les muscles selon les exercices de la séance
+        const muscleCount = new Map<string, number>();
+        
+        seanceTrainings?.forEach((training: any) => {
+          if (training.categories) {
+            training.categories.forEach((category: any) => {
+              if (category.name) {
+                muscleCount.set(category.name, (muscleCount.get(category.name) || 0) + 1);
+              }
+            });
+          }
+        });
+        
+        // Réinitialiser les muscles à leur couleur originale
+        loadedGltf.scene.traverse((child: any) => {
+          if (child.isMesh && child.material && child.name) {
+            if (originalMainMaterials.has(child.name)) {
+              child.material.color.setHex(originalMainMaterials.get(child.name));
+            }
+          }
+        });
+        
+        // Colorer les muscles selon l'intensité (même logique que updateCreateSceneMuscles)
+        muscleCount.forEach((count, muscleName) => {
+          if (loadedGltf.scene.getObjectByName(muscleName)) {
+            // Système de couleurs rouge exact : 1+, 3+, 5+
+            let color = 0xFF4545; // Rouge clair pour 1+ exercice
+            if (count >= 5) {
+              color = 0xBF0000; // Rouge très foncé pour 5+ exercices
+            } else if (count >= 3) {
+              color = 0xE61F1F; // Rouge foncé pour 3+ exercices
+            }
+            
+            loadedGltf.scene.getObjectByName(muscleName).material.color.setHex(color);
+            console.log(`Muscle coloré (scène principale): ${muscleName} (${count} exercice(s)) - Couleur: #${color.toString(16)}`);
+          }
+        });
+        
+        console.log('Muscles ciblés dans la séance:', Array.from(muscleCount.keys()));
+        console.log('Intensités des muscles:', Object.fromEntries(muscleCount));
+        
         scene.clear()
         scene.add(lightx)
         scene.add(light1)
         scene.add(light2)
         scene.add(loadedGltf.scene);
       });
+      
       console.log(champs);
       chartData.value.labels = Object.keys(seanceStore.counts);
       chartData.value.datasets[0].data = Object.values(seanceStore.counts);
       chartData.value.datasets[0].backgroundColor = ['#6A1B9A', '#283593', '#00838F', '#00695C', '#2E7D32', '#689F38', '#C0CA33', '#FBC02D']; // Changez cela selon vos besoins
       chartInstance.update()
     }
+
+    // Fonction pour mettre à jour la scène 3D de création quand on sélectionne un exercice
+    const onTrainingChange = async (trainingId: number) => {
+      updateCreateSceneMuscles();
+    };
+
+    // Fonction pour mettre à jour tous les muscles selon tous les exercices sélectionnés
+    const updateCreateSceneMuscles = () => {
+      if (!createGltf.value) return;
+      
+      // Collecter tous les muscles ciblés avec comptage
+      const muscleCount = new Map<string, number>();
+      
+      inputs.value.forEach(input => {
+        if (input.training) {
+          const selectedTraining = trainingStore.trainings.find((training: any) => training.id === input.training);
+          if (selectedTraining && selectedTraining.categories) {
+            selectedTraining.categories.forEach((category: any) => {
+              if (category.name) {
+                muscleCount.set(category.name, (muscleCount.get(category.name) || 0) + 1);
+              }
+            });
+          }
+        }
+      });
+      
+      // Réinitialiser SEULEMENT les muscles à leur couleur par défaut, pas tout l'objet
+      createGltf.value.scene.traverse((child: any) => {
+        if (child.isMesh && child.material && child.name) {
+          // Si c'est un muscle qui était ciblé, on le remet à sa couleur originale
+          if (originalMaterials.has(child.name)) {
+            child.material.color.setHex(originalMaterials.get(child.name));
+          }
+        }
+      });
+      
+      // Colorer tous les muscles ciblés avec le nouveau système de couleurs
+      muscleCount.forEach((count, muscleName) => {
+        if (createGltf.value.scene.getObjectByName(muscleName)) {
+          // Système de couleurs rouge exact : 1+, 3+, 5+
+          let color = 0xFF4545; // Rouge clair pour 1+ exercice
+          if (count >= 5) {
+            color = 0xBF0000; // Rouge très foncé pour 5+ exercices
+          } else if (count >= 3) {
+            color = 0xE61F1F; // Rouge foncé pour 3+ exercices
+          }
+          
+          createGltf.value.scene.getObjectByName(muscleName).material.color.setHex(color);
+          console.log(`Muscle coloré: ${muscleName} (${count} exercice(s)) - Couleur: #${color.toString(16)}`);
+        }
+      });
+      
+      console.log('Muscles ciblés au total:', Array.from(muscleCount.keys()));
+      console.log('Détail des intensités:', Object.fromEntries(muscleCount));
+    };
+
+    // Watcher pour initialiser la scène de création quand le dialog s'ouvre
+    watch(dialog, (newVal) => {
+      if (newVal) {
+        // Utiliser nextTick pour s'assurer que le DOM est rendu
+        setTimeout(() => {
+          if (createContainer.value) {
+            // Vérifier si la scène n'est pas déjà initialisée
+            if (!createContainer.value.hasChildNodes()) {
+              initCreateScene();
+            }
+          }
+        }, 200); // Délai un peu plus long pour s'assurer que le DOM est rendu
+      }
+    });
 
     const data = ref([])
     const counts = ({})
@@ -540,6 +733,10 @@ export default defineComponent({
 
     function deleteInput(index: number) {
       inputs.value.splice(index, 1);
+      // Mettre à jour la scène 3D après suppression
+      setTimeout(() => {
+        updateCreateSceneMuscles();
+      }, 100);
     }
 
     const state = reactive({
@@ -740,6 +937,8 @@ export default defineComponent({
       changeChallengerFin,
       supprChallengerFin,
       container,
+      createContainer,
+      onTrainingChange,
       ...toRefs(state)
     }
   }
@@ -758,6 +957,12 @@ export default defineComponent({
   }
   #container {
     position: relative;
+  }
+  #create-container {
+    position: relative;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f5f5f5;
   }
   #custom-legend {
     display: flex;
