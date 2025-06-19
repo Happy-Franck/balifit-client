@@ -16,6 +16,9 @@ export const useTrainingStore = defineStore('trainingChallenger', {
     async getTrainings() {
       const response = await http.get('/challenger/training');
       this.trainings = response.data.trainings;
+      console.clear()
+      console.log('trainings')
+      console.log(this.trainings)
       this.loading = false
     },
     async showTraining(id: number) {
