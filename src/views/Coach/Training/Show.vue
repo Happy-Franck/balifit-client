@@ -34,6 +34,18 @@
           </v-chip>
         </span>
       </p>
+      <p v-if="trainingStore.currentTraining.equipments && trainingStore.currentTraining.equipments.length > 0">
+        Équipements:
+        <span v-for="(equipment, index) in trainingStore.currentTraining.equipments" :key="index">
+          <v-chip
+            class="ma-2"
+            color="blue"
+            text-color="white"
+          >
+            {{equipment.name}}
+          </v-chip>
+        </span>
+      </p>
       <div v-if="trainingStore.currentTraining.image">
         <v-img
           class="bg-white"
@@ -86,7 +98,7 @@
                         required
                         multiple
                         v-model="categories"
-                        label="Select"
+                        label="Catégories musculaires"
                         :items="categoryStore.categories"
                         item-title="name"
                         item-value="id"
@@ -100,6 +112,30 @@
                           class="text-grey text-caption align-self-center"
                         >
                           (+{{ categories.length - 4 }} autres)
+                        </span>
+                      </template>
+                      </v-select>
+                    </v-col>
+                    <v-col cols="12">
+                      <v-select
+                        multiple
+                        v-model="equipments"
+                        label="Équipements nécessaires"
+                        :items="equipmentStore.equipments"
+                        item-title="name"
+                        item-value="id"
+                        hint="Sélectionnez les équipements nécessaires pour cet exercice"
+                        persistent-hint
+                      >
+                      <template v-slot:selection="{ item, index }">
+                        <v-chip v-if="index < 3">
+                          <span>{{ item.title }}</span>
+                        </v-chip>
+                        <span
+                          v-if="index === 3"
+                          class="text-grey text-caption align-self-center"
+                        >
+                          (+{{ equipments.length - 3 }} autres)
                         </span>
                       </template>
                       </v-select>
@@ -140,6 +176,7 @@ import { useRoute } from 'vue-router'
 import { useTrainingStore } from '@/store/CoachStore/TrainingStore'
 import { useAuthStore } from '@/store/AuthStore'
 import { useCategoryStore } from '@/store/CoachStore/CategoryStore'
+import { useEquipmentStore } from '@/store/CoachStore/EquipmentStore'
 
 export default defineComponent({
   setup() {
@@ -150,15 +187,21 @@ export default defineComponent({
       image: null as null | any,
       video: null as null | any,
       categories: [] as any,
+      equipments: [] as any,
       sary: null as null | any,
       vidaka: null as null | any,
     })
     const trainingStore = useTrainingStore()
     const AuthStore = useAuthStore()
     const categoryStore = useCategoryStore()
+    const equipmentStore = useEquipmentStore()
+    
     categoryStore.getCategories()
+    equipmentStore.getEquipments()
+    
     const route = useRoute()
     const router = useRouter()
+    
     watch(
       () => trainingStore.currentTraining,
       (newTraining) => {
@@ -168,9 +211,13 @@ export default defineComponent({
           state.categories = newTraining.categories?.map(function(item) {
             return item.id;
           });
+          state.equipments = newTraining.equipments?.map(function(item) {
+            return item.id;
+          }) || [];
         }
       }
     );
+    
     watch(
       [() => trainingStore.message, () => trainingStore.alert],
       ([newMessage, newAlert]) => {
@@ -197,6 +244,7 @@ export default defineComponent({
       trainingStore.showTraining(Number(route.params.id))
     }
     AuthStore.getUserAuth()
+    
     const editTraining = (idTraining : number) => {
       console.log(state.categories)
       dialog.value = false
@@ -214,6 +262,7 @@ export default defineComponent({
           name: state.name,
           description: state.description,
           categories: state.categories,
+          equipments: state.equipments,
         },
         formData
       )
@@ -229,7 +278,7 @@ export default defineComponent({
     const uploadVideo = (e: any) => {
       state.vidaka = e.target.files[0]
     }
-    return {trainingStore , categoryStore , uploadImage , uploadVideo , AuthStore , supprimerTraining , editTraining , dialog , ...toRefs(state) }
+    return {trainingStore , categoryStore , equipmentStore , uploadImage , uploadVideo , AuthStore , supprimerTraining , editTraining , dialog , ...toRefs(state) }
   }
 })
 </script>

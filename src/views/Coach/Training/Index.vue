@@ -58,7 +58,7 @@
                     required
                     multiple
                     v-model="categories"
-                    label="Select"
+                    label="Catégories musculaires"
                     :items="categoryStore.categories"
                     item-title="name"
                     item-value="id"
@@ -71,7 +71,31 @@
                       v-if="index === 4"
                       class="text-grey text-caption align-self-center"
                     >
-                      (+{{ value.length - 4 }} autres)
+                      (+{{ categories.length - 4 }} autres)
+                    </span>
+                  </template>
+                  </v-select>
+                </v-col>
+                <v-col cols="12">
+                  <v-select
+                    multiple
+                    v-model="equipments"
+                    label="Équipements nécessaires"
+                    :items="equipmentStore.equipments"
+                    item-title="name"
+                    item-value="id"
+                    hint="Sélectionnez les équipements nécessaires pour cet exercice"
+                    persistent-hint
+                  >
+                  <template v-slot:selection="{ item, index }">
+                    <v-chip v-if="index < 3">
+                      <span>{{ item.title }}</span>
+                    </v-chip>
+                    <span
+                      v-if="index === 3"
+                      class="text-grey text-caption align-self-center"
+                    >
+                      (+{{ equipments.length - 3 }} autres)
                     </span>
                   </template>
                   </v-select>
@@ -116,6 +140,12 @@
             {{elem.name}} -
           </span>
         </div>
+        <div v-if="training.equipments && training.equipments.length > 0">
+          <strong>Équipements:</strong>
+          <span v-for="(equipment, index) in training.equipments" :key="index">
+            {{equipment.name}}<span v-if="index < training.equipments.length - 1">, </span>
+          </span>
+        </div>
 
         <router-link :to="{name: 'coachTrainingItem', params: {id: training.id}}">
           Voir
@@ -129,6 +159,7 @@
 import { defineComponent , ref , reactive , toRefs , watch } from 'vue'
 import { useCategoryStore } from '@/store/CoachStore/CategoryStore'
 import { useTrainingStore } from '@/store/CoachStore/TrainingStore'
+import { useEquipmentStore } from '@/store/CoachStore/EquipmentStore'
 import { useAuthStore } from '@/store/AuthStore'
 
 export default defineComponent({
@@ -140,15 +171,21 @@ export default defineComponent({
       image: null as null | any,
       video: null as null | any,
       categories: [] as any,
+      equipments: [] as any,
       sary: null as null | any,
       vidaka: null as null | any,
     })
     const categoryStore = useCategoryStore()
     const trainingStore = useTrainingStore()
+    const equipmentStore = useEquipmentStore()
+    
     categoryStore.getCategories()
     trainingStore.getTrainings()
+    equipmentStore.getEquipments()
+    
     const AuthStore = useAuthStore()
     AuthStore.getUserAuth()
+    
     watch(
       [() => trainingStore.message, () => trainingStore.alert],
       ([newMessage, newAlert]) => {
@@ -161,6 +198,7 @@ export default defineComponent({
         }
       }
     );
+    
     const uploadImage = (e: any) => {
       state.sary = e.target.files[0]
     }
@@ -182,18 +220,20 @@ export default defineComponent({
           name: state.name,
           description: state.description,
           categories: state.categories,
+          equipments: state.equipments,
         },
         formData
       )
       state.name = ''
       state.description = ''
       state.categories = []
+      state.equipments = []
       state.image = null
       state.sary = null
       state.video = null
       state.vidaka = null
     }
-    return {categoryStore , createTraining , trainingStore , AuthStore , dialog , ...toRefs(state) , uploadImage , uploadVideo }
+    return {categoryStore , equipmentStore , createTraining , trainingStore , AuthStore , dialog , ...toRefs(state) , uploadImage , uploadVideo }
   }
 })
 </script>

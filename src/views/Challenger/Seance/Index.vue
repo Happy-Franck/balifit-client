@@ -355,11 +355,14 @@ import { useTrainingStore } from '@/store/ChallengerStore/TrainingStore'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
 import { Chart, registerables } from 'chart.js';
 
 export default defineComponent({
   setup(){
+    // Configuration centralisée des URLs
+    const ASSETS_BASE_URL = import.meta.env.VITE_ASSETS_BASE_URL || window.location.origin
+    const GLTF_MODEL_PATH = `${ASSETS_BASE_URL}/src/assets/Muscle.gltf`
+    
     const AuthStore = useAuthStore()
     AuthStore.getUserAuth()
     const dialog = ref(false)
@@ -431,7 +434,7 @@ export default defineComponent({
       scene.add(light1)
       scene.add(light2)
 
-      loader.load('http://localhost:3000/src/assets/Muscle.gltf', (loadedGltf : any) => {
+      loader.load(GLTF_MODEL_PATH, (loadedGltf : any) => {
         gltf.value = loadedGltf
         console.log(loadedGltf.scene)
         
@@ -476,7 +479,7 @@ export default defineComponent({
       createScene.add(light1)
       createScene.add(light2)
 
-      createLoader.load('http://localhost:3000/src/assets/Muscle.gltf', (loadedGltf : any) => {
+      createLoader.load(GLTF_MODEL_PATH, (loadedGltf : any) => {
         createGltf.value = loadedGltf
         console.log('Create scene - model loaded:', loadedGltf.scene)
         
@@ -571,7 +574,7 @@ export default defineComponent({
         }
       }
       
-      loader.load('http://localhost:3000/src/assets/Muscle.gltf', (loadedGltf : any) => {
+      loader.load(GLTF_MODEL_PATH, (loadedGltf : any) => {
         gltf.value = loadedGltf
         console.log(loadedGltf.scene)
         
