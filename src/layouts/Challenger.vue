@@ -108,63 +108,67 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
-  import { useAuthStore } from '@/store/AuthStore'
-  import { useRouter, useRoute } from 'vue-router'
-  import ThemeToggle from '@/components/ThemeToggle.vue'
-  
-  const AuthStore = useAuthStore()
-  const drawer = ref(true)
-  const router = useRouter()
-  const route = useRoute()
-  
-  AuthStore.getUserAuth()
-  
-  const redirectTo = (path) =>{
-    router.push(path)
+import { ref } from 'vue'
+import { useAuthStore } from '@/store/AuthStore'
+import { useRouter, useRoute } from 'vue-router'
+import ThemeToggle from '@/components/ThemeToggle.vue'
+import http from '@/axios'
+import { useSeanceStore } from '@/store/ChallengerStore/SeanceStore'
+import { useTrainingStore } from '@/store/ChallengerStore/TrainingStore'
+import { useProductStore } from '@/store/ChallengerStore/ProductStore'
+
+const AuthStore = useAuthStore()
+const drawer = ref(true)
+const router = useRouter()
+const route = useRoute()
+
+AuthStore.getUserAuth()
+
+const links = [
+  {name:'Dashboard', url:'/challenger/dashboard'},
+  {name:'Produits', url:'/challenger/produit'},
+  {name:'Seances', url:'/challenger/seance'},
+  {name:'Exercices', url:'/challenger/exercice'},
+  {name:'Mon Profil', url:'/challenger/profile'},
+]
+
+const redirectTo = (path) => {
+  router.push(path)
+}
+
+// Fonction pour déterminer si un lien est actif
+const isActive = (path) => {
+  return route.path.startsWith(path)
+}
+
+// Méthode de déconnexion corrigée
+const deconnexion = async () => {
+  try {
+    // Réinitialiser tous les stores
+    const SeanceStore = useSeanceStore()
+    const TrainingStore = useTrainingStore()
+    const ProductStore = useProductStore()
+    
+    SeanceStore.$reset()
+    TrainingStore.$reset()
+    ProductStore.$reset()
+    
+    // Appeler l'API de déconnexion
+    await http.post("/logout")
+    
+    // Utiliser la méthode deconnexion de l'AuthStore pour nettoyer proprement
+    AuthStore.deconnexion()
+    
+    // Rediriger vers login
+    router.push('/login')
+    
+  } catch (err) {
+    console.log(err)
+    // En cas d'erreur, forcer la déconnexion locale
+    AuthStore.deconnexion()
+    router.push('/login')
   }
-
-  // Fonction pour déterminer si un lien est actif
-  const isActive = (path) => {
-    return route.path.startsWith(path)
-  }
-</script>
-
-<script>
-  import http from '@/axios'
-  import { useSeanceStore } from '@/store/ChallengerStore/SeanceStore'
-  import { useTrainingStore } from '@/store/ChallengerStore/TrainingStore'
-  import { useProductStore } from '@/store/ChallengerStore/ProductStore'
-
-
-  export default {
-    data: () => ({
-      links : [
-        {name:'Dashboard', url:'/challenger/dashboard'},
-        {name:'Produits', url:'/challenger/produit'},
-        {name:'Seances', url:'/challenger/seance'},
-        {name:'Exercices', url:'/challenger/exercice'},
-        {name:'Mon Profil', url:'/challenger/profile'},
-      ]
-    }),
-    methods: {
-      deconnexion(){
-        const SeanceStore = useSeanceStore()
-        const TrainingStore = useTrainingStore()
-        const ProductStore = useProductStore()
-        SeanceStore.$reset()
-        TrainingStore.$reset()
-        ProductStore.$reset()
-        http.post("/logout").then((response) => {
-          this.$router.push('/login');
-          localStorage.clear();
-        }).catch((err) => {
-          console.log(err)
-          this.alert = true
-        })
-      },
-    },
-  }
+}
 </script>
 
 

@@ -75,24 +75,10 @@
 </template>
 
 <script setup>
-  import { ref, computed } from 'vue'
-  import { useAuthStore } from '@/store/AuthStore'
-  import { useRoute } from 'vue-router'
-  import ThemeToggle from '@/components/ThemeToggle.vue'
-  
-  const AuthStore = useAuthStore()
-  const drawer = ref(null)
-  const route = useRoute()
-  
-  AuthStore.getUserAuth()
-
-  // Fonction pour déterminer si un lien est actif
-  const isActive = (path) => {
-    return route.path.startsWith(path)
-  }
-</script>
-
-<script>
+import { ref } from 'vue'
+import { useAuthStore } from '@/store/AuthStore'
+import { useRoute, useRouter } from 'vue-router'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 import http from '@/axios'
 import { useCategoryStore } from '@/store/AdminStore/CategoryStore'
 import { useProductStore } from '@/store/AdminStore/ProductStore'
@@ -100,50 +86,49 @@ import { useRolePermissionStore } from '@/store/AdminStore/RolePermissionStore'
 import { useSeanceStore } from '@/store/AdminStore/SeanceStore'
 import { useUserStore } from '@/store/AdminStore/UserStore'
 
-  export default {
-    data: () => ({ drawer: null}),
-    methods: {
-      deconnexion(){
-        const CategoryStore = useCategoryStore()
-        const ProductStore = useProductStore()
-        const RolePermissionStore = useRolePermissionStore()
-        const SeanceStore = useSeanceStore()
-        const UserStore = useUserStore()
-        CategoryStore.$reset()
-        ProductStore.$reset()
-        RolePermissionStore.$reset()
-        SeanceStore.$reset()
-        UserStore.$reset()
-        http.post("/logout").then((response) => {
-          this.$router.push('/login');
-          localStorage.clear();
-        }).catch((err) => {
-          console.log(err)
-          this.alert = true
-        })
-      },
-    },
+const AuthStore = useAuthStore()
+const drawer = ref(null)
+const route = useRoute()
+const router = useRouter()
+
+AuthStore.getUserAuth()
+
+// Fonction pour déterminer si un lien est actif
+const isActive = (path) => {
+  return route.path.startsWith(path)
+}
+
+// Méthode de déconnexion corrigée
+const deconnexion = async () => {
+  try {
+    // Réinitialiser tous les stores
+    const CategoryStore = useCategoryStore()
+    const ProductStore = useProductStore()
+    const RolePermissionStore = useRolePermissionStore()
+    const SeanceStore = useSeanceStore()
+    const UserStore = useUserStore()
+    
+    CategoryStore.$reset()
+    ProductStore.$reset()
+    RolePermissionStore.$reset()
+    SeanceStore.$reset()
+    UserStore.$reset()
+    
+    // Appeler l'API de déconnexion
+    await http.post("/logout")
+    
+    // Utiliser la méthode deconnexion de l'AuthStore pour nettoyer proprement
+    AuthStore.deconnexion()
+    
+    // Rediriger vers login
+    router.push('/login')
+    
+  } catch (err) {
+    console.log(err)
+    // En cas d'erreur, forcer la déconnexion locale
+    AuthStore.deconnexion()
+    router.push('/login')
   }
+}
 </script>
 
-<style scoped>
-/* Contrôler les états de clic des éléments de navigation */
-.v-list-item:active {
-  background-color: transparent !important;
-}
-
-.v-list-item:active .v-list-item__overlay {
-  opacity: 0 !important;
-}
-
-/* Maintenir la couleur du thème pour les états hover et focus */
-.v-list-item:hover,
-.v-list-item:focus {
-  background-color: rgba(var(--v-theme-primary), 0.1) !important;
-}
-
-/* Désactiver l'effet ripple par défaut si nécessaire */
-.v-list-item .v-ripple__container {
-  color: rgb(var(--v-theme-primary)) !important;
-}
-</style>

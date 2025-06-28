@@ -24,6 +24,18 @@ export const useAuthStore = defineStore('auth', {
     },
     getFullUserProfile(): User | null {
       return this.userAuth
+    },
+    isAuthenticated(): boolean {
+      return !!this.token && !!this.role
+    },
+    isAdmin(): boolean {
+      return this.role === 'administrateur'
+    },
+    isCoach(): boolean {
+      return this.role === 'coach'  
+    },
+    isChallenger(): boolean {
+      return this.role === 'challenger'
     }
   },
   actions: {
@@ -34,6 +46,25 @@ export const useAuthStore = defineStore('auth', {
       this.role = userData.role;
       this.token = userData.token;
       localStorage.setItem('token', this.token);
+      localStorage.setItem('role', this.role);
+      localStorage.setItem('username', this.username);
+      localStorage.setItem('useremail', this.useremail);
+      localStorage.setItem('useravatar', this.useravatar);
+    },
+    initFromStorage() {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role');
+      const username = localStorage.getItem('username');
+      const useremail = localStorage.getItem('useremail');
+      const useravatar = localStorage.getItem('useravatar');
+      
+      if (token && role) {
+        this.token = token;
+        this.role = role;
+        this.username = username || '';
+        this.useremail = useremail || '';
+        this.useravatar = useravatar || '';
+      }
     },
     deconnexion() {
       this.username = '';
@@ -43,6 +74,37 @@ export const useAuthStore = defineStore('auth', {
       this.token = '';
       this.userAuth = null;
       localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('username');
+      localStorage.removeItem('useremail');
+      localStorage.removeItem('useravatar');
+    },
+    canAccessRoute(routePath: string): boolean {
+      if (!this.isAuthenticated) return false;
+      
+      if (routePath.startsWith('/admin')) {
+        return this.isAdmin;
+      }
+      if (routePath.startsWith('/coach')) {
+        return this.isCoach;
+      }
+      if (routePath.startsWith('/challenger')) {
+        return this.isChallenger;
+      }
+      
+      return true;
+    },
+    getDashboardRoute(): string {
+      switch (this.role) {
+        case 'administrateur':
+          return '/admin/dashboard';
+        case 'coach':
+          return '/coach/dashboard';
+        case 'challenger':
+          return '/challenger/dashboard';
+        default:
+          return '/login';
+      }
     },
     async getUserAuth(){
       try {
@@ -66,7 +128,6 @@ export const useAuthStore = defineStore('auth', {
     },
     async updateProfile(profileData: FormData) {
       try {
-        // Ajouter _method=PUT pour Laravel
         profileData.append('_method', 'PUT')
         
         const response = await http.post('/profile', profileData, {
@@ -75,7 +136,6 @@ export const useAuthStore = defineStore('auth', {
           }
         })
         this.userAuth = response.data.user
-        // Mettre à jour les données de base aussi
         this.username = response.data.user.name
         this.useremail = response.data.user.email
         this.useravatar = response.data.user.avatar

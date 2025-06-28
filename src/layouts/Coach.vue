@@ -44,63 +44,68 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
-  import { useAuthStore } from '@/store/AuthStore'
-  import { useRouter, useRoute } from 'vue-router'
-  import ThemeToggle from '@/components/ThemeToggle.vue'
-  
-  const AuthStore = useAuthStore()
-  const drawer = ref(true)
-  const router = useRouter()
-  const route = useRoute()
-  
-  AuthStore.getUserAuth()
-  
-  const redirectTo = (path) =>{
-    router.push(path)
-  }
-
-  // Fonction pour déterminer si un lien est actif
-  const isActive = (path) => {
-    return route.path.startsWith(path)
-  }
-</script>
-
-<script>
+import { ref } from 'vue'
+import { useAuthStore } from '@/store/AuthStore'
+import { useRouter, useRoute } from 'vue-router'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 import http from '@/axios'
 import { useCategoryStore } from '@/store/CoachStore/CategoryStore'
 import { useChallengerStore } from '@/store/CoachStore/ChallengerStore'
 import { useSeanceStore } from '@/store/CoachStore/SeanceStore'
 import { useTrainingStore } from '@/store/CoachStore/TrainingStore'
 
-  export default {
-    data: () => ({
-      links: [
-        {icon:'mdi-folder',text:'Dashboard', path:'/coach/dashboard'},
-        {icon:'mdi-folder',text:'Trainings', path:'/coach/training'},
-        {icon:'mdi-folder',text:'Challengers', path:'/coach/challenger'},
-        {icon:'mdi-folder',text:'Seances', path:'/coach/seance'},
-        {icon:'mdi-account-edit',text:'Mon Profil', path:'/coach/profile'},
-      ],
-    }),
-    methods: {
-      deconnexion(){
-        const CategoryStore = useCategoryStore()
-        const ChallengerStore = useChallengerStore()
-        const SeanceStore = useSeanceStore()
-        const TrainingStore = useTrainingStore()
-        CategoryStore.$reset()
-        ChallengerStore.$reset()
-        SeanceStore.$reset()
-        TrainingStore.$reset()
-        http.post("/logout").then((response) => {
-          this.$router.push('/login');
-          localStorage.clear();
-        }).catch((err) => {
-          console.log(err)
-          this.alert = true
-        })
-      },
-    },
+const AuthStore = useAuthStore()
+const drawer = ref(true)
+const router = useRouter()
+const route = useRoute()
+
+AuthStore.getUserAuth()
+
+const links = [
+  {icon:'mdi-folder',text:'Dashboard', path:'/coach/dashboard'},
+  {icon:'mdi-folder',text:'Trainings', path:'/coach/training'},
+  {icon:'mdi-folder',text:'Challengers', path:'/coach/challenger'},
+  {icon:'mdi-folder',text:'Seances', path:'/coach/seance'},
+  {icon:'mdi-account-edit',text:'Mon Profil', path:'/coach/profile'},
+]
+
+const redirectTo = (path) => {
+  router.push(path)
+}
+
+// Fonction pour déterminer si un lien est actif
+const isActive = (path) => {
+  return route.path.startsWith(path)
+}
+
+// Méthode de déconnexion corrigée
+const deconnexion = async () => {
+  try {
+    // Réinitialiser tous les stores
+    const CategoryStore = useCategoryStore()
+    const ChallengerStore = useChallengerStore()
+    const SeanceStore = useSeanceStore()
+    const TrainingStore = useTrainingStore()
+    
+    CategoryStore.$reset()
+    ChallengerStore.$reset()
+    SeanceStore.$reset()
+    TrainingStore.$reset()
+    
+    // Appeler l'API de déconnexion
+    await http.post("/logout")
+    
+    // Utiliser la méthode deconnexion de l'AuthStore pour nettoyer proprement
+    AuthStore.deconnexion()
+    
+    // Rediriger vers login
+    router.push('/login')
+    
+  } catch (err) {
+    console.log(err)
+    // En cas d'erreur, forcer la déconnexion locale
+    AuthStore.deconnexion()
+    router.push('/login')
   }
+}
 </script>

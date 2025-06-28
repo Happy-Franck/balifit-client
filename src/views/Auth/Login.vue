@@ -142,15 +142,7 @@ export default defineComponent({
             };
             authStore.setUserData(userData);
 
-            if (authStore.role === 'administrateur') {
-              router.push('/admin/dashboard')
-            }
-            if (authStore.role === 'coach') {
-              router.push('/coach/dashboard')
-            }
-            if (authStore.role === 'challenger') {
-              router.push('/challenger/dashboard')
-            }
+            router.push(authStore.getDashboardRoute());
           }
           loading.value = false;
         })

@@ -1,5 +1,6 @@
 // Composables
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/store/AuthStore'
 //Not connected
 import NotConnected from '../layouts/NotConnected.vue'
 import Login from '../views/Auth/Login.vue'
@@ -47,18 +48,21 @@ const routes = [
       {
         path: 'login',
         name: 'login',
-        component: Login
+        component: Login,
+        meta: { requiresGuest: true }
       },
       {
         path: 'register',
         name: 'register',
-        component: Register
+        component: Register,
+        meta: { requiresGuest: true }
       },
     ]
   },
   {
     path: '/admin',
     component: Admin,
+    meta: { requiresAuth: true, requiresRole: 'administrateur' },
     children: [
       {
         path: 'dashboard',
@@ -118,6 +122,7 @@ const routes = [
   {
     path: '/coach',
     component: Coach,
+    meta: { requiresAuth: true, requiresRole: 'coach' },
     children: [
       {
         path: 'dashboard',
@@ -184,6 +189,7 @@ const routes = [
   {
     path: '/challenger',
     component: Challenger,
+    meta: { requiresAuth: true, requiresRole: 'challenger' },
     children: [
       {
         path: 'dashboard',
@@ -222,6 +228,51 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
+})
+
+// Guards de navigation
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  
+  // Initialiser les données depuis localStorage au démarrage
+  authStore.initFromStorage()
+  
+  // Vérifier si la route nécessite d'être déconnecté (login/register)
+  if (to.meta.requiresGuest) {
+    if (authStore.isAuthenticated) {
+      // Si déjà connecté, rediriger vers le dashboard approprié
+      return next(authStore.getDashboardRoute())
+    }
+    return next()
+  }
+  
+  // Vérifier si la route nécessite une authentification
+  if (to.meta.requiresAuth) {
+    if (!authStore.isAuthenticated) {
+      // Si pas connecté, rediriger vers login
+      return next('/login')
+    }
+    
+    // Vérifier le rôle requis
+    if (to.meta.requiresRole) {
+      const requiredRole = to.meta.requiresRole as string
+      if (authStore.role !== requiredRole) {
+        // Si le rôle ne correspond pas, rediriger vers le dashboard approprié
+        return next(authStore.getDashboardRoute())
+      }
+    }
+  }
+  
+  // Redirection de la route racine
+  if (to.path === '/') {
+    if (authStore.isAuthenticated) {
+      return next(authStore.getDashboardRoute())
+    } else {
+      return next('/login')
+    }
+  }
+  
+  next()
 })
 
 export default router
