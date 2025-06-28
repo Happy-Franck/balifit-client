@@ -12,6 +12,7 @@ import { registerPlugins } from '@/plugins'
 //axios
 import '@/axios'
 
+
 const app = createApp(App)
 
 registerPlugins(app)

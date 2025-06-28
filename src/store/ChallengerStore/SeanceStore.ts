@@ -3,6 +3,7 @@ import Seance from '@/types/Seance'
 import User from '@/types/User'
 import Training from '@/types/Training'
 import http from '@/axios'
+import { getCoachAvatarUrl } from '@/config/constants'
 
 export const useSeanceStore = defineStore('seanceChallenger', {
   state: () => ({
@@ -30,17 +31,17 @@ export const useSeanceStore = defineStore('seanceChallenger', {
     },
     getCoachAvatar(coachId : any) {
       const coach = this.users.find(user => user.id === coachId);
-      return coach ? `http://localhost:8000/storage/avatars/${coach.avatar}` : '';
+      return coach && coach.avatar ? getCoachAvatarUrl(coach.avatar) : '';
     },
     dateTime(dateString: string){
         const dateObject = new Date(dateString);
-        const options = { weekday: 'short', day: 'numeric', month: 'short', /*year: 'numeric'*/ };
+        const options: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' };
         const formattedDate = new Intl.DateTimeFormat('fr-FR', options).format(dateObject);
         return formattedDate;
     },
     hourTime(dateString: string){
         const dateObject = new Date(dateString);
-        const options = { hour: 'numeric', minute: 'numeric', hour12: false};
+        const options: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: 'numeric', hour12: false};
         const formattedHour = new Intl.DateTimeFormat('fr-FR', options).format(dateObject);
         return formattedHour;
     },
@@ -55,7 +56,7 @@ export const useSeanceStore = defineStore('seanceChallenger', {
       const counts: { [key: string]: number } = {};
       const data: string[] = [];
 
-      this.currentSeanceTrainings.forEach((item: any) => {
+      this.currentSeanceTrainings?.forEach((item: any) => {
         if (item.categories) {
           item.categories.forEach((x: any) => {
             if (x.name) {

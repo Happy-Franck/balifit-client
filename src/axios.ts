@@ -10,9 +10,10 @@
 // })
 
 import axios from 'axios';
+import { APP_CONFIG } from '@/config/constants';
 
 const http = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: APP_CONFIG.API_BASE_URL,
 });
 
 http.interceptors.request.use(

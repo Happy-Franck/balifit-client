@@ -5,7 +5,7 @@
         <v-layout>
           <v-navigation-drawer permanent absolute>
             <v-list>
-              <v-list-item :prepend-avatar="`http://localhost:8000/storage/avatars/${AuthStore.userAuth?.avatar}`" :title="AuthStore.userAuth?.email" :subtitle="AuthStore.userAuth?.email">
+              <v-list-item :prepend-avatar="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''" :title="AuthStore.userAuth?.name" :subtitle="AuthStore.userAuth?.email">
                 <template v-slot:append>
                   <v-btn size="small" variant="text" icon="mdi-menu-down" ></v-btn>
                 </template>
@@ -13,14 +13,45 @@
             </v-list>
             <v-divider></v-divider>
             <v-list :lines="false" density="compact" nav>
+              <router-link to="/admin/dashboard">
+                <v-list-item 
+                  prepend-icon="mdi-view-dashboard" 
+                  title="Dashboard" 
+                  value="dashboard"
+                  :active="isActive('/admin/dashboard')"
+                ></v-list-item>
+              </router-link>
               <router-link to="/admin/category">
-                <v-list-item prepend-icon="mdi-view-dashboard" title="Categories" value="category"></v-list-item>
+                <v-list-item 
+                  prepend-icon="mdi-view-dashboard" 
+                  title="Categories" 
+                  value="category"
+                  :active="isActive('/admin/category')"
+                ></v-list-item>
               </router-link>
               <router-link to="/admin/user">
-                <v-list-item prepend-icon="mdi-account-box" title="Utilisateurs" value="user"></v-list-item>
+                <v-list-item 
+                  prepend-icon="mdi-account-box" 
+                  title="Utilisateurs" 
+                  value="user"
+                  :active="isActive('/admin/user')"
+                ></v-list-item>
               </router-link>
               <router-link to="/admin/product">
-                <v-list-item prepend-icon="mdi-gavel" title="Produits" value="product"></v-list-item>
+                <v-list-item 
+                  prepend-icon="mdi-gavel" 
+                  title="Produits" 
+                  value="product"
+                  :active="isActive('/admin/product')"
+                ></v-list-item>
+              </router-link>
+              <router-link to="/admin/profile">
+                <v-list-item 
+                  prepend-icon="mdi-account-edit" 
+                  title="Mon Profil" 
+                  value="profile"
+                  :active="isActive('/admin/profile')"
+                ></v-list-item>
               </router-link>
             </v-list>
           </v-navigation-drawer>
@@ -45,11 +76,20 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
+  import { ref, computed } from 'vue'
   import { useAuthStore } from '@/store/AuthStore'
+  import { useRoute } from 'vue-router'
+  
   const AuthStore = useAuthStore()
   const drawer = ref(null)
+  const route = useRoute()
+  
   AuthStore.getUserAuth()
+
+  // Fonction pour déterminer si un lien est actif
+  const isActive = (path) => {
+    return route.path.startsWith(path)
+  }
 </script>
 
 <script>

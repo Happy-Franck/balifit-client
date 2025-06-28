@@ -11,6 +11,8 @@
           :key="link"
           variant="text"
           @click="redirectTo(link.url)"
+          :color="isActive(link.url) ? 'primary' : 'default'"
+          :class="{ 'v-btn--active': isActive(link.url) }"
         >
           {{ link.name }}
           <template v-slot:append>
@@ -29,7 +31,7 @@
           class="me-10 ms-4"
           color="grey-darken-1"
           size="32"
-          :image="`http://localhost:8000/storage/avatars/${AuthStore.userAuth?.avatar}`"
+          :image="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''"
         ></v-avatar>
         <v-responsive max-width="260">
           <v-text-field
@@ -114,13 +116,22 @@
 <script setup>
   import { ref } from 'vue'
   import { useAuthStore } from '@/store/AuthStore'
-  import { useRouter } from 'vue-router'
+  import { useRouter, useRoute } from 'vue-router'
+  
   const AuthStore = useAuthStore()
   const drawer = ref(true)
-  AuthStore.getUserAuth()
   const router = useRouter()
+  const route = useRoute()
+  
+  AuthStore.getUserAuth()
+  
   const redirectTo = (path) =>{
     router.push(path)
+  }
+
+  // Fonction pour déterminer si un lien est actif
+  const isActive = (path) => {
+    return route.path.startsWith(path)
   }
 </script>
 
@@ -138,6 +149,7 @@
         {name:'Produits', url:'/challenger/produit'},
         {name:'Seances', url:'/challenger/seance'},
         {name:'Exercices', url:'/challenger/exercice'},
+        {name:'Mon Profil', url:'/challenger/profile'},
       ]
     }),
     methods: {

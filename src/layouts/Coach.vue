@@ -6,7 +6,7 @@
           class="me-10 ms-4"
           color="grey-darken-1"
           size="32"
-          :image="`http://localhost:8000/storage/avatars/${AuthStore.userAuth?.avatar}`"
+          :image="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''"
         ></v-avatar>
 
         <v-btn
@@ -14,6 +14,8 @@
           :key="link"
           variant="text"
           @click="redirectTo(link.path)"
+          :color="isActive(link.path) ? 'primary' : 'default'"
+          :class="{ 'v-btn--active': isActive(link.path) }"
         >
           {{ link.text }}
         </v-btn>
@@ -42,13 +44,22 @@
 <script setup>
   import { ref } from 'vue'
   import { useAuthStore } from '@/store/AuthStore'
-  import { useRouter } from 'vue-router'
+  import { useRouter, useRoute } from 'vue-router'
+  
   const AuthStore = useAuthStore()
   const drawer = ref(true)
-  AuthStore.getUserAuth()
   const router = useRouter()
+  const route = useRoute()
+  
+  AuthStore.getUserAuth()
+  
   const redirectTo = (path) =>{
     router.push(path)
+  }
+
+  // Fonction pour déterminer si un lien est actif
+  const isActive = (path) => {
+    return route.path.startsWith(path)
   }
 </script>
 
@@ -66,6 +77,7 @@ import { useTrainingStore } from '@/store/CoachStore/TrainingStore'
         {icon:'mdi-folder',text:'Trainings', path:'/coach/training'},
         {icon:'mdi-folder',text:'Challengers', path:'/coach/challenger'},
         {icon:'mdi-folder',text:'Seances', path:'/coach/seance'},
+        {icon:'mdi-account-edit',text:'Mon Profil', path:'/coach/profile'},
       ],
     }),
     methods: {

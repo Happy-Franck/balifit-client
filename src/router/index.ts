@@ -31,6 +31,9 @@ import DashboardChallenger from '../views/Challenger/DashboardChallenger.vue'
 import SeanceChallenger from '../views/Challenger/Seance/Index.vue'
 import ProductChallenger from '../views/Challenger/Product/Index.vue'
 import ExoChallenger from '../views/Challenger/Exercice/Index.vue'
+//profile
+import EditProfile from '../views/Profile/EditProfile.vue'
+import ProfileView from '../views/Profile/ProfileView.vue'
 
 const routes = [
   {
@@ -100,6 +103,16 @@ const routes = [
         name: 'adminProductCreate',
         component: ProductCreateAdmin
       },
+      {
+        path: 'profile',
+        name: 'adminProfile',
+        component: ProfileView
+      },
+      {
+        path: 'profile/edit',
+        name: 'adminProfileEdit',
+        component: EditProfile
+      },
     ]
   },
   {
@@ -156,7 +169,16 @@ const routes = [
         component: SeanceItemEditCoach,
         props: true
       },
-
+      {
+        path: 'profile',
+        name: 'coachProfile',
+        component: ProfileView
+      },
+      {
+        path: 'profile/edit',
+        name: 'coachProfileEdit',
+        component: EditProfile
+      },
     ]
   },
   {
@@ -182,6 +204,16 @@ const routes = [
         path: 'exercice',
         name: 'exoProduit',
         component: ExoChallenger,
+      },
+      {
+        path: 'profile',
+        name: 'challengerProfile',
+        component: ProfileView
+      },
+      {
+        path: 'profile/edit',
+        name: 'challengerProfileEdit',
+        component: EditProfile
       },
     ]
   },
