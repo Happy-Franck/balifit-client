@@ -19,8 +19,8 @@
 
 
 <script lang="ts">
-import { useProductStore } from '@/store/AdminStore/ProductStore'
-import Product from '@/types/Product';
+import { useProductStore } from '../store/AdminStore/ProductStore'
+import Product from '../types/Product';
 import { defineComponent } from 'vue'
 
 export default defineComponent({

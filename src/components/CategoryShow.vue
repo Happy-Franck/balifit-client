@@ -16,9 +16,9 @@
 
 <script lang="ts">
 import { defineComponent , ref } from 'vue'
-import http from '@/axios'
-import Category from '@/types/Category';
-import { useCategoryStore } from '@/store/AdminStore/CategoryStore'
+import http from '../axios'
+import Category from '../types/Category';
+import { useCategoryStore } from '../store/AdminStore/CategoryStore'
 
 export default defineComponent({
   setup() {

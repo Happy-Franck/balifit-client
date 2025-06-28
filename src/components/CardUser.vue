@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import User from '@/types/User';
+import User from '../types/User';
 import { defineComponent } from 'vue'
 export default defineComponent({
   props: {
