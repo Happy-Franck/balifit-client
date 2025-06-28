@@ -1,73 +1,72 @@
 <template>
   <v-app>
     <v-navigation-drawer v-model="drawer">
-      <v-card class="mx-auto" width="256">
-        <v-layout>
-          <v-navigation-drawer permanent absolute>
-            <v-list>
-              <v-list-item :prepend-avatar="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''" :title="AuthStore.userAuth?.name" :subtitle="AuthStore.userAuth?.email">
-                <template v-slot:append>
-                  <v-btn size="small" variant="text" icon="mdi-menu-down" ></v-btn>
-                </template>
-              </v-list-item>
-            </v-list>
-            <v-divider></v-divider>
-            <v-list :lines="false" density="compact" nav>
-              <router-link to="/admin/dashboard">
-                <v-list-item 
-                  prepend-icon="mdi-view-dashboard" 
-                  title="Dashboard" 
-                  value="dashboard"
-                  :active="isActive('/admin/dashboard')"
-                ></v-list-item>
-              </router-link>
-              <router-link to="/admin/category">
-                <v-list-item 
-                  prepend-icon="mdi-view-dashboard" 
-                  title="Categories" 
-                  value="category"
-                  :active="isActive('/admin/category')"
-                ></v-list-item>
-              </router-link>
-              <router-link to="/admin/user">
-                <v-list-item 
-                  prepend-icon="mdi-account-box" 
-                  title="Utilisateurs" 
-                  value="user"
-                  :active="isActive('/admin/user')"
-                ></v-list-item>
-              </router-link>
-              <router-link to="/admin/product">
-                <v-list-item 
-                  prepend-icon="mdi-gavel" 
-                  title="Produits" 
-                  value="product"
-                  :active="isActive('/admin/product')"
-                ></v-list-item>
-              </router-link>
-              <router-link to="/admin/profile">
-                <v-list-item 
-                  prepend-icon="mdi-account-edit" 
-                  title="Mon Profil" 
-                  value="profile"
-                  :active="isActive('/admin/profile')"
-                ></v-list-item>
-              </router-link>
-            </v-list>
-          </v-navigation-drawer>
-          <v-main style="height: 354px;"></v-main>
-        </v-layout>
-      </v-card>
+      <v-layout>
+        <v-navigation-drawer permanent absolute>
+          <v-list>
+            <v-list-item :prepend-avatar="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''" :title="AuthStore.userAuth?.name" :subtitle="AuthStore.userAuth?.email">
+              <template v-slot:append>
+                <v-btn size="small" variant="text" icon="mdi-menu-down" ></v-btn>
+              </template>
+            </v-list-item>
+          </v-list>
+          <v-divider></v-divider>
+          <v-list :lines="false" density="compact" nav>
+            <router-link to="/admin/dashboard">
+              <v-list-item 
+                prepend-icon="mdi-view-dashboard" 
+                title="Dashboard" 
+                value="dashboard"
+                :active="isActive('/admin/dashboard')"
+              ></v-list-item>
+            </router-link>
+            <router-link to="/admin/category">
+              <v-list-item 
+                prepend-icon="mdi-view-dashboard" 
+                title="Categories" 
+                value="category"
+                :active="isActive('/admin/category')"
+              ></v-list-item>
+            </router-link>
+            <router-link to="/admin/user">
+              <v-list-item 
+                prepend-icon="mdi-account-box" 
+                title="Utilisateurs" 
+                value="user"
+                :active="isActive('/admin/user')"
+              ></v-list-item>
+            </router-link>
+            <router-link to="/admin/product">
+              <v-list-item 
+                prepend-icon="mdi-gavel" 
+                title="Produits" 
+                value="product"
+                :active="isActive('/admin/product')"
+              ></v-list-item>
+            </router-link>
+            <router-link to="/admin/profile">
+              <v-list-item 
+                prepend-icon="mdi-account-edit" 
+                title="Mon Profil" 
+                value="profile"
+                :active="isActive('/admin/profile')"
+              ></v-list-item>
+            </router-link>
+          </v-list>
+        </v-navigation-drawer>
+        <v-main style="height: 354px;"></v-main>
+      </v-layout>
     </v-navigation-drawer>
     <v-app-bar>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>Admin</v-toolbar-title>
       <v-spacer></v-spacer>
+      <ThemeToggle />
       <v-btn icon @click="deconnexion">
         <v-icon>mdi-export</v-icon>
       </v-btn>
     </v-app-bar>
-    <v-main class="bg-grey-lighten-3" style="min-height: 300px;">
+    <v-main class="bg-surface" style="min-height: 300px;">
       <v-container>
         <router-view />
       </v-container>
@@ -79,6 +78,7 @@
   import { ref, computed } from 'vue'
   import { useAuthStore } from '@/store/AuthStore'
   import { useRoute } from 'vue-router'
+  import ThemeToggle from '@/components/ThemeToggle.vue'
   
   const AuthStore = useAuthStore()
   const drawer = ref(null)
@@ -125,3 +125,25 @@ import { useUserStore } from '@/store/AdminStore/UserStore'
     },
   }
 </script>
+
+<style scoped>
+/* Contrôler les états de clic des éléments de navigation */
+.v-list-item:active {
+  background-color: transparent !important;
+}
+
+.v-list-item:active .v-list-item__overlay {
+  opacity: 0 !important;
+}
+
+/* Maintenir la couleur du thème pour les états hover et focus */
+.v-list-item:hover,
+.v-list-item:focus {
+  background-color: rgba(var(--v-theme-primary), 0.1) !important;
+}
+
+/* Désactiver l'effet ripple par défaut si nécessaire */
+.v-list-item .v-ripple__container {
+  color: rgb(var(--v-theme-primary)) !important;
+}
+</style>

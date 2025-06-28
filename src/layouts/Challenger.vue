@@ -24,6 +24,7 @@
           </template>
         </v-btn>
 
+        <ThemeToggle />
         <v-btn icon @click="deconnexion">
           <v-icon>mdi-export</v-icon>
         </v-btn>
@@ -33,17 +34,10 @@
           size="32"
           :image="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''"
         ></v-avatar>
-        <v-responsive max-width="260">
-          <v-text-field
-            density="compact"
-            hide-details
-            variant="solo"
-          ></v-text-field>
-        </v-responsive>
       </v-container>
     </v-app-bar>
 
-    <v-main class="bg-grey-lighten-3">
+    <v-main class="bg-background">
       <router-view/>
     </v-main>
 
@@ -117,6 +111,7 @@
   import { ref } from 'vue'
   import { useAuthStore } from '@/store/AuthStore'
   import { useRouter, useRoute } from 'vue-router'
+  import ThemeToggle from '@/components/ThemeToggle.vue'
   
   const AuthStore = useAuthStore()
   const drawer = ref(true)

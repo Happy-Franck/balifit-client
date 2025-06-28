@@ -11,6 +11,8 @@ import { createApp } from 'vue'
 import { registerPlugins } from '@/plugins'
 //axios
 import '@/axios'
+// Custom theme styles
+import '@/assets/styles/theme.css'
 
 
 const app = createApp(App)

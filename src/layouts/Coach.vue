@@ -19,6 +19,8 @@
         >
           {{ link.text }}
         </v-btn>
+        
+        <ThemeToggle />
         <v-btn icon @click="deconnexion">
           <v-icon>mdi-export</v-icon>
         </v-btn>
@@ -35,7 +37,7 @@
       </v-container>
     </v-app-bar>
 
-    <v-main class="bg-grey-lighten-3">
+    <v-main class="bg-background">
       <router-view/>
     </v-main>
   </v-app>
@@ -45,6 +47,7 @@
   import { ref } from 'vue'
   import { useAuthStore } from '@/store/AuthStore'
   import { useRouter, useRoute } from 'vue-router'
+  import ThemeToggle from '@/components/ThemeToggle.vue'
   
   const AuthStore = useAuthStore()
   const drawer = ref(true)
