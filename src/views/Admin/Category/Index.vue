@@ -82,8 +82,8 @@
 </template>
 <script lang="ts">
 import { defineComponent , watch , reactive , toRefs } from 'vue'
-import { useCategoryStore } from '@/store/AdminStore/CategoryStore'
-import CategoryShow from '@/components/CategoryShow.vue'
+import { useCategoryStore } from '../../../store/AdminStore/CategoryStore'
+import CategoryShow from '../../../components/CategoryShow.vue'
 
 export default defineComponent({
     components: { CategoryShow },

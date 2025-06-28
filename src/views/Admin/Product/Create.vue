@@ -13,7 +13,7 @@
 </template>
 <script lang="ts">
 import { defineComponent , reactive , toRefs } from 'vue'
-import { useProductStore } from '@/store/AdminStore/ProductStore'
+import { useProductStore } from '../../../store/AdminStore/ProductStore'
 import { useRouter } from 'vue-router'
 
 export default defineComponent({

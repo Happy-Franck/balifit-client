@@ -40,10 +40,10 @@
   </div>
 </template>
 <script lang="ts">
-import { useUserStore } from '@/store/AdminStore/UserStore'
+import { useUserStore } from '../../../store/AdminStore/UserStore'
 import { defineComponent , ref , watch } from 'vue'
-import CardUser from '@/components/CardUser.vue'
-import { useRolePermissionStore } from '@/store/AdminStore/RolePermissionStore'
+import CardUser from '../../../components/CardUser.vue'
+import { useRolePermissionStore } from '../../../store/AdminStore/RolePermissionStore'
 
 export default defineComponent({
     components: { CardUser },

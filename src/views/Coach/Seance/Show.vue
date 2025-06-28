@@ -62,7 +62,7 @@
 <script lang="ts">
 import { defineComponent , watch, reactive, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useSeanceStore } from '@/store/CoachStore/SeanceStore'
+import { useSeanceStore } from '../../../store/CoachStore/SeanceStore'
 
 export default defineComponent({
   setup() {

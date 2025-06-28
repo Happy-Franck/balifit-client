@@ -41,7 +41,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import http from '@/axios'
+import http from '../../axios'
 
 export default defineComponent({
   name: "LoginView",

@@ -119,8 +119,8 @@
 
 <script lang="ts">
 import { defineComponent, ref, watch } from 'vue';
-import { useProductStore } from '@/store/ChallengerStore/ProductStore';
-import { useAuthStore } from '@/store/AuthStore';
+import { useProductStore } from '../../../store/ChallengerStore/ProductStore';
+import { useAuthStore } from '../../../store/AuthStore';
 
 export default defineComponent({
   setup() {

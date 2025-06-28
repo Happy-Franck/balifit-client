@@ -19,7 +19,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useChallengerStore } from '@/store/CoachStore/ChallengerStore'
+import { useChallengerStore } from '../../../store/CoachStore/ChallengerStore'
 export default defineComponent({
   setup(){
     const challengerStore = useChallengerStore()

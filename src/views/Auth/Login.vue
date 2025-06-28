@@ -35,8 +35,8 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { useAuthStore } from "@/store/AuthStore";
-import http from '@/axios'
+import { useAuthStore } from "../../store/AuthStore";
+import http from '../../axios'
 import { useRouter } from "vue-router"; // Importer useRouter depuis vue-router
 
 export default defineComponent({

@@ -23,7 +23,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useSeanceStore } from '@/store/AdminStore/SeanceStore'
+import { useSeanceStore } from '../../../store/AdminStore/SeanceStore'
 import { useRoute } from 'vue-router'
 
 export default defineComponent({

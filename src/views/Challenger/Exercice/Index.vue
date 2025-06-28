@@ -72,8 +72,8 @@
 
 <script lang="ts">
   import { defineComponent, ref, watch, onMounted } from 'vue'
-  import { useCategoryStore } from '@/store/ChallengerStore/CategoryStore'
-  import { useTrainingStore } from '@/store/ChallengerStore/TrainingStore'
+  import { useCategoryStore } from '../../../store/ChallengerStore/CategoryStore'
+  import { useTrainingStore } from '../../../store/ChallengerStore/TrainingStore'
   import Isotope from 'isotope-layout';
   //import Masonry from 'masonry-layout';
   import imagesLoaded from 'imagesloaded';
@@ -87,7 +87,7 @@
       categoryStore.getCategories()
       trainingStore.getTrainings()
       let iso: Isotope;
-      let grid: Element | null = document.querySelector('.grid');
+      let grid: HTMLElement | null = null;
 
       function closeDialog(id: number): void {
         dialog.value[id] = false;
@@ -100,14 +100,13 @@
       watch(
         [() => categoryStore.categories, () => trainingStore.trainings],
         ([categs, traings]) => {
-          if (categs, traings) {
-            grid = document.querySelector('.grid');
+          if (categs && traings) {
+            grid = document.querySelector('.grid') as HTMLElement;
             if (grid) {
               iso = new Isotope(grid, {
                 itemSelector: '.element-item',
                 masonry: {
-                  columnWidth: '.grid-sizer',
-                  percentPosition: true,
+                  columnWidth: '.grid-sizer'
                 }
               });
               iso.layout()
@@ -122,13 +121,12 @@
       );
 
       onMounted(()=> {
-        grid = document.querySelector('.grid');
+        grid = document.querySelector('.grid') as HTMLElement;
         if (grid) {
           iso = new Isotope(grid, {
             itemSelector: '.element-item',
             masonry: {
-              columnWidth: '.grid-sizer',
-              percentPosition: true,
+              columnWidth: '.grid-sizer'
             }
           });
           iso.layout()
@@ -141,12 +139,14 @@
           iso.layout()
           const filteredElements = document.querySelectorAll('.element-item');
           const count = filteredElements.length;
-          countElement.value.innerText = `Nombre d'éléments : ${count}`;
+          if (countElement.value) {
+            countElement.value.innerText = `Nombre d'éléments : ${count}`;
+          }
         }
       });
 
       function filterItems(event: MouseEvent, categ : string): void {
-        const btn = event.target.closest('button') as HTMLButtonElement | null;
+        const btn = (event.target as HTMLElement)?.closest('button') as HTMLButtonElement | null;
         if (btn) {
           btn.classList.toggle('active');
         }

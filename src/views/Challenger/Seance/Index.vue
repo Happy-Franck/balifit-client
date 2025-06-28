@@ -88,11 +88,9 @@
       <v-col cols="12" sm="12" style="overflow-x: scroll;" class="mb-5">
         <v-timeline direction="horizontal" side="end" align="center">
           <v-timeline-item v-for="(seance , index) in seanceStore.seances" :key="index" @click="show(seance.id)" dot-color="teal-lighten-3" size="large">
-            <template v-if="seance.coach_id" v-slot:icon>
-              <v-avatar class="primary" :image="seanceStore.getCoachAvatar(seance.coach_id)"></v-avatar>
-            </template>
-            <template v-if="!seance.coach_id" v-slot:icon>
-              <v-avatar class="pink" :image="seanceStore.getCoachAvatar(seance.challenger_id)"></v-avatar>
+            <template v-slot:icon>
+              <v-avatar v-if="seance.coach_id" class="primary" :image="seanceStore.getCoachAvatar(seance.coach_id)"></v-avatar>
+              <v-avatar v-else class="pink" :image="seanceStore.getCoachAvatar(seance.challenger_id)"></v-avatar>
             </template>
             <v-tooltip activator="parent" location="bottom" v-if="seance.validated == false">
               A valider
@@ -348,19 +346,19 @@
   </v-container>
 </template>
 <script lang="ts">
-import { useAuthStore } from '@/store/AuthStore'
+import { useAuthStore } from '../../../store/AuthStore'
 import { defineComponent, ref, reactive, toRefs , watch, onMounted } from 'vue'
-import { useSeanceStore } from '@/store/ChallengerStore/SeanceStore'
-import { useTrainingStore } from '@/store/ChallengerStore/TrainingStore'
+import { useSeanceStore } from '../../../store/ChallengerStore/SeanceStore'
+import { useTrainingStore } from '../../../store/ChallengerStore/TrainingStore'
 import * as THREE from 'three'
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Chart, registerables } from 'chart.js';
 
 export default defineComponent({
   setup(){
     // Configuration centralisée des URLs
-    const ASSETS_BASE_URL = import.meta.env.VITE_ASSETS_BASE_URL || window.location.origin
+    const ASSETS_BASE_URL = window.location.origin
     const GLTF_MODEL_PATH = `${ASSETS_BASE_URL}/src/assets/Muscle.gltf`
     
     const AuthStore = useAuthStore()
@@ -444,7 +442,7 @@ export default defineComponent({
             originalMainMaterials.set(child.name, child.material.color.getHex());
           }
         });
-        console.log('Couleurs originales sauvegardées (scène principale):', Object.fromEntries(originalMainMaterials));
+        console.log('Couleurs originales sauvegardées (scène principale):', Array.from(originalMainMaterials.entries()).reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {}));
         
         //loadedGltf.scene.getObjectByName('Biceps').material.color.setHex(0xFF0000)
         //loadedGltf.scene.getObjectByName('Triceps').material.color.setHex(0x0000FF)
@@ -489,7 +487,7 @@ export default defineComponent({
             originalMaterials.set(child.name, child.material.color.getHex());
           }
         });
-        console.log('Couleurs originales sauvegardées:', Object.fromEntries(originalMaterials));
+        console.log('Couleurs originales sauvegardées:', Array.from(originalMaterials.entries()).reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {}));
         
         createScene.add(loadedGltf.scene);
       });
@@ -626,7 +624,7 @@ export default defineComponent({
         });
         
         console.log('Muscles ciblés dans la séance:', Array.from(muscleCount.keys()));
-        console.log('Intensités des muscles:', Object.fromEntries(muscleCount));
+        console.log('Intensités des muscles:', Array.from(muscleCount.entries()).reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {}));
         
         scene.clear()
         scene.add(lightx)
@@ -694,7 +692,7 @@ export default defineComponent({
       });
       
       console.log('Muscles ciblés au total:', Array.from(muscleCount.keys()));
-      console.log('Détail des intensités:', Object.fromEntries(muscleCount));
+      console.log('Détail des intensités:', Array.from(muscleCount.entries()).reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {}));
     };
 
     // Watcher pour initialiser la scène de création quand le dialog s'ouvre
@@ -787,12 +785,12 @@ export default defineComponent({
 
     watch(
       [() => seanceStore.message, () => modal.value,],
-      (newMessage, modal) => {
+      ([newMessage, modalValue]) => {
         if (newMessage !== '') {
           seanceStore.getSeances()
           seanceStore.message = '';
         }
-        if(modal == false){
+        if(modalValue == false){
           fields.value = [
             {
               training: null,

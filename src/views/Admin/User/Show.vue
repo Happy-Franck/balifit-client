@@ -229,9 +229,9 @@
 
 <script lang="ts">
 import { defineComponent , ref , watch } from 'vue'
-import { useUserStore } from '@/store/AdminStore/UserStore'
-import { useRolePermissionStore } from '@/store/AdminStore/RolePermissionStore'
-import { useSeanceStore } from '@/store/AdminStore/SeanceStore'
+import { useUserStore } from '../../../store/AdminStore/UserStore'
+import { useRolePermissionStore } from '../../../store/AdminStore/RolePermissionStore'
+import { useSeanceStore } from '../../../store/AdminStore/SeanceStore'
 import { useRoute } from 'vue-router'
 
 export default defineComponent({

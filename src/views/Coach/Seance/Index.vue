@@ -13,7 +13,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { useSeanceStore } from '@/store/CoachStore/SeanceStore'
+import { useSeanceStore } from '../../../store/CoachStore/SeanceStore'
 export default defineComponent({
   setup(){
     const seanceStore = useSeanceStore()

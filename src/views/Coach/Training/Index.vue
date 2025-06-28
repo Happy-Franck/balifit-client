@@ -157,10 +157,10 @@
 
 <script lang="ts">
 import { defineComponent , ref , reactive , toRefs , watch } from 'vue'
-import { useCategoryStore } from '@/store/CoachStore/CategoryStore'
-import { useTrainingStore } from '@/store/CoachStore/TrainingStore'
-import { useEquipmentStore } from '@/store/CoachStore/EquipmentStore'
-import { useAuthStore } from '@/store/AuthStore'
+import { useCategoryStore } from '../../../store/CoachStore/CategoryStore'
+import { useTrainingStore } from '../../../store/CoachStore/TrainingStore'
+import { useEquipmentStore } from '../../../store/CoachStore/EquipmentStore'
+import { useAuthStore } from '../../../store/AuthStore'
 
 export default defineComponent({
   setup() {

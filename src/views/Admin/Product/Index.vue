@@ -26,8 +26,8 @@
 </template>
 <script lang="ts">
 import { defineComponent , watch } from 'vue'
-import { useProductStore } from '@/store/AdminStore/ProductStore'
-import CardProduct from '@/components/CardProduct.vue'
+import { useProductStore } from '../../../store/AdminStore/ProductStore'
+import CardProduct from '../../../components/CardProduct.vue'
 
 export default defineComponent({
     components: { CardProduct },

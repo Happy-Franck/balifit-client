@@ -52,8 +52,8 @@
 <script lang="ts">
 import { defineComponent , ref , toRefs , reactive , watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useChallengerStore } from '@/store/CoachStore/ChallengerStore'
-import { useAuthStore } from '@/store/AuthStore'
+import { useChallengerStore } from '../../../store/CoachStore/ChallengerStore'
+import { useAuthStore } from '../../../store/AuthStore'
 
 export default defineComponent({
   setup() {

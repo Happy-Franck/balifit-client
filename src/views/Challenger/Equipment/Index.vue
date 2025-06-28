@@ -107,7 +107,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
-import { useEquipmentStore } from '@/store/ChallengerStore/EquipmentStore'
+import { useEquipmentStore } from '../../../store/ChallengerStore/EquipmentStore'
 
 export default defineComponent({
   setup() {

@@ -173,10 +173,10 @@
 import { defineComponent , ref , toRefs , reactive , watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRoute } from 'vue-router'
-import { useTrainingStore } from '@/store/CoachStore/TrainingStore'
-import { useAuthStore } from '@/store/AuthStore'
-import { useCategoryStore } from '@/store/CoachStore/CategoryStore'
-import { useEquipmentStore } from '@/store/CoachStore/EquipmentStore'
+import { useTrainingStore } from '../../..//store/CoachStore/TrainingStore'
+import { useAuthStore } from '../../..//store/AuthStore'
+import { useCategoryStore } from '../../..//store/CoachStore/CategoryStore'
+import { useEquipmentStore } from '../../../store/CoachStore/EquipmentStore'
 
 export default defineComponent({
   setup() {

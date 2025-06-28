@@ -38,8 +38,8 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { useSeanceStore } from '@/store/CoachStore/SeanceStore'
-import { useTrainingStore } from '@/store/CoachStore/TrainingStore'
+import { useSeanceStore } from '../../../store/CoachStore/SeanceStore'
+import { useTrainingStore } from '../../../store/CoachStore/TrainingStore'
 import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
 
