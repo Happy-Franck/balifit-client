@@ -7,8 +7,16 @@ import { useUserStore } from '@/store/AdminStore/UserStore'
 
 export const useSeanceStore = defineStore('seanceAdmin', {
   state: () => ({
+    seances: [] as Seance[],
     userSeances: [] as Seance[],
     loading: true,
+    alert: false,
+    message: '',
+    pagination: {
+      current_page: 1,
+      last_page: 1,
+      total: 0
+    },
     currentSeance: null as Seance | null,
     currentSeanceTrainings: [] as Training[],
     currentSeanceAdmin: null as User | null,
@@ -18,6 +26,50 @@ export const useSeanceStore = defineStore('seanceAdmin', {
   getters: {
   },
   actions: {
+    async getSeances(page = 1, search = '', sortBy = 'id', sortOrder = 'desc') {
+      try {
+        this.loading = true
+        const params = {
+          page,
+          search,
+          sort_by: sortBy,
+          sort_order: sortOrder,
+          per_page: 15
+        }
+        const response = await http.get('/admin/seance', { params });
+        this.seances = response.data.seances || []
+        this.pagination = response.data.pagination || {
+          current_page: 1,
+          last_page: 1,
+          total: 0
+        }
+        this.loading = false
+      } catch (error) {
+        console.error('Erreur lors du chargement des séances:', error)
+        this.seances = []
+        this.loading = false
+      }
+    },
+    async storeSeance(data: any) {
+      try {
+        const response = await http.post('/admin/seance', data);
+        this.message = response.data.message || 'Séance créée avec succès';
+        this.alert = true;
+      } catch (error) {
+        console.error('Erreur lors de la création:', error)
+        throw error
+      }
+    },
+    async updateSeance(id: number, data: any) {
+      try {
+        const response = await http.put(`/admin/seance/${id}`, data);
+        this.message = response.data.message || 'Séance mise à jour avec succès';
+        this.alert = true;
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour:', error)
+        throw error
+      }
+    },
     async assignCoach(challengerId : number, data : Object) {
       const userStore = useUserStore()
       const response = await http.post('/admin/users/'+challengerId+'/assign-coach', data);
@@ -31,10 +83,9 @@ export const useSeanceStore = defineStore('seanceAdmin', {
       userStore.alert = true
     },
     async destroySeance(seanceId : number){
-      const userStore = useUserStore()
       const response = await http.delete('/admin/seance/'+seanceId);
-      userStore.message = response.data.message;
-      userStore.alert = true
+      this.message = response.data.message || 'Séance supprimée avec succès';
+      this.alert = true
     },
     async showSeance(seanceId: number) {
       this.loading = true

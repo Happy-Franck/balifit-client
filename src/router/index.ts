@@ -9,8 +9,16 @@ import Register from '../views/Auth/Register.vue'
 import Admin from '../layouts/Admin.vue'
 import DashboardAdmin from '../views/Admin/DashboardAdmin.vue'
 import CategoryAdmin from '../views/Admin/Category/Index.vue'
+import TrainingAdmin from '../views/Admin/Training/Index.vue'
+import TrainingShowAdmin from '../views/Admin/Training/Show.vue'
+import TrainingEditAdmin from '../views/Admin/Training/Edit.vue'
+import EquipmentAdmin from '../views/Admin/Equipment/Index.vue'
+import EquipmentShowAdmin from '../views/Admin/Equipment/Show.vue'
+import EquipmentEditAdmin from '../views/Admin/Equipment/Edit.vue'
 import UserAdmin from '../views/Admin/User/Index.vue'
 import UserItemAdmin from '../views/Admin/User/Show.vue'
+import SeanceAdmin from '../views/Admin/Seance/index.vue'
+import SeanceShowAdmin from '../views/Admin/Seance/Show.vue'
 import UserSeanceAdmin from '../views/Admin/Seance/Show.vue'
 import ProductAdmin from '../views/Admin/Product/Index.vue'
 import ProductItemAdmin from '../views/Admin/Product/Show.vue'
@@ -65,6 +73,10 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: 'administrateur' },
     children: [
       {
+        path: '',
+        redirect: 'dashboard'
+      },
+      {
         path: 'dashboard',
         name: 'adminDashboard',
         component: DashboardAdmin
@@ -73,6 +85,40 @@ const routes = [
         path: 'category',
         name: 'adminCategory',
         component: CategoryAdmin
+      },
+      {
+        path: 'training',
+        name: 'adminTraining',
+        component: TrainingAdmin
+      },
+      {
+        path: 'training/:id',
+        name: 'adminTrainingShow',
+        component: TrainingShowAdmin,
+        props: true
+      },
+      {
+        path: 'training/:id/edit',
+        name: 'adminTrainingEdit',
+        component: TrainingEditAdmin,
+        props: true
+      },
+      {
+        path: 'equipment',
+        name: 'adminEquipment',
+        component: EquipmentAdmin
+      },
+      {
+        path: 'equipment/:id',
+        name: 'adminEquipmentShow',
+        component: EquipmentShowAdmin,
+        props: true
+      },
+      {
+        path: 'equipment/:id/edit',
+        name: 'adminEquipmentEdit',
+        component: EquipmentEditAdmin,
+        props: true
       },
       {
         path: 'user',
@@ -90,6 +136,17 @@ const routes = [
         name: 'userSeance',
         component: UserSeanceAdmin,
         props: true,
+      },
+      {
+        path: 'seance',
+        name: 'adminSeance',
+        component: SeanceAdmin
+      },
+      {
+        path: 'seance/:id',
+        name: 'adminSeanceShow',
+        component: SeanceShowAdmin,
+        props: true
       },
       {
         path: 'product',

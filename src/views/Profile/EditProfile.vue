@@ -1,196 +1,203 @@
- <template>
+<template>
   <div class="profile-edit">
+    <!-- Breadcrumbs -->
+    <v-container>
+      <v-breadcrumbs
+        :items="breadcrumbItems"
+        class="pa-0 mb-4"
+      >
+        <template v-slot:prepend>
+          <v-icon size="small">mdi-home</v-icon>
+        </template>
+        <template v-slot:divider>
+          <v-icon size="small">mdi-chevron-right</v-icon>
+        </template>
+      </v-breadcrumbs>
+    </v-container>
+
     <v-container>
       <v-row justify="center">
-        <v-col cols="12" md="8" lg="6">
-          <v-card class="pa-6">
-            <v-card-title class="text-h5 mb-4">
-              <v-icon class="mr-2">mdi-account-edit</v-icon>
-              Éditer mon profil
-            </v-card-title>
+        <v-col cols="12" md="10" lg="8">
+          <div class="edit-header mb-6">
+            <h1 class="text-h3 font-weight-bold mb-2">Éditer mon profil</h1>
+            <p class="text-subtitle-1 text-medium-emphasis">Modifiez vos informations personnelles</p>
+          </div>
 
-            <v-form @submit.prevent="updateProfile" ref="form">
-              <!-- Avatar -->
-              <v-row>
-                <v-col cols="12" class="text-center">
-                  <v-avatar size="120" class="mb-4">
-                    <v-img 
-                      v-if="avatarPreview" 
-                      :src="avatarPreview"
-                      cover
-                    ></v-img>
-                    <v-img 
-                      v-else-if="currentAvatar" 
-                      :src="`http://localhost:8000/storage/avatars/${currentAvatar}`"
-                      cover
-                    ></v-img>
-                    <v-icon v-else size="60">mdi-account</v-icon>
-                  </v-avatar>
-                  <div>
-                    <v-file-input
-                      v-model="avatarFile"
-                      label="Changer l'avatar"
-                      accept="image/*"
-                      prepend-icon="mdi-camera"
-                      @update:model-value="onAvatarChange"
+          <v-form @submit.prevent="updateProfile" ref="form">
+            <!-- Section Avatar -->
+            <v-card class="mb-6 custom-card">
+              <v-card-title class="custom-card-title">Photo de profil</v-card-title>
+              <v-card-text class="text-center">
+                <v-avatar size="120" class="mb-4 avatar-upload">
+                  <v-img 
+                    v-if="avatarPreview" 
+                    :src="avatarPreview"
+                    cover
+                  ></v-img>
+                  <v-img 
+                    v-else-if="currentAvatar" 
+                    :src="`http://localhost:8000/storage/avatars/${currentAvatar}`"
+                    cover
+                  ></v-img>
+                  <v-icon v-else size="60" color="grey-lighten-1">mdi-account</v-icon>
+                </v-avatar>
+                <div class="upload-section">
+                  <v-file-input
+                    v-model="avatarFile"
+                    label="Choisir une nouvelle photo"
+                    accept="image/*"
+                    @update:model-value="onAvatarChange"
+                    variant="outlined"
+                    density="comfortable"
+                    class="avatar-input"
+                  ></v-file-input>
+                </div>
+              </v-card-text>
+            </v-card>
+
+            <!-- Section Informations personnelles -->
+            <v-card class="mb-6 custom-card">
+              <v-card-title class="custom-card-title">Informations personnelles</v-card-title>
+              <v-card-text>
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="profileData.name"
+                      label="Nom complet"
                       variant="outlined"
-                      density="compact"
-                    ></v-file-input>
-                  </div>
-                </v-col>
-              </v-row>
+                      density="comfortable"
+                      :rules="[rules.required]"
+                      class="form-field"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="profileData.email"
+                      label="Adresse email"
+                      variant="outlined"
+                      density="comfortable"
+                      type="email"
+                      :rules="[rules.required, rules.email]"
+                      class="form-field"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
 
-              <!-- Informations personnelles -->
-              <v-row>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="profileData.name"
-                    label="Nom complet"
-                    prepend-icon="mdi-account"
-                    variant="outlined"
-                    :rules="[rules.required]"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="profileData.email"
-                    label="Email"
-                    prepend-icon="mdi-email"
-                    variant="outlined"
-                    type="email"
-                    :rules="[rules.required, rules.email]"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="profileData.telephone"
+                      label="Numéro de téléphone"
+                      variant="outlined"
+                      density="comfortable"
+                      class="form-field"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="profileData.cin"
+                      label="Numéro CIN"
+                      variant="outlined"
+                      density="comfortable"
+                      class="form-field"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
 
-              <v-row>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="profileData.telephone"
-                    label="Téléphone"
-                    prepend-icon="mdi-phone"
-                    variant="outlined"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="profileData.cin"
-                    label="CIN"
-                    prepend-icon="mdi-card-account-details"
-                    variant="outlined"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-select
+                      v-model="profileData.sexe"
+                      label="Sexe"
+                      :items="sexeOptions"
+                      variant="outlined"
+                      density="comfortable"
+                      class="form-field"
+                    ></v-select>
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="profileData.date_naissance"
+                      label="Date de naissance"
+                      variant="outlined"
+                      density="comfortable"
+                      type="date"
+                      class="form-field"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
 
-              <!-- Informations physiques -->
-              <v-row>
-                <v-col cols="12" md="4">
-                  <v-select
-                    v-model="profileData.sexe"
-                    label="Sexe"
-                    prepend-icon="mdi-human-male-female"
-                    :items="sexeOptions"
-                    variant="outlined"
-                  ></v-select>
-                </v-col>
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="profileData.taille"
-                    label="Taille (m)"
-                    prepend-icon="mdi-human-male-height"
-                    variant="outlined"
-                    type="number"
-                    step="0.01"
-                    min="0.5"
-                    max="3.0"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model="profileData.date_naissance"
-                    label="Date de naissance"
-                    prepend-icon="mdi-calendar"
-                    variant="outlined"
-                    type="date"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
+            <!-- Section Informations physiques -->
+            <v-card class="mb-6 custom-card">
+              <v-card-title class="custom-card-title">Informations physiques</v-card-title>
+              <v-card-text>
+                <v-row>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model="profileData.taille"
+                      label="Taille (en mètres)"
+                      variant="outlined"
+                      density="comfortable"
+                      type="number"
+                      step="0.01"
+                      min="0.5"
+                      max="3.0"
+                      placeholder="Ex: 1.75"
+                      class="form-field"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model="profileData.nouveau_poids"
+                      label="Poids actuel (kg)"
+                      variant="outlined"
+                      density="comfortable"
+                      type="number"
+                      step="0.1"
+                      min="20"
+                      max="300"
+                      placeholder="Ex: 70.5"
+                      class="form-field"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-select
+                      v-model="profileData.objectif"
+                      label="Objectif principal"
+                      :items="objectifOptions"
+                      variant="outlined"
+                      density="comfortable"
+                      class="form-field"
+                    ></v-select>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
 
-              <!-- Objectif -->
-              <v-row>
-                <v-col cols="12">
-                  <v-select
-                    v-model="profileData.objectif"
-                    label="Objectif"
-                    prepend-icon="mdi-target"
-                    :items="objectifOptions"
-                    variant="outlined"
-                  ></v-select>
-                </v-col>
-              </v-row>
-
-              <!-- Nouveau poids -->
-              <v-row>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="profileData.nouveau_poids"
-                    label="Nouveau poids (kg)"
-                    prepend-icon="mdi-scale-bathroom"
-                    variant="outlined"
-                    type="number"
-                    step="0.1"
-                    min="20"
-                    max="300"
-                    hint="Laisser vide si pas de changement"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" md="6" v-if="currentWeight">
-                  <v-text-field
-                    :value="`${currentWeight} kg`"
-                    label="Poids actuel"
-                    prepend-icon="mdi-scale"
-                    variant="outlined"
-                    readonly
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-
-              <!-- Boutons d'action -->
-              <v-row class="mt-4">
-                <v-col cols="12">
-                  <v-btn
-                    type="submit"
-                    color="primary"
-                    size="large"
-                    :loading="loading"
-                    block
-                  >
-                    <v-icon class="mr-2">mdi-content-save</v-icon>
-                    Sauvegarder
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </v-form>
-
-            <!-- Historique de poids -->
-            <v-divider class="my-6"></v-divider>
-            <v-card-title class="text-h6">
-              <v-icon class="mr-2">mdi-chart-line</v-icon>
-              Historique de poids
-            </v-card-title>
-            <v-list v-if="weightHistory.length > 0">
-              <v-list-item
-                v-for="(entry, index) in weightHistory.slice().reverse()"
-                :key="index"
+            <!-- Boutons d'action -->
+            <div class="action-buttons">
+              <v-btn
+                type="submit"
+                color="primary"
+                size="large"
+                :loading="loading"
+                class="save-btn"
               >
-                <v-list-item-title>{{ entry.valeur }} kg</v-list-item-title>
-                <v-list-item-subtitle>{{ formatDate(entry.date) }}</v-list-item-subtitle>
-              </v-list-item>
-            </v-list>
-            <v-alert v-else type="info" variant="tonal">
-              Aucun historique de poids disponible
-            </v-alert>
-          </v-card>
+                Sauvegarder les modifications
+              </v-btn>
+              <v-btn
+                color="grey-lighten-1"
+                size="large"
+                variant="outlined"
+                @click="$router.go(-1)"
+                class="cancel-btn ml-4"
+              >
+                Annuler
+              </v-btn>
+            </div>
+          </v-form>
         </v-col>
       </v-row>
     </v-container>
@@ -214,9 +221,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useAuthStore } from '../../store/AuthStore'
+import { useRouter, useRoute } from 'vue-router'
 import type User from '../../types/User'
 
 const authStore = useAuthStore()
+const router = useRouter()
+const route = useRoute()
 const form = ref()
 const loading = ref(false)
 const avatarFile = ref()
@@ -413,7 +423,156 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('fr-FR')
 }
 
+// Breadcrumbs selon le rôle
+const breadcrumbItems = computed(() => {
+  const userRole = authStore.userAuth?.roles?.[0]?.name
+  const items = []
+  
+  switch (userRole) {
+    case 'administrateur':
+      items.push(
+        { title: 'Dashboard', to: '/admin/dashboard' },
+        { title: 'Mon Profil', to: '/admin/profile' },
+        { title: 'Éditer', disabled: true }
+      )
+      break
+    case 'coach':
+      items.push(
+        { title: 'Dashboard', to: '/coach/dashboard' },
+        { title: 'Mon Profil', to: '/coach/profile' },
+        { title: 'Éditer', disabled: true }
+      )
+      break
+    case 'challenger':
+      items.push(
+        { title: 'Dashboard', to: '/challenger/dashboard' },
+        { title: 'Mon Profil', to: '/challenger/profile' },
+        { title: 'Éditer', disabled: true }
+      )
+      break
+    default:
+      items.push(
+        { title: 'Accueil', to: '/' },
+        { title: 'Mon Profil', to: '/profile' },
+        { title: 'Éditer', disabled: true }
+      )
+  }
+  
+  return items
+})
+
 onMounted(() => {
   loadProfile()
 })
 </script>
+
+<style scoped>
+.profile-edit {
+  background-color: rgb(var(--v-theme-background));
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+.edit-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.avatar-upload {
+  transition: transform 0.2s ease;
+}
+
+.avatar-upload:hover {
+  transform: scale(1.05);
+}
+
+.upload-section {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.avatar-input {
+  margin-top: 16px;
+}
+
+.form-field {
+  margin-bottom: 8px;
+}
+
+.form-field .v-field--focused {
+  box-shadow: 0 0 0 2px rgba(var(--v-theme-primary), 0.2);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.save-btn {
+  padding: 12px 32px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  min-width: 200px;
+}
+
+.cancel-btn {
+  padding: 12px 32px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  min-width: 120px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .save-btn,
+  .cancel-btn {
+    width: 100%;
+    margin: 0;
+  }
+  
+  .edit-header h1 {
+    font-size: 2rem;
+  }
+}
+
+/* Amélioration des champs de formulaire */
+.v-text-field .v-field__input {
+  padding: 16px;
+  font-size: 1rem;
+}
+
+.v-select .v-field__input {
+  padding: 16px;
+  font-size: 1rem;
+}
+
+.v-file-input .v-field__input {
+  padding: 16px;
+  font-size: 1rem;
+}
+
+/* Style des breadcrumbs */
+.v-breadcrumbs {
+  padding: 16px 0;
+}
+
+.v-breadcrumbs .v-breadcrumbs-item {
+  font-size: 0.875rem;
+}
+
+.v-breadcrumbs .v-breadcrumbs-item--disabled {
+  color: rgb(var(--v-theme-primary));
+  font-weight: 600;
+}
+</style>

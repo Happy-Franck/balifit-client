@@ -1,4 +1,7 @@
-interface Seance{
+import User from './User'
+import Training from './Training'
+
+interface Seance {
   id: number,
   admin_id: number | null,
   coach_id: number | null,
@@ -8,5 +11,12 @@ interface Seance{
   img_fin: string | null,
   created_at: string,
   updated_at: string,
+  // Relations
+  admin?: User | null,
+  coach?: User | null,
+  challenger?: User,
+  trainings?: Training[],
+  // Counts
+  trainings_count?: number,
 }
 export default Seance;

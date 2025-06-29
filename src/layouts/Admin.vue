@@ -1,62 +1,119 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="drawer">
-      <v-layout>
-        <v-navigation-drawer permanent absolute>
-          <v-list>
-            <v-list-item :prepend-avatar="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''" :title="AuthStore.userAuth?.name" :subtitle="AuthStore.userAuth?.email">
-              <template v-slot:append>
-                <v-btn size="small" variant="text" icon="mdi-menu-down" ></v-btn>
-              </template>
-            </v-list-item>
-          </v-list>
-          <v-divider></v-divider>
-          <v-list :lines="false" density="compact" nav>
-            <router-link to="/admin/dashboard">
-              <v-list-item 
-                prepend-icon="mdi-view-dashboard" 
-                title="Dashboard" 
-                value="dashboard"
-                :active="isActive('/admin/dashboard')"
-              ></v-list-item>
-            </router-link>
-            <router-link to="/admin/category">
-              <v-list-item 
-                prepend-icon="mdi-view-dashboard" 
-                title="Categories" 
-                value="category"
-                :active="isActive('/admin/category')"
-              ></v-list-item>
-            </router-link>
-            <router-link to="/admin/user">
-              <v-list-item 
-                prepend-icon="mdi-account-box" 
-                title="Utilisateurs" 
-                value="user"
-                :active="isActive('/admin/user')"
-              ></v-list-item>
-            </router-link>
-            <router-link to="/admin/product">
-              <v-list-item 
-                prepend-icon="mdi-gavel" 
-                title="Produits" 
-                value="product"
-                :active="isActive('/admin/product')"
-              ></v-list-item>
-            </router-link>
-            <router-link to="/admin/profile">
-              <v-list-item 
-                prepend-icon="mdi-account-edit" 
-                title="Mon Profil" 
-                value="profile"
-                :active="isActive('/admin/profile')"
-              ></v-list-item>
-            </router-link>
-          </v-list>
-        </v-navigation-drawer>
-        <v-main style="height: 354px;"></v-main>
-      </v-layout>
+    <!-- Navigation Drawer -->
+    <v-navigation-drawer v-model="drawer" permanent>
+      <!-- Section Avatar et Profil -->
+      <v-list>
+        <v-list-item class="text-center pa-6">
+          <div class="d-flex flex-column align-center">
+            <v-avatar
+              size="80"
+              class="mb-4"
+              :image="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''"
+            >
+              <v-icon v-if="!AuthStore.userAuth?.avatar" size="40">mdi-account</v-icon>
+            </v-avatar>
+            <div class="text-h6 font-weight-medium mb-1">
+              {{ AuthStore.userAuth?.name || 'Utilisateur' }}
+            </div>
+            <div class="text-caption text-grey">
+              {{ AuthStore.userAuth?.email || 'email@example.com' }}
+            </div>
+          </div>
+        </v-list-item>
+      </v-list>
+
+      <v-divider></v-divider>
+
+      <!-- Menu de navigation -->
+      <v-list density="compact" nav>
+        <v-list-item 
+          prepend-icon="mdi-view-dashboard" 
+          title="Dashboard" 
+          value="dashboard"
+          color="primary"
+          :active="isActive('/admin/dashboard')"
+          @click="navigateTo('/admin/dashboard')"
+        ></v-list-item>
+        
+        <v-list-item 
+          prepend-icon="mdi-account-edit" 
+          title="Mon Profil" 
+          value="profile"
+          color="primary"
+          :active="isActive('/admin/profile')"
+          @click="navigateTo('/admin/profile')"
+        ></v-list-item>
+
+        <!-- Menu déroulant Entraînement -->
+        <v-list-group value="entrainement">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-dumbbell"
+              title="Entraînement"
+              color="primary"
+            ></v-list-item>
+          </template>
+          
+          <v-list-item
+            title="Tous les entraînements"
+            value="training"
+            color="primary"
+            :active="isActive('/admin/training')"
+            @click="navigateTo('/admin/training')"
+            class="ml-4"
+          ></v-list-item>
+
+          <v-list-item
+            title="Les équipements"
+            value="equipment"
+            color="primary"
+            :active="isActive('/admin/equipment')"
+            @click="navigateTo('/admin/equipment')"
+            class="ml-4"
+          ></v-list-item>
+
+          <v-list-item
+            title="Liste des Muscles"
+            value="category"
+            color="primary"
+            :active="isActive('/admin/category')"
+            @click="navigateTo('/admin/category')"
+            class="ml-4"
+          ></v-list-item>
+        </v-list-group>
+
+        <v-list-item 
+          prepend-icon="mdi-account-box" 
+          title="Utilisateurs" 
+          value="user"
+          color="primary"
+          :active="isActive('/admin/user')"
+          @click="navigateTo('/admin/user')"
+        ></v-list-item>
+
+        <v-list-item 
+          prepend-icon="mdi-calendar-clock" 
+          title="Séances" 
+          value="seance"
+          color="primary"
+          :active="isActive('/admin/seance')"
+          @click="navigateTo('/admin/seance')"
+        ></v-list-item>
+
+        <v-list-item 
+          prepend-icon="mdi-gavel" 
+          title="Produits" 
+          value="product"
+          color="primary"
+          :active="isActive('/admin/product')"
+          @click="navigateTo('/admin/product')"
+        ></v-list-item>
+      </v-list>
     </v-navigation-drawer>
+
+    <!-- App Bar -->
     <v-app-bar>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>Admin</v-toolbar-title>
@@ -66,7 +123,9 @@
         <v-icon>mdi-export</v-icon>
       </v-btn>
     </v-app-bar>
-    <v-main class="bg-surface" style="min-height: 300px;">
+
+    <!-- Contenu principal -->
+    <v-main class="bg-surface">
       <v-container>
         <router-view />
       </v-container>
@@ -85,6 +144,8 @@ import { useProductStore } from '@/store/AdminStore/ProductStore'
 import { useRolePermissionStore } from '@/store/AdminStore/RolePermissionStore'
 import { useSeanceStore } from '@/store/AdminStore/SeanceStore'
 import { useUserStore } from '@/store/AdminStore/UserStore'
+import { useTrainingStore } from '@/store/AdminStore/TrainingStore'
+import { useEquipmentStore } from '@/store/AdminStore/EquipmentStore'
 
 const AuthStore = useAuthStore()
 const drawer = ref(null)
@@ -98,6 +159,11 @@ const isActive = (path) => {
   return route.path.startsWith(path)
 }
 
+// Fonction pour naviguer vers une route
+const navigateTo = (path) => {
+  router.push(path)
+}
+
 // Méthode de déconnexion corrigée
 const deconnexion = async () => {
   try {
@@ -107,12 +173,16 @@ const deconnexion = async () => {
     const RolePermissionStore = useRolePermissionStore()
     const SeanceStore = useSeanceStore()
     const UserStore = useUserStore()
+    const TrainingStore = useTrainingStore()
+    const EquipmentStore = useEquipmentStore()
     
     CategoryStore.$reset()
     ProductStore.$reset()
     RolePermissionStore.$reset()
     SeanceStore.$reset()
     UserStore.$reset()
+    TrainingStore.$reset()
+    EquipmentStore.$reset()
     
     // Appeler l'API de déconnexion
     await http.post("/logout")

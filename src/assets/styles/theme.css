@@ -67,7 +67,7 @@
 }
 
 .v-card:hover {
-  transform: translateY(-2px);
+  /* transform: translateY(-2px); */
   box-shadow: var(--hpfit-shadow-primary);
 }
 
@@ -84,11 +84,11 @@
 }
 
 /* Styles pour les barres d'application */
-.v-app-bar {
+/* .v-app-bar {
   backdrop-filter: blur(50px);
   background: rgba(var(--v-theme-surface-rgb), 0.95) !important;
   border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
-}
+} */
 
 /* Mode sombre pour les barres d'application */
 .v-theme--customDark .v-app-bar {
