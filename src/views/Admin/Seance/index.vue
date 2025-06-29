@@ -196,7 +196,6 @@
                 </v-avatar>
                 <div>
                   <div class="font-weight-medium">{{ item.challenger.name }}</div>
-                  <div class="text-caption text-grey">{{ item.challenger.email }}</div>
                 </div>
               </div>
               <span v-else class="text-grey">Non assigné</span>
@@ -214,7 +213,6 @@
                 </v-avatar>
                 <div>
                   <div class="font-weight-medium">{{ item.coach.name }}</div>
-                  <div class="text-caption text-grey">{{ item.coach.email }}</div>
                 </div>
               </div>
               <span v-else class="text-grey">Non assigné</span>
@@ -232,7 +230,6 @@
                 </v-avatar>
                 <div>
                   <div class="font-weight-medium">{{ item.admin.name }}</div>
-                  <div class="text-caption text-grey">Admin</div>
                 </div>
               </div>
               <span v-else class="text-grey">-</span>
@@ -240,13 +237,7 @@
             
             <!-- Date -->
             <td>
-              <div class="d-flex align-center">
-                <v-icon class="mr-2" color="primary" size="18">mdi-calendar</v-icon>
-                <div>
-                  <div class="font-weight-medium">{{ formatDate(item.created_at) }}</div>
-                  <div class="text-caption text-grey">{{ formatTime(item.created_at) }}</div>
-                </div>
-              </div>
+              <div class="font-weight-medium">{{ formatDate(item.created_at) }} {{ formatTime(item.created_at) }}</div>
             </td>
             
             <!-- Nombre d'exercices -->
@@ -582,23 +573,23 @@ const formatTime = (dateString: string) => {
 }
 
 const formatValidatedStatus = (validated: boolean | null) => {
-  if (validated === true) return 'Validée'
-  if (validated === false) return 'À corriger'
-  if (validated === null) return 'Assignée'
+  if (validated == true) return 'Validée'
+  if (validated == false) return 'À corriger'
+  if (validated == null) return 'Assignée'
   return 'Non défini'
 }
 
 const getStatusColor = (validated: boolean | null) => {
-  if (validated === true) return 'success'
-  if (validated === false) return 'error'
-  if (validated === null) return 'info'
+  if (validated == true) return 'success'
+  if (validated == false) return 'error'
+  if (validated == null) return 'info'
   return 'grey'
 }
 
 const getStatusIcon = (validated: boolean | null) => {
-  if (validated === true) return 'mdi-check-circle'
-  if (validated === false) return 'mdi-alert-circle'
-  if (validated === null) return 'mdi-account-group'
+  if (validated == true) return 'mdi-check-circle'
+  if (validated == false) return 'mdi-alert-circle'
+  if (validated == null) return 'mdi-account-group'
   return 'mdi-help-circle'
 }
 
