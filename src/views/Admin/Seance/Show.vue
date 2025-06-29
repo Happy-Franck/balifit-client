@@ -1,9 +1,9 @@
 <template>
-  <v-container class="seance-show-container">
+  <v-container class="seance-show-youtube">
     <!-- Breadcrumbs -->
     <v-breadcrumbs 
       :items="breadcrumbItems" 
-      class="breadcrumbs pa-0 mb-4"
+      class="youtube-breadcrumbs pa-0 mb-4"
       divider="/"
     >
       <template v-slot:item="{ item }">
@@ -26,297 +26,229 @@
 
     <!-- Seance Content -->
     <div v-if="seance && !seanceStore.loading" class="seance-content">
-      <!-- Header avec photo de couverture stylée -->
-      <div class="seance-header">
-        <div class="cover-section">
-          <v-img
-            src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-            height="300"
-            cover
-            class="cover-bg"
-          >
-            <div class="cover-overlay"></div>
-            <div class="cover-content">
-              <div class="seance-status-badge">
-                <v-chip 
-                  :color="getStatusColor(seance.validated)" 
-                  size="x-large" 
-                  variant="elevated"
-                  class="status-chip"
-                >
-                  <v-icon start size="20">{{ getStatusIcon(seance.validated) }}</v-icon>
-                  {{ formatValidatedStatus(seance.validated) }}
-                </v-chip>
-              </div>
-              <h1 class="seance-title-overlay">Séance #{{ seance.id }}</h1>
-              <div class="seance-meta-overlay">
-                <div class="meta-item">
-                  <v-icon color="white" size="20">mdi-calendar</v-icon>
-                  <span>{{ formatDate(seance.created_at) }}</span>
-                </div>
-                <div class="meta-item">
-                  <v-icon color="white" size="20">mdi-clock</v-icon>
-                  <span>{{ formatTime(seance.created_at) }}</span>
-                </div>
-              </div>
-            </div>
-          </v-img>
+      <!-- Titre -->
+      <h1 class="video-title">Séance #{{ seance.id }}</h1>
+
+      <!-- Métadonnées et actions -->
+      <div class="video-meta">
+        <div class="meta-left">
+          <span class="meta-text">{{ formatDate(seance.created_at) }}</span>
+          <span class="meta-divider">•</span>
+          <span class="meta-text">{{ formatTime(seance.created_at) }}</span>
+          <span class="meta-divider">•</span>
+          <span class="meta-text">{{ trainings?.length || 0 }} exercice{{ (trainings?.length || 0) > 1 ? 's' : '' }}</span>
         </div>
-        
-        <!-- Actions flottantes -->
-        <div class="floating-actions">
-          <v-btn
-            variant="elevated"
-            size="large"
-            color="primary"
-            @click="editSeance"
-            class="action-btn"
+        <div class="meta-actions">
+          <v-chip 
+            :color="getStatusColor(seance.validated)" 
+            size="small" 
+            variant="flat"
+            class="status-chip"
           >
-            <v-icon start size="20">mdi-pencil</v-icon>
+            <v-icon start size="14">{{ getStatusIcon(seance.validated) }}</v-icon>
+            {{ formatValidatedStatus(seance.validated) }}
+          </v-chip>
+          <v-btn
+            v-if="seance.validated === null"
+            variant="outlined"
+            size="small"
+            @click="editSeance"
+            class="action-btn ml-2"
+          >
+            <v-icon start size="16">mdi-pencil</v-icon>
             Modifier
           </v-btn>
           <v-btn
-            variant="elevated"
-            size="large"
+            v-if="seance.validated === null"
+            variant="outlined"
             color="error"
+            size="small"
             @click="confirmDelete"
-            class="action-btn ml-3"
+            class="action-btn ml-2"
           >
-            <v-icon start size="20">mdi-delete</v-icon>
+            <v-icon start size="16">mdi-delete</v-icon>
             Supprimer
           </v-btn>
         </div>
       </div>
 
-      <!-- Layout principal style YouTube -->
-      <div class="main-layout">
-        <!-- Colonne principale -->
-        <div class="main-column">
-          <!-- Coach assigné -->
-          <v-card class="modern-card mb-4" v-if="coach">
-            <v-card-text class="pa-6">
-              <h3 class="section-title mb-4">
-                <v-icon color="primary" class="mr-2">mdi-account-tie</v-icon>
-                Coach assigné
-              </h3>
-              <div class="coach-info">
-                <v-avatar size="80" class="mr-4 elevation-4">
-                  <v-img 
-                    v-if="coach.avatar" 
-                    :src="`http://localhost:8000/storage/avatars/${coach.avatar}`"
-                  ></v-img>
-                  <v-icon v-else size="40" color="primary">mdi-account</v-icon>
-                </v-avatar>
-                <div>
-                  <h4 class="coach-name">{{ coach.name }}</h4>
-                  <p class="coach-email">{{ coach.email }}</p>
-                  <v-chip color="success" size="small" variant="elevated" class="mt-2">
-                    <v-icon start size="14">mdi-star</v-icon>
-                    Coach
-                  </v-chip>
-                </div>
-              </div>
-            </v-card-text>
-          </v-card>
+      <!-- Participants -->
+      <div class="participants-section">
+        <div class="participant">
+          <v-avatar 
+            size="40" 
+            class="perfect-avatar"
+            :image="challenger?.avatar ? `http://127.0.0.1:8000/storage/avatars/${challenger.avatar}` : ''"
+          >
+            <v-icon v-if="!challenger?.avatar">mdi-account</v-icon>
+          </v-avatar>
+          <div class="participant-info">
+            <div class="participant-label">Challenger</div>
+            <div class="participant-name">{{ challenger?.name || 'Non défini' }}</div>
+            <div class="participant-email">{{ challenger?.email || 'Non défini' }}</div>
+          </div>
+        </div>
+        <div class="participant">
+          <v-avatar 
+            size="40" 
+            class="perfect-avatar"
+            :image="coach?.avatar ? `http://127.0.0.1:8000/storage/avatars/${coach.avatar}` : ''"
+          >
+            <v-icon v-if="!coach?.avatar">mdi-account-tie</v-icon>
+          </v-avatar>
+          <div class="participant-info">
+            <div class="participant-label">Coach</div>
+            <div class="participant-name">{{ coach?.name || 'Non défini' }}</div>
+            <div class="participant-email">{{ coach?.email || 'Non défini' }}</div>
+          </div>
+        </div>
+      </div>
 
-          <!-- Exercices de la séance -->
-          <v-card class="modern-card" v-if="trainings && trainings.length > 0">
-            <v-card-text class="pa-6">
-              <h3 class="section-title mb-4">
-                <v-icon color="primary" class="mr-2">mdi-dumbbell</v-icon>
-                Exercices de la séance ({{ trainings.length }})
-              </h3>
-              <div class="trainings-grid">
-                <div
-                  v-for="training in trainings"
-                  :key="training.id"
-                  class="training-card"
-                  @click="viewTraining(training.id)"
-                >
-                  <div class="training-thumbnail">
-                    <v-img
-                      v-if="training.image"
-                      :src="`http://127.0.0.1:8000/storage/trainings/${training.image}`"
-                      :alt="training.name"
-                      height="140"
-                      cover
-                      class="training-image"
-                    ></v-img>
-                    <div v-else class="training-placeholder">
-                      <v-icon size="48" color="primary">mdi-dumbbell</v-icon>
-                    </div>
-                    
-                    <div class="training-overlay">
-                      <v-icon size="32" color="white">mdi-play-circle</v-icon>
-                    </div>
+      <!-- Images Before/After -->
+      <div v-if="seance.img_debut || seance.img_fin" class="images-section">
+        <h3 class="section-title">Photos de la séance</h3>
+        <div class="images-grid">
+          <div class="image-item">
+            <div class="image-label">
+              <v-icon size="16" class="mr-1">mdi-camera-outline</v-icon>
+              Avant
+            </div>
+            <div v-if="seance.img_debut" class="image-container">
+              <v-img
+                :src="`http://127.0.0.1:8000/storage/seance/${challenger?.id}/${seance.img_debut}`"
+                :alt="'Image avant séance'"
+                class="seance-image"
+                cover
+              ></v-img>
+            </div>
+            <div v-else class="no-image">
+              <v-icon size="32" color="grey-lighten-2">mdi-camera-off</v-icon>
+              <p class="no-image-text">Aucune image</p>
+            </div>
+          </div>
+          <div class="image-item">
+            <div class="image-label">
+              <v-icon size="16" class="mr-1">mdi-camera-check</v-icon>
+              Après
+            </div>
+            <div v-if="seance.img_fin" class="image-container">
+              <v-img
+                :src="`http://127.0.0.1:8000/storage/seance/${challenger?.id}/${seance.img_fin}`"
+                :alt="'Image après séance'"
+                class="seance-image"
+                cover
+              ></v-img>
+            </div>
+            <div v-else class="no-image">
+              <v-icon size="32" color="grey-lighten-2">mdi-camera-off</v-icon>
+              <p class="no-image-text">Aucune image</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exercices -->
+      <div v-if="trainings && trainings.length > 0" class="exercises-section">
+        <h3 class="section-title">Exercices de la séance</h3>
+        <div class="exercises-table">
+          <div class="table-header">
+            <div class="col-exercise">Exercice</div>
+            <div class="col-series">Séries</div>
+            <div class="col-reps">Répétitions</div>
+            <div class="col-duration">Durée</div>
+            <div class="col-muscles">Muscles</div>
+          </div>
+          <div 
+            v-for="training in trainings" 
+            :key="training.id"
+            class="table-row"
+            @click="viewTraining(training.id)"
+            @mouseenter="playVideo(training.id)"
+            @mouseleave="pauseVideo(training.id)"
+          >
+            <div class="col-exercise">
+              <div class="exercise-info">
+                <div class="exercise-thumbnail">
+                  <!-- Image par défaut -->
+                  <v-img
+                    v-if="training.image"
+                    :src="`http://127.0.0.1:8000/storage/trainings/${training.image}`"
+                    :alt="training.name"
+                    height="60"
+                    width="80"
+                    cover
+                    class="training-image"
+                  ></v-img>
+                  <div v-else class="training-placeholder">
+                    <v-icon size="24" color="grey-lighten-1">mdi-dumbbell</v-icon>
                   </div>
                   
-                  <div class="training-info">
-                    <h4 class="training-name">{{ training.name }}</h4>
-                    <p class="training-description">
-                      {{ truncateText(training.description, 100) }}
-                    </p>
-                    
-                    <!-- Muscles -->
-                    <div v-if="training.categories && training.categories.length > 0" class="training-muscles">
-                      <v-chip
-                        v-for="category in training.categories.slice(0, 3)"
-                        :key="category.id"
-                        size="x-small"
-                        color="secondary"
-                        variant="elevated"
-                        class="mr-1 mb-1"
-                      >
-                        {{ category.name }}
-                      </v-chip>
-                      <span v-if="training.categories.length > 3" class="text-caption text-primary font-weight-bold">
-                        +{{ training.categories.length - 3 }}
-                      </span>
-                    </div>
+                  <!-- Vidéo qui apparaît au hover -->
+                  <video
+                    v-if="training.video"
+                    :id="`video-${training.id}`"
+                    :src="`http://127.0.0.1:8000/storage/training_videos/${training.video}`"
+                    class="training-video"
+                    muted
+                    loop
+                    preload="metadata"
+                  >
+                  </video>
+                  
+                  <!-- Play overlay pour les vidéos -->
+                  <div v-if="training.video" class="play-overlay">
+                    <v-icon size="16" color="white">mdi-play</v-icon>
                   </div>
+                </div>
+                <div class="exercise-details">
+                  <div class="exercise-name">{{ training.name }}</div>
+                  <div class="exercise-id">#{{ training.id }}</div>
                 </div>
               </div>
-            </v-card-text>
-          </v-card>
-        </div>
-
-        <!-- Colonne latérale -->
-        <div class="sidebar-column">
-          <!-- Statistiques -->
-          <v-card class="modern-card mb-4">
-            <v-card-text class="pa-6">
-              <h3 class="section-title mb-4">
-                <v-icon color="primary" class="mr-2">mdi-chart-line</v-icon>
-                Statistiques
-              </h3>
-              <div class="stats-grid">
-                <div class="stat-item">
-                  <div class="stat-icon">
-                    <v-icon size="24" color="primary">mdi-account-group</v-icon>
-                  </div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ seance.participants_count || 0 }}</div>
-                    <div class="stat-label">Participants</div>
-                  </div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-icon">
-                    <v-icon size="24" color="secondary">mdi-dumbbell</v-icon>
-                  </div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ trainings?.length || 0 }}</div>
-                    <div class="stat-label">Exercices</div>
-                  </div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-icon">
-                    <v-icon size="24" color="success">mdi-clock</v-icon>
-                  </div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ seance.duree || 0 }}</div>
-                    <div class="stat-label">Minutes</div>
-                  </div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-icon">
-                    <v-icon size="24" color="info">mdi-calendar-plus</v-icon>
-                  </div>
-                  <div class="stat-content">
-                    <div class="stat-value">{{ formatDate(seance.created_at, 'short') }}</div>
-                    <div class="stat-label">Créée le</div>
-                  </div>
-                </div>
-              </div>
-            </v-card-text>
-          </v-card>
-
-          <!-- Participant -->
-          <v-card class="modern-card mb-4" v-if="challenger">
-            <v-card-text class="pa-6">
-              <h3 class="section-title mb-4">
-                <v-icon color="primary" class="mr-2">mdi-account</v-icon>
-                Participant
-              </h3>
-              <div class="participant-info">
-                <v-avatar size="60" class="mr-3 elevation-4">
-                  <v-img 
-                    v-if="challenger.avatar" 
-                    :src="`http://localhost:8000/storage/avatars/${challenger.avatar}`"
-                  ></v-img>
-                  <v-icon v-else size="30" color="info">mdi-account</v-icon>
-                </v-avatar>
-                <div>
-                  <h4 class="participant-name">{{ challenger.name }}</h4>
-                  <p class="participant-email">{{ challenger.email }}</p>
-                  <v-chip color="info" size="small" variant="elevated" class="mt-2">
-                    <v-icon start size="14">mdi-account-check</v-icon>
-                    Challenger
-                  </v-chip>
-                </div>
-              </div>
-            </v-card-text>
-          </v-card>
-
-          <!-- Actions rapides -->
-          <v-card class="modern-card">
-            <v-card-text class="pa-6">
-              <h3 class="section-title mb-4">
-                <v-icon color="primary" class="mr-2">mdi-lightning-bolt</v-icon>
-                Actions rapides
-              </h3>
-              <div class="quick-actions">
-                <v-btn
-                  block
-                  variant="elevated"
+            </div>
+            <div class="col-series">
+              <span class="value">{{ training.pivot.series || '-' }}</span>
+            </div>
+            <div class="col-reps">
+              <span class="value">{{ training.pivot.repetitions || '-' }}</span>
+            </div>
+            <div class="col-duration">
+              <span class="value">{{ training.pivot.duree ? `${training.pivot.duree}s` : '-' }}</span>
+            </div>
+            <div class="col-muscles">
+              <div class="muscles-badges">
+                <v-chip
+                  v-for="category in training.categories?.slice(0, 2)"
+                  :key="category.id"
+                  size="x-small"
                   color="primary"
-                  size="large"
-                  class="mb-3"
-                  @click="editSeance"
-                  v-if="seance.validated === null"
+                  variant="flat"
+                  class="muscle-chip"
                 >
-                  <v-icon start>mdi-pencil</v-icon>
-                  Modifier l'assignation
-                </v-btn>
-                <v-btn
-                  block
-                  variant="elevated"
-                  color="error"
-                  size="large"
-                  @click="confirmDelete"
-                  v-if="seance.validated === null"
-                >
-                  <v-icon start>mdi-delete</v-icon>
-                  Supprimer la séance
-                </v-btn>
-                <v-alert 
-                  v-if="seance.validated !== null" 
-                  type="info" 
-                  variant="tonal"
-                  class="mt-3"
-                >
-                  <v-icon start>mdi-information</v-icon>
-                  <div v-if="seance.validated === false">
-                    <strong>Séance à corriger</strong><br>
-                    Le challenger a signalé une erreur. Cette séance est maintenant gérée entre le coach et le challenger.
-                  </div>
-                  <div v-else-if="seance.validated === true">
-                    <strong>Séance validée</strong><br>
-                    Cette séance a été validée par le challenger. Aucune modification n'est possible.
-                  </div>
-                </v-alert>
+                  {{ category.name }}
+                </v-chip>
+                <span v-if="training.categories?.length > 2" class="more-muscles">
+                  +{{ training.categories.length - 2 }}
+                </span>
               </div>
-            </v-card-text>
-          </v-card>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- Message si pas d'exercices -->
+      <div v-if="!trainings || trainings.length === 0" class="no-exercises">
+        <v-icon size="40" color="grey-lighten-1">mdi-dumbbell-off</v-icon>
+        <p class="no-exercises-text">Aucun exercice dans cette séance</p>
       </div>
     </div>
 
     <!-- État vide -->
     <div v-if="!seance && !seanceStore.loading" class="empty-state">
-      <v-icon size="120" color="grey-lighten-1">mdi-calendar-remove</v-icon>
+      <v-icon size="80" color="grey-lighten-1">mdi-calendar-remove</v-icon>
       <h3 class="empty-title">Séance introuvable</h3>
       <p class="empty-subtitle">Cette séance n'existe pas ou a été supprimée.</p>
-      <v-btn color="primary" size="large" @click="goBack" class="mt-6">
+      <v-btn color="primary" @click="goBack" class="mt-4">
         <v-icon start>mdi-arrow-left</v-icon>
         Retour à la liste
       </v-btn>
@@ -324,22 +256,21 @@
 
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="deleteDialog" max-width="400px">
-      <v-card class="modern-card">
-        <v-card-title class="text-h6 pa-6 bg-error text-white">
-          <v-icon class="mr-2" color="white">mdi-delete</v-icon>
+      <v-card>
+        <v-card-title class="text-h6 pa-4">
+          <v-icon class="mr-2" color="error">mdi-delete</v-icon>
           Confirmer la suppression
         </v-card-title>
-        <v-card-text class="pa-6">
-          <p class="text-h6 mb-4">Êtes-vous sûr de vouloir supprimer la séance <strong>{{ seance?.nom }}</strong> ?</p>
-          <v-alert type="warning" variant="elevated" class="mt-4">
-            <v-icon start>mdi-alert-triangle</v-icon>
+        <v-card-text class="pa-4">
+          <p>Êtes-vous sûr de vouloir supprimer la séance <strong>#{{ seance?.id }}</strong> ?</p>
+          <v-alert type="warning" variant="tonal" class="mt-3">
             Cette action est irréversible.
           </v-alert>
         </v-card-text>
-        <v-card-actions class="pa-6">
+        <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn variant="elevated" @click="deleteDialog = false" size="large">Annuler</v-btn>
-          <v-btn color="error" variant="elevated" @click="deleteSeance" size="large" class="ml-3">Supprimer</v-btn>
+          <v-btn variant="text" @click="deleteDialog = false">Annuler</v-btn>
+          <v-btn color="error" variant="flat" @click="deleteSeance">Supprimer</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -376,7 +307,7 @@ const breadcrumbItems = computed(() => [
     icon: 'mdi-calendar-clock'
   },
   {
-    title: seance.value?.nom || 'Détail',
+    title: seance.value ? `Séance #${seance.value.id}` : 'Détail',
     disabled: true,
     icon: 'mdi-eye'
   }
@@ -415,60 +346,60 @@ const deleteSeance = async () => {
   }
 }
 
-const formatDate = (dateString: string, format: string = 'full') => {
+const formatDate = (dateString: string) => {
   if (!dateString) return 'Non définie'
-  const date = new Date(dateString)
-  
-  if (format === 'short') {
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit'
-    })
-  }
-  
-  return date.toLocaleDateString('fr-FR', {
+  return new Date(dateString).toLocaleDateString('fr-FR', {
     year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    month: 'short',
+    day: 'numeric'
   })
 }
 
 const formatTime = (dateString: string) => {
   if (!dateString) return 'Non défini'
-  const date = new Date(dateString)
-  
-  return date.toLocaleTimeString('fr-FR', {
+  return new Date(dateString).toLocaleTimeString('fr-FR', {
     hour: '2-digit',
     minute: '2-digit'
   })
 }
 
 const formatValidatedStatus = (validated: boolean | null) => {
-  if (validated === true) return 'Validée'
-  if (validated === false) return 'À corriger'
-  if (validated === null) return 'Assignée'
+  if (validated == true) return 'Validée'
+  if (validated == false) return 'À corriger'
+  if (validated == null) return 'Assignée'
   return 'Non défini'
 }
 
 const getStatusColor = (validated: boolean | null) => {
-  if (validated === true) return 'success'
-  if (validated === false) return 'error'
-  if (validated === null) return 'info'
+  if (validated == true) return 'success'
+  if (validated == false) return 'error'
+  if (validated == null) return 'info'
   return 'grey'
 }
 
 const getStatusIcon = (validated: boolean | null) => {
-  if (validated === true) return 'mdi-check-circle'
-  if (validated === false) return 'mdi-alert-circle'
-  if (validated === null) return 'mdi-account-group'
+  if (validated == true) return 'mdi-check-circle'
+  if (validated == false) return 'mdi-alert-circle'
+  if (validated == null) return 'mdi-account-group'
   return 'mdi-help-circle'
 }
 
-const truncateText = (text: string, maxLength: number) => {
-  if (!text) return ''
-  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
+const playVideo = (trainingId: number) => {
+  const videoElement = document.querySelector(`#video-${trainingId}`) as HTMLVideoElement
+  if (videoElement) {
+    videoElement.currentTime = 0
+    videoElement.play().catch(error => {
+      console.log('Erreur lecture vidéo:', error)
+    })
+  }
+}
+
+const pauseVideo = (trainingId: number) => {
+  const videoElement = document.querySelector(`#video-${trainingId}`) as HTMLVideoElement
+  if (videoElement) {
+    videoElement.pause()
+    videoElement.currentTime = 0
+  }
 }
 
 // Lifecycle
@@ -478,13 +409,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.seance-show-container {
-  max-width: 1400px;
+.seance-show-youtube {
+  max-width: 1280px;
   padding: 16px;
 }
 
 /* Breadcrumbs */
-.breadcrumbs {
+.youtube-breadcrumbs {
   font-size: 0.875rem;
   color: #606060;
 }
@@ -507,178 +438,260 @@ onMounted(() => {
   color: #606060;
 }
 
-/* Header avec couverture */
-.seance-header {
-  position: relative;
-  margin-bottom: 32px;
+/* Layout simple - une seule colonne */
+.seance-content {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-.cover-section {
-  position: relative;
-  border-radius: 16px;
+/* Titre */
+.video-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0 0 8px 0;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+/* Métadonnées */
+.video-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
+}
+
+.meta-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-text {
+  font-size: 0.875rem;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.meta-divider {
+  color: rgb(var(--v-theme-on-surface-variant));
+  margin: 0 4px;
+}
+
+.meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  text-transform: none;
+  font-size: 0.875rem;
+}
+
+.status-chip {
+  font-size: 0.75rem;
+  height: 24px;
+}
+
+/* Participants */
+.participants-section {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgb(var(--v-theme-surface-variant));
+  border-radius: 8px;
+}
+
+.participant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.perfect-avatar {
+  border-radius: 50% !important;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  background: rgb(var(--v-theme-surface));
 }
 
-.cover-overlay {
+.participant-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.participant-label {
+  font-size: 0.75rem;
+  color: rgb(var(--v-theme-on-surface-variant));
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.participant-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.participant-email {
+  font-size: 0.75rem;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+/* Sections */
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+/* Images */
+.images-section {
+  margin-bottom: 24px;
+}
+
+.images-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.image-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.image-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface));
+  display: flex;
+  align-items: center;
+}
+
+.image-container {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.seance-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgb(var(--v-theme-surface-variant));
+  border-radius: 8px;
+  border: 2px dashed rgb(var(--v-theme-outline));
+}
+
+.no-image-text {
+  margin-top: 8px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 0.875rem;
+}
+
+/* Exercices */
+.exercises-section {
+  margin-bottom: 24px;
+}
+
+.exercises-table {
+  border: 1px solid rgb(var(--v-theme-outline-variant));
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 80px 100px 80px 1fr;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgb(var(--v-theme-surface-variant));
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 80px 100px 80px 1fr;
+  gap: 16px;
+  padding: 12px 16px;
+  border-top: 1px solid rgb(var(--v-theme-outline-variant));
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background: rgb(var(--v-theme-surface-variant));
+}
+
+.table-row:hover .training-image {
+  opacity: 0;
+}
+
+.table-row:hover .training-video {
+  opacity: 1;
+}
+
+.col-exercise,
+.col-series,
+.col-reps,
+.col-duration,
+.col-muscles {
+  display: flex;
+  align-items: center;
+}
+
+.exercise-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.exercise-thumbnail {
+  position: relative;
+  width: 80px;
+  height: 60px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+  flex-shrink: 0;
+}
+
+.training-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.training-video {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(45deg, rgba(0,0,0,0.7), rgba(0,0,0,0.3));
-  z-index: 1;
-}
-
-.cover-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  text-align: center;
-  color: white;
-}
-
-.seance-title-overlay {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: white;
-  margin: 16px 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-}
-
-.seance-meta-overlay {
-  display: flex;
-  gap: 32px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1.1rem;
-  color: white;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-}
-
-.status-chip {
-  font-size: 1.1rem !important;
-  height: 48px !important;
-  font-weight: 700;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  margin-bottom: 16px;
-}
-
-.floating-actions {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  z-index: 3;
-}
-
-.action-btn {
-  text-transform: none;
-  font-size: 1rem;
-  font-weight: 600;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-/* Layout principal */
-.main-layout {
-  display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 32px;
-  align-items: start;
-}
-
-.main-column {
-  min-width: 0;
-}
-
-.sidebar-column {
-  position: sticky;
-  top: 24px;
-  max-height: calc(100vh - 48px);
-  overflow-y: auto;
-}
-
-/* Cards modernes */
-.modern-card {
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgba(var(--v-theme-outline), 0.1);
-}
-
-.section-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: rgb(var(--v-theme-on-surface));
-  display: flex;
-  align-items: center;
-}
-
-.description-text {
-  font-size: 1.1rem;
-  line-height: 1.7;
-  color: rgb(var(--v-theme-on-surface));
-  margin: 0;
-}
-
-/* Coach info */
-.coach-info {
-  display: flex;
-  align-items: center;
-}
-
-.coach-name {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: rgb(var(--v-theme-on-surface));
-  margin: 0 0 8px 0;
-}
-
-.coach-email {
-  font-size: 1rem;
-  color: rgb(var(--v-theme-on-surface-variant));
-  margin: 0 0 8px 0;
-}
-
-/* Exercices grid */
-.trainings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-}
-
-.training-card {
-  border: 1px solid rgba(var(--v-theme-outline), 0.2);
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: rgb(var(--v-theme-surface-variant));
-}
-
-.training-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.training-thumbnail {
-  position: relative;
-  height: 140px;
-}
-
-.training-image {
-  transition: transform 0.3s ease;
-}
-
-.training-card:hover .training-image {
-  transform: scale(1.05);
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .training-placeholder {
@@ -687,188 +700,126 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgb(var(--v-theme-surface));
-}
-
-.training-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 50%;
-  width: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.training-card:hover .training-overlay {
-  opacity: 1;
-}
-
-.training-info {
-  padding: 16px;
-}
-
-.training-name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: rgb(var(--v-theme-on-surface));
-  margin: 0 0 8px 0;
-  line-height: 1.4;
-}
-
-.training-description {
-  font-size: 0.95rem;
-  color: rgb(var(--v-theme-on-surface-variant));
-  line-height: 1.5;
-  margin: 0 0 12px 0;
-}
-
-.training-muscles {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Statistiques */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  padding: 20px;
   background: rgb(var(--v-theme-surface-variant));
-  border-radius: 12px;
-  gap: 16px;
 }
 
-.stat-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: rgb(var(--v-theme-surface));
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.play-overlay {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.8);
+  padding: 2px 4px;
+  border-radius: 2px;
 }
 
-.stat-content {
+.exercise-details {
   flex: 1;
+  min-width: 0;
 }
 
-.stat-value {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: rgb(var(--v-theme-on-surface));
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: rgb(var(--v-theme-on-surface-variant));
+.exercise-name {
+  font-size: 0.875rem;
   font-weight: 500;
+  color: rgb(var(--v-theme-on-surface));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Participant */
-.participant-info {
+.exercise-id {
+  font-size: 0.75rem;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.muscles-badges {
   display: flex;
   align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
-.participant-name {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: rgb(var(--v-theme-on-surface));
-  margin: 0 0 8px 0;
+.muscle-chip {
+  font-size: 0.625rem;
+  height: 20px;
 }
 
-.participant-email {
-  font-size: 1rem;
+.more-muscles {
+  font-size: 0.75rem;
   color: rgb(var(--v-theme-on-surface-variant));
-  margin: 0 0 8px 0;
 }
 
-/* Actions rapides */
-.quick-actions {
-  display: flex;
-  flex-direction: column;
+/* No exercises */
+.no-exercises {
+  text-align: center;
+  padding: 40px 16px;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.no-exercises-text {
+  margin-top: 8px;
+  font-size: 0.875rem;
 }
 
 /* Empty state */
 .empty-state {
   text-align: center;
-  padding: 100px 24px;
+  padding: 80px 24px;
 }
 
 .empty-title {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: rgb(var(--v-theme-on-surface));
-  margin: 24px 0 12px 0;
+  margin: 16px 0 8px 0;
 }
 
 .empty-subtitle {
-  font-size: 1.1rem;
+  font-size: 0.875rem;
   color: rgb(var(--v-theme-on-surface-variant));
   margin: 0;
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-  .main-layout {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  
-  .sidebar-column {
-    position: static;
-    max-height: none;
-  }
-}
-
 @media (max-width: 768px) {
-  .seance-show-container {
-    padding: 12px;
+  .seance-show-youtube {
+    padding: 8px;
   }
   
-  .seance-title-overlay {
-    font-size: 2rem;
+  .video-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
   
-  .seance-meta-overlay {
+  .meta-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .participants-section {
     flex-direction: column;
     gap: 16px;
   }
   
-  .floating-actions {
-    position: static;
-    margin-top: 16px;
-    text-align: center;
-  }
-  
-  .action-btn {
-    display: block;
-    width: 100%;
-    margin: 8px 0;
-  }
-  
-  .trainings-grid {
+  .images-grid {
     grid-template-columns: 1fr;
   }
   
-  .stats-grid {
+  .table-header,
+  .table-row {
     grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .exercise-thumbnail {
+    width: 60px;
+    height: 45px;
   }
 }
 </style>
