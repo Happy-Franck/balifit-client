@@ -124,19 +124,6 @@
                     Supprimer
                   </v-btn>
                 </template>
-                
-                <!-- Bouton retour (sauf si c'est mon profil) -->
-                <v-btn 
-                  v-if="!isMyProfile"
-                  color="info" 
-                  variant="outlined"
-                  size="large"
-                  class="no-radius-btn"
-                  @click="goBack"
-                >
-                  <v-icon class="mr-2">mdi-arrow-left</v-icon>
-                  Retour
-                </v-btn>
               </div>
             </div>
 
@@ -243,33 +230,89 @@
                           <div class="stat-value">{{ user.seances_as_challenger_count || 0 }}</div>
                           <div class="stat-label">Séance{{ (user.seances_as_challenger_count || 0) > 1 ? 's' : '' }} réalisée{{ (user.seances_as_challenger_count || 0) > 1 ? 's' : '' }}</div>
                         </div>
-
-                        <!-- Stats générales -->
-                        <div class="stat-item">
-                          <div class="stat-value">{{ formatDate(user?.last_login_at) || 'Jamais' }}</div>
-                          <div class="stat-label">Dernière connexion</div>
-                        </div>
                       </div>
                     </v-card-text>
                   </v-card>
 
-                  <!-- Permissions (si applicable) -->
-                  <v-card v-if="user?.permissions && user.permissions.length > 0" class="custom-card">
+                </v-col>
+              </v-row>
+
+              <!-- Section Historique des séances -->
+              <v-row v-if="seances && seances.length > 0" class="mt-4">
+                <v-col cols="12">
+                  <v-card class="custom-card">
                     <v-card-title class="custom-card-title">
-                      <v-icon class="mr-2">mdi-key</v-icon>
-                      Permissions spéciales
+                      <v-icon class="mr-2">mdi-dumbbell</v-icon>
+                      Historique des séances
                     </v-card-title>
                     <v-card-text>
-                      <v-chip 
-                        v-for="permission in user.permissions" 
-                        :key="permission.id"
-                        class="mr-2 mb-1 no-radius-chip"
-                        color="info"
-                        variant="outlined"
-                        size="small"
-                      >
-                        {{ permission.name }}
-                      </v-chip>
+                      <div class="seances-list">
+                        <div 
+                          v-for="seance in seances" 
+                          :key="seance.id"
+                          class="seance-item"
+                        >
+                          <!-- Ligne principale avec toutes les infos -->
+                          <div class="seance-main-info">
+                            <div class="seance-date">
+                              <v-icon size="16" class="mr-1">mdi-calendar</v-icon>
+                              {{ formatDate(seance.date_seance) }}
+                            </div>
+                            <div class="seance-exercises">
+                              <v-icon size="16" class="mr-1">mdi-dumbbell</v-icon>
+                              {{ seance.nombre_exercices }} exercice{{ seance.nombre_exercices > 1 ? 's' : '' }}
+                            </div>
+                            <div class="seance-muscles">
+                              <v-icon size="16" class="mr-1">mdi-arm-flex</v-icon>
+                              <span v-if="seance.muscles_travailles.length > 0">
+                                {{ seance.muscles_travailles.join(', ') }}
+                              </span>
+                              <span v-else class="text-medium-emphasis">Aucun muscle</span>
+                            </div>
+                            <v-chip 
+                              :color="getStateColor(seance.state)"
+                              variant="elevated"
+                              size="small"
+                              class="seance-state-chip"
+                            >
+                              {{ formatState(seance.state) }}
+                            </v-chip>
+                          </div>
+
+                          <!-- Ligne secondaire avec coach/challenger -->
+                          <div v-if="(seance.type === 'challenger' && seance.coach && seance.coach.id) || (seance.type === 'coach' && seance.challenger && seance.challenger.id)" class="seance-partner">
+                            <!-- Si c'est un challenger, afficher le coach -->
+                            <div v-if="seance.type === 'challenger' && seance.coach && seance.coach.id" class="partner-display">
+                              <v-icon size="16" class="mr-1">mdi-account-tie</v-icon>
+                              <span class="partner-role">Coach :</span>
+                              <v-avatar size="20" class="mx-2">
+                                <v-img 
+                                  v-if="seance.coach.avatar" 
+                                  :src="`http://localhost:8000/storage/avatars/${seance.coach.avatar}`"
+                                  cover
+                                ></v-img>
+                                <v-icon v-else size="10">mdi-account</v-icon>
+                              </v-avatar>
+                              <span class="partner-name">{{ seance.coach.name }}</span>
+                            </div>
+
+                            <!-- Si c'est un coach, afficher le challenger -->
+                            <div v-if="seance.type === 'coach' && seance.challenger && seance.challenger.id" class="partner-display">
+                              <v-icon size="16" class="mr-1">mdi-account</v-icon>
+                              <span class="partner-role">Challenger :</span>
+                              <v-avatar size="20" class="mx-2">
+                                <v-img 
+                                  v-if="seance.challenger.avatar" 
+                                  :src="`http://localhost:8000/storage/avatars/${seance.challenger.avatar}`"
+                                  cover
+                                ></v-img>
+                                <v-icon v-else size="10">mdi-account</v-icon>
+                              </v-avatar>
+                              <span class="partner-name">{{ seance.challenger.name }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -347,12 +390,13 @@ export default defineComponent({
   setup() {
     const route = useRoute()
     const router = useRouter()
-    const userStore = useUserStore()
+      const userStore = useUserStore()
     const authStore = useAuthStore()
 
     // Reactive data
     const user = ref(null)
     const weightHistory = ref([])
+    const seances = ref([])
     const showAvatarModal = ref(false)
     const deleteDialog = ref(false)
     const loading = ref(true)
@@ -424,6 +468,7 @@ export default defineComponent({
           if (response.ok) {
             const data = await response.json()
             user.value = data.user
+            seances.value = data.seances || []
           } else {
             throw new Error('Utilisateur non trouvé')
           }
@@ -450,6 +495,7 @@ export default defineComponent({
     const goBack = () => {
       router.go(-1)
     }
+    
 
     const goToEdit = () => {
       // Déterminer la route d'édition selon le rôle
@@ -560,6 +606,20 @@ export default defineComponent({
       }
     }
 
+    const getStateColor = (state) => {
+      if (state == true) return 'success'
+      if (state == false) return 'error'
+      if (state == null) return 'info'
+      return 'grey'
+    }
+
+    const formatState = (state) => {
+      if (state == true) return 'Validée'
+      if (state == false) return 'À corriger'
+      if (state == null) return 'Assignée'
+      return 'Non défini'
+    }
+
     // Lifecycle
     onMounted(() => {
       loadUser()
@@ -577,6 +637,7 @@ export default defineComponent({
       showAvatarModal, 
       deleteDialog, 
       loading,
+      seances,
       goBack, 
       goToEdit,
       editUser, 
@@ -588,9 +649,11 @@ export default defineComponent({
       formatObjectif, 
       calculateIMC, 
       confirmDelete, 
-      deleteUser 
+      deleteUser,
+      getStateColor,
+      formatState
     }
-  }
+    }
 })
 </script>
 
@@ -621,9 +684,9 @@ export default defineComponent({
 .cover-section {
   position: relative;
   height: 300px;
-  margin-bottom: 32px;
+  margin-bottom: 100px; /* Increased margin to accommodate floating avatar */
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to visible */
 }
 
 .cover-image {
@@ -633,6 +696,8 @@ export default defineComponent({
   width: 100%;
   height: 100%;
   z-index: 1;
+  border-radius: 12px;
+  overflow: hidden; /* Moved overflow hidden here */
 }
 
 .cover-overlay {
@@ -647,18 +712,19 @@ export default defineComponent({
 
 .avatar-container {
   position: absolute;
-  bottom: -25%;
+  bottom: -75px; /* Adjusted to properly float outside */
   left: 50%;
   transform: translateX(-50%);
-  z-index: 3;
+  z-index: 10; /* Increased z-index */
 }
 
 .avatar-floating {
   border-radius: 50%;
+  cursor: pointer;
 }
 
 .profile-content {
-  padding-top: 125px;
+  padding-top: 40px; /* Reduced since we increased margin-bottom of cover-section */
 }
 
 .profile-header {
@@ -681,7 +747,7 @@ export default defineComponent({
 }
 
 .custom-card {
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -800,6 +866,97 @@ export default defineComponent({
   
   .info-value {
     text-align: left;
+  }
+}
+
+/* Styles pour les séances */
+.seances-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.seance-item {
+  border: 1px solid rgb(var(--v-theme-outline-variant));
+  border-radius: 0;
+  padding: 16px;
+  background: rgb(var(--v-theme-surface-bright));
+}
+
+.seance-main-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.seance-date {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface));
+  min-width: 120px;
+}
+
+.seance-exercises {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  color: rgb(var(--v-theme-primary));
+  font-size: 0.875rem;
+  min-width: 100px;
+}
+
+.seance-muscles {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 0.875rem;
+  flex: 1;
+  min-width: 150px;
+}
+
+.seance-state-chip {
+  margin-left: 8px;
+}
+
+.seance-partner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.partner-display {
+  display: flex;
+  align-items: center;
+}
+
+.partner-role {
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 0.875rem;
+}
+
+.partner-name {
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+@media (max-width: 768px) {
+  .seance-main-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .seance-partner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 }
 </style>
