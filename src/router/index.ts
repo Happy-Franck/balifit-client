@@ -123,7 +123,8 @@ const routes = [
       {
         path: 'user',
         name: 'adminUser',
-        component: UserAdmin
+        component: UserAdmin,
+        meta: { keepAlive: true }
       },
       {
         path: 'user/:id',
@@ -279,7 +280,7 @@ const routes = [
         component: EditProfile
       },
     ]
-  },
+  }
 ]
 
 const router = createRouter({
