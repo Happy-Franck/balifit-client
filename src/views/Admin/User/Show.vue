@@ -99,31 +99,6 @@
                   <v-icon class="mr-2">mdi-account-edit</v-icon>
                   Éditer mon profil
                 </v-btn>
-                
-                <!-- Si je suis admin et ce n'est pas mon profil -->
-                <template v-if="!isMyProfile && isCurrentUserAdmin">
-                  <v-btn 
-                    color="primary" 
-                    variant="elevated"
-                    size="large"
-                    class="mr-3 no-radius-btn"
-                    @click="editUser"
-                  >
-                    <v-icon class="mr-2">mdi-account-edit</v-icon>
-                    Éditer l'utilisateur
-                  </v-btn>
-                  <v-btn 
-                    v-if="canDeleteUser"
-                    color="error" 
-                    variant="outlined"
-                    size="large"
-                    class="mr-3 no-radius-btn"
-                    @click="confirmDelete"
-                  >
-                    <v-icon class="mr-2">mdi-delete</v-icon>
-                    Supprimer
-                  </v-btn>
-                </template>
               </div>
             </div>
 
