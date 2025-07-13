@@ -136,7 +136,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, defineOptions } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../../../store/AdminStore/UserStore'
 import { useRolePermissionStore } from '../../../store/AdminStore/RolePermissionStore'
 
@@ -146,6 +146,7 @@ defineOptions({
 })
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const rolePermissionStore = useRolePermissionStore()
 
@@ -154,10 +155,20 @@ const activeTab = ref<string>('')
 // Méthodes
 const setActiveTab = (roleName: string) => {
   activeTab.value = roleName
+  // Mettre à jour l'URL avec le tab actif
+  router.replace({
+    path: route.path,
+    query: { ...route.query, tab: roleName }
+  })
 }
 
 const viewUser = (user: any) => {
-  router.push(`/admin/user/${user.id}`)
+  // Conserver le tab actif dans l'URL lors de la navigation vers Show
+  const currentTab = activeTab.value
+  router.push({
+    path: `/admin/user/${user.id}`,
+    query: { from_tab: currentTab }
+  })
 }
 
 const getRoleIcon = (roleName: string) => {
@@ -216,15 +227,39 @@ watch(
   () => rolePermissionStore.roles,
   (newRoles) => {
     if (newRoles.length > 0 && !activeTab.value) {
-      activeTab.value = newRoles[0].name
+      // Vérifier s'il y a un tab dans l'URL
+      const tabFromUrl = route.query.tab as string
+      if (tabFromUrl && newRoles.some(role => role.name === tabFromUrl)) {
+        activeTab.value = tabFromUrl
+      } else {
+        // Sinon, utiliser le premier tab disponible
+        activeTab.value = newRoles[0].name
+      }
     }
   }
+)
+
+// Watcher pour restaurer le tab à partir de l'URL
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && typeof newTab === 'string' && rolePermissionStore.roles.some(role => role.name === newTab)) {
+      activeTab.value = newTab
+    }
+  },
+  { immediate: true }
 )
 
 // Lifecycle
 onMounted(() => {
   rolePermissionStore.getRoles()
   userStore.getUsers()
+  
+  // Restaurer le tab actif à partir de l'URL au montage
+  const tabFromUrl = route.query.tab as string
+  if (tabFromUrl && rolePermissionStore.roles.some(role => role.name === tabFromUrl)) {
+    activeTab.value = tabFromUrl
+  }
 })
 </script>
 

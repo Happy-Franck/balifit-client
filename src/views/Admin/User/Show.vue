@@ -365,7 +365,7 @@ export default defineComponent({
   setup() {
     const route = useRoute()
     const router = useRouter()
-      const userStore = useUserStore()
+    const userStore = useUserStore()
     const authStore = useAuthStore()
 
     // Reactive data
@@ -432,21 +432,10 @@ export default defineComponent({
           user.value = await authStore.getProfile()
           await loadWeightHistory()
         } else {
-          // Charger le profil d'un autre utilisateur
-          const response = await fetch(`http://localhost:8000/api/user/${id}`, {
-            headers: {
-              'Authorization': `Bearer ${authStore.token}`,
-              'Content-Type': 'application/json'
-            }
-          })
-          
-          if (response.ok) {
-            const data = await response.json()
-            user.value = data.user
-            seances.value = data.seances || []
-          } else {
-            throw new Error('Utilisateur non trouvé')
-          }
+          // Charger le profil d'un autre utilisateur via le store
+          const data = await userStore.showUser(Number(id))
+          user.value = data.user
+          seances.value = data.seances || []
         }
       } catch (error) {
         console.error('Erreur lors du chargement de l\'utilisateur:', error)
@@ -468,7 +457,19 @@ export default defineComponent({
     }
 
     const goBack = () => {
-      router.go(-1)
+      // Récupérer le tab d'origine depuis les query parameters
+      const fromTab = route.query.from_tab as string
+      
+      if (fromTab) {
+        // Rediriger vers la liste avec le bon tab actif
+        router.push({
+          path: '/admin/user',
+          query: { tab: fromTab }
+        })
+      } else {
+        // Redirection simple si pas de tab spécifié
+        router.push('/admin/user')
+      }
     }
     
 
@@ -562,20 +563,9 @@ export default defineComponent({
 
     const deleteUser = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/admin/user/${user.value.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json'
-          }
-        })
-        
-        if (response.ok) {
-          deleteDialog.value = false
-          router.push('/admin/user')
-        } else {
-          throw new Error('Erreur lors de la suppression')
-        }
+        await userStore.deleteUser(user.value.id)
+        deleteDialog.value = false
+        router.push('/admin/user')
       } catch (error) {
         console.error('Erreur lors de la suppression de l\'utilisateur:', error)
       }

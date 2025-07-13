@@ -128,9 +128,7 @@
     <v-main class="bg-surface">
       <v-container>
         <router-view v-slot="{ Component, route }">
-          <keep-alive :include="keepAliveComponents">
-            <component :is="Component" :key="route.meta.keepAlive ? undefined : route.fullPath" />
-          </keep-alive>
+          <component :is="Component" :key="route.fullPath" />
         </router-view>
       </v-container>
     </v-main>

@@ -27,24 +27,37 @@ export const useUserStore = defineStore('userAdmin', {
   },
   actions: {
     async getUsers() {
-      const response = await http.get('/admin/user');
-      this.users = response.data.users;
-      this.loading = false
+      try {
+        this.loading = true;
+        const response = await http.get('/admin/user');
+        this.users = response.data.users;
+        this.loading = false;
+      } catch (error) {
+        console.error('Erreur lors du chargement des utilisateurs:', error);
+        this.users = [];
+        this.loading = false;
+      }
     },
     async showUser(id: number) {
-      const seanceStore = useSeanceStore()
-      const response = await http.get('/admin/user/'+id);
-      this.currentUser = response.data.user
-      if(response.data.user.seances){
-        seanceStore.userSeances = response.data.user.seances
+      try {
+        this.loading = true;
+        const seanceStore = useSeanceStore();
+        const response = await http.get('/admin/user/'+id);
+        this.currentUser = response.data.user;
+        
+        // Gestion des séances selon la structure de la réponse
+        if(response.data.seances){
+          seanceStore.userSeances = response.data.seances;
+        }
+        
+        this.loading = false;
+        return response.data;
+      } catch (error) {
+        console.error('Erreur lors du chargement de l\'utilisateur:', error);
+        this.currentUser = null;
+        this.loading = false;
+        throw error;
       }
-      if(response.data.user.challenger_seances){
-        seanceStore.userSeances = response.data.user.challenger_seances
-      }
-      if(response.data.user.coach_seances){
-        seanceStore.userSeances = response.data.user.coach_seances
-      }
-      this.loading = false
     },
     async assignRole(userId : number , role : Object) {
       const response = await http.post('admin/user/'+userId+'/assign-role', role)

@@ -88,7 +88,7 @@
             <div class="participant-email">{{ challenger?.email || 'Non défini' }}</div>
           </div>
         </div>
-        <div class="participant">
+        <div v-if="coach" class="participant">
           <v-avatar 
             size="40" 
             class="perfect-avatar"
@@ -97,10 +97,34 @@
             <v-icon v-if="!coach?.avatar">mdi-account-tie</v-icon>
           </v-avatar>
           <div class="participant-info">
-            <div class="participant-label">Coach</div>
+            <div class="participant-label">Coaché par</div>
             <div class="participant-name">{{ coach?.name || 'Non défini' }}</div>
             <div class="participant-email">{{ coach?.email || 'Non défini' }}</div>
           </div>
+        </div>
+        <div v-else class="participant">
+          <v-chip color="primary" variant="flat" size="small" class="solo-badge">
+            <v-icon start size="16">mdi-account-solo</v-icon>
+            Solo
+          </v-chip>
+        </div>
+      </div>
+
+      <!-- Muscles entraînés -->
+      <div v-if="uniqueMuscles.length > 0" class="muscles-section">
+        <h3 class="section-title">Muscles entraînés</h3>
+        <div class="muscles-list">
+          <v-chip
+            v-for="muscle in uniqueMuscles"
+            :key="muscle"
+            color="primary"
+            variant="outlined"
+            size="small"
+            class="muscle-badge"
+          >
+            <v-icon start size="16">mdi-arm-flex</v-icon>
+            {{ muscle }}
+          </v-chip>
         </div>
       </div>
 
@@ -154,8 +178,7 @@
           <div class="table-header">
             <div class="col-exercise">Exercice</div>
             <div class="col-series">Séries</div>
-            <div class="col-reps">Répétitions</div>
-            <div class="col-duration">Durée</div>
+            <div class="col-reps-duration">Rép./Durée</div>
             <div class="col-muscles">Muscles</div>
           </div>
           <div 
@@ -209,11 +232,14 @@
             <div class="col-series">
               <span class="value">{{ training.pivot.series || '-' }}</span>
             </div>
-            <div class="col-reps">
-              <span class="value">{{ training.pivot.repetitions || '-' }}</span>
-            </div>
-            <div class="col-duration">
-              <span class="value">{{ training.pivot.duree ? `${training.pivot.duree}s` : '-' }}</span>
+            <div class="col-reps-duration">
+              <span v-if="training.pivot.repetitions && training.pivot.repetitions > 0" class="value">
+                {{ training.pivot.repetitions }} rép.
+              </span>
+              <span v-else-if="training.pivot.duree && training.pivot.duree > 0" class="value">
+                {{ training.pivot.duree }}s
+              </span>
+              <span v-else class="value">-</span>
             </div>
             <div class="col-muscles">
               <div class="muscles-badges">
@@ -278,7 +304,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSeanceStore } from '../../../store/AdminStore/SeanceStore'
 
@@ -294,6 +320,22 @@ const seance = computed(() => seanceStore.currentSeance)
 const coach = computed(() => seanceStore.currentSeanceCoach)
 const challenger = computed(() => seanceStore.currentSeanceChallenger)
 const trainings = computed(() => seanceStore.currentSeanceTrainings)
+
+// Calcul des muscles uniques entraînés dans la séance
+const uniqueMuscles = computed(() => {
+  if (!trainings.value || trainings.value.length === 0) return []
+  
+  const muscles = new Set<string>()
+  trainings.value.forEach(training => {
+    if (training.categories && training.categories.length > 0) {
+      training.categories.forEach(category => {
+        muscles.add(category.name)
+      })
+    }
+  })
+  
+  return Array.from(muscles).sort()
+})
 
 const breadcrumbItems = computed(() => [
   {
@@ -317,10 +359,27 @@ const breadcrumbItems = computed(() => [
 const loadSeance = async () => {
   const id = Number(route.params.id)
   if (id) {
+    // Nettoyer d'abord les données précédentes
+    seanceStore.currentSeance = null
+    seanceStore.currentSeanceTrainings = []
+    seanceStore.currentSeanceCoach = null
+    seanceStore.currentSeanceChallenger = null
+    seanceStore.currentSeanceAdmin = null
+    
     await seanceStore.showSeance(id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
+
+// Watcher sur les paramètres de route pour recharger automatiquement
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    if (newId !== oldId && newId) {
+      loadSeance()
+    }
+  }
+)
 
 const goBack = () => {
   router.push('/admin/seance')
@@ -503,12 +562,17 @@ onMounted(() => {
   padding: 16px;
   background: rgb(var(--v-theme-surface-variant));
   border-radius: 8px;
+  align-items: center;
 }
 
 .participant {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.solo-badge {
+  font-weight: 500;
 }
 
 .perfect-avatar {
@@ -619,7 +683,7 @@ onMounted(() => {
 
 .table-header {
   display: grid;
-  grid-template-columns: 2fr 80px 100px 80px 1fr;
+  grid-template-columns: 2fr 80px 120px 1fr;
   gap: 16px;
   padding: 12px 16px;
   background: rgb(var(--v-theme-surface-variant));
@@ -630,7 +694,7 @@ onMounted(() => {
 
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 80px 100px 80px 1fr;
+  grid-template-columns: 2fr 80px 120px 1fr;
   gap: 16px;
   padding: 12px 16px;
   border-top: 1px solid rgb(var(--v-theme-outline-variant));
@@ -652,8 +716,7 @@ onMounted(() => {
 
 .col-exercise,
 .col-series,
-.col-reps,
-.col-duration,
+.col-reps-duration,
 .col-muscles {
   display: flex;
   align-items: center;
@@ -821,5 +884,24 @@ onMounted(() => {
     width: 60px;
     height: 45px;
   }
+}
+
+/* Muscles entraînés */
+.muscles-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgb(var(--v-theme-surface-variant));
+  border-radius: 8px;
+}
+
+.muscles-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.muscle-badge {
+  font-weight: 500;
 }
 </style>

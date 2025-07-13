@@ -59,255 +59,211 @@
     ></v-alert>
 
     <!-- Data table -->
-    <v-card elevation="3">
-      <v-card-title class="text-h6 pa-4 bg-primary text-white">
-        <v-icon start>mdi-calendar-clock</v-icon>
-        Liste des Séances
-      </v-card-title>
+    <div class="seances-table-container">
+      
 
-      <v-table>
-        <thead>
-          <tr>
-            <th class="text-left">
-              <v-btn 
-                variant="text" 
-                size="small" 
-                @click="setSortBy('id')"
-                class="pa-0"
-              >
-                ID
-                <v-icon v-if="sortBy === 'id'" size="small" class="ml-1">
-                  {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
-                </v-icon>
-              </v-btn>
-            </th>
-            <th class="text-left">
-              <v-btn 
-                variant="text" 
-                size="small" 
-                @click="setSortBy('challenger_id')"
-                class="pa-0"
-              >
-                Challenger
-                <v-icon v-if="sortBy === 'challenger_id'" size="small" class="ml-1">
-                  {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
-                </v-icon>
-              </v-btn>
-            </th>
-            <th class="text-left">
-              <v-btn 
-                variant="text" 
-                size="small" 
-                @click="setSortBy('coach_id')"
-                class="pa-0"
-              >
-                Coach
-                <v-icon v-if="sortBy === 'coach_id'" size="small" class="ml-1">
-                  {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
-                </v-icon>
-              </v-btn>
-            </th>
-            <th class="text-left">
-              <v-btn 
-                variant="text" 
-                size="small" 
-                @click="setSortBy('admin_id')"
-                class="pa-0"
-              >
-                Admin
-                <v-icon v-if="sortBy === 'admin_id'" size="small" class="ml-1">
-                  {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
-                </v-icon>
-              </v-btn>
-            </th>
-            <th class="text-left">
-              <v-btn 
-                variant="text" 
-                size="small" 
-                @click="setSortBy('created_at')"
-                class="pa-0"
-              >
-                Date
-                <v-icon v-if="sortBy === 'created_at'" size="small" class="ml-1">
-                  {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
-                </v-icon>
-              </v-btn>
-            </th>
-            <th class="text-left">
-              <v-btn 
-                variant="text" 
-                size="small" 
-                @click="setSortBy('trainings_count')"
-                class="pa-0"
-              >
-                Exercices
-                <v-icon v-if="sortBy === 'trainings_count'" size="small" class="ml-1">
-                  {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
-                </v-icon>
-              </v-btn>
-            </th>
-            <th class="text-left">
-              <v-btn 
-                variant="text" 
-                size="small" 
-                @click="setSortBy('validated')"
-                class="pa-0"
-              >
-                Statut
-                <v-icon v-if="sortBy === 'validated'" size="small" class="ml-1">
-                  {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
-                </v-icon>
-              </v-btn>
-            </th>
-            <th class="text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr 
-            v-for="item in seanceStore.seances" 
-            :key="item.id"
-            :class="{ 'row-locked': item.validated !== null }"
-          >
-            <td>
-              <div class="d-flex align-center">
-                <span class="font-weight-medium">{{ item.id }}</span>
-                <!-- <v-chip
-                  v-if="item.validated === null"
-                  color="success"
-                  size="x-small"
-                  variant="flat"
-                  class="ml-2"
-                >
-                  <v-icon start size="10">mdi-pencil</v-icon>
-                  Modifiable
-                </v-chip> -->
+      <div class="seances-table">
+        <div class="table-header">
+          <div class="col-id">
+            <v-btn 
+              variant="text" 
+              size="small" 
+              @click="setSortBy('id')"
+              class="sort-btn"
+            >
+              ID
+              <v-icon v-if="sortBy === 'id'" size="small" class="ml-1">
+                {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </v-btn>
+          </div>
+          <div class="col-challenger">
+            <v-btn 
+              variant="text" 
+              size="small" 
+              @click="setSortBy('challenger_id')"
+              class="sort-btn"
+            >
+              Challenger
+              <v-icon v-if="sortBy === 'challenger_id'" size="small" class="ml-1">
+                {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </v-btn>
+          </div>
+          <div class="col-coach">
+            <v-btn 
+              variant="text" 
+              size="small" 
+              @click="setSortBy('coach_id')"
+              class="sort-btn"
+            >
+              Coach
+              <v-icon v-if="sortBy === 'coach_id'" size="small" class="ml-1">
+                {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </v-btn>
+          </div>
+          <div class="col-date">
+            <v-btn 
+              variant="text" 
+              size="small" 
+              @click="setSortBy('created_at')"
+              class="sort-btn"
+            >
+              Date
+              <v-icon v-if="sortBy === 'created_at'" size="small" class="ml-1">
+                {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </v-btn>
+          </div>
+          <div class="col-exercises">
+            <v-btn 
+              variant="text" 
+              size="small" 
+              @click="setSortBy('trainings_count')"
+              class="sort-btn"
+            >
+              Exercices
+              <v-icon v-if="sortBy === 'trainings_count'" size="small" class="ml-1">
+                {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </v-btn>
+          </div>
+          <div class="col-status">
+            <v-btn 
+              variant="text" 
+              size="small" 
+              @click="setSortBy('validated')"
+              class="sort-btn"
+            >
+              Statut
+              <v-icon v-if="sortBy === 'validated'" size="small" class="ml-1">
+                {{ sortOrder === 'asc' ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
+              </v-icon>
+            </v-btn>
+          </div>
+          <div class="col-actions">Actions</div>
+        </div>
+
+        <div 
+          v-for="item in seanceStore.seances" 
+          :key="item.id"
+          class="table-row"
+          :class="{ 'row-locked': item.validated !== null }"
+          @click="viewSeance(item.id)"
+        >
+          <div class="col-id">
+            <span class="seance-id">#{{ item.id }}</span>
+          </div>
+          
+          <div class="col-challenger">
+            <div v-if="item.challenger" class="user-info">
+              <v-avatar size="32" class="user-avatar">
+                <v-img 
+                  v-if="item.challenger.avatar" 
+                  :src="`http://localhost:8000/storage/avatars/${item.challenger.avatar}`"
+                ></v-img>
+                <v-icon v-else size="18" color="info">mdi-account</v-icon>
+              </v-avatar>
+              <div class="user-details">
+                <div class="user-name">{{ item.challenger.name }}</div>
               </div>
-            </td>
-            
-            <!-- Challenger -->
-            <td>
-              <div v-if="item.challenger" class="d-flex align-center">
-                <v-avatar size="32" class="mr-3">
-                  <v-img 
-                    v-if="item.challenger.avatar" 
-                    :src="`http://localhost:8000/storage/avatars/${item.challenger.avatar}`"
-                  ></v-img>
-                  <v-icon v-else size="18" color="info">mdi-account</v-icon>
-                </v-avatar>
-                <div>
-                  <div class="font-weight-medium">{{ item.challenger.name }}</div>
-                </div>
+            </div>
+            <span v-else class="no-data">Non assigné</span>
+          </div>
+          
+          <div class="col-coach">
+            <div v-if="item.coach" class="user-info">
+              <v-avatar size="32" class="user-avatar">
+                <v-img 
+                  v-if="item.coach.avatar" 
+                  :src="`http://localhost:8000/storage/avatars/${item.coach.avatar}`"
+                ></v-img>
+                <v-icon v-else size="18" color="success">mdi-account-tie</v-icon>
+              </v-avatar>
+              <div class="user-details">
+                <div class="user-name">{{ item.coach.name }}</div>
               </div>
-              <span v-else class="text-grey">Non assigné</span>
-            </td>
-            
-            <!-- Coach -->
-            <td>
-              <div v-if="item.coach" class="d-flex align-center">
-                <v-avatar size="32" class="mr-3">
-                  <v-img 
-                    v-if="item.coach.avatar" 
-                    :src="`http://localhost:8000/storage/avatars/${item.coach.avatar}`"
-                  ></v-img>
-                  <v-icon v-else size="18" color="success">mdi-account-tie</v-icon>
-                </v-avatar>
-                <div>
-                  <div class="font-weight-medium">{{ item.coach.name }}</div>
-                </div>
-              </div>
-              <span v-else class="text-grey">Non assigné</span>
-            </td>
-            
-            <!-- Admin -->
-            <td>
-              <div v-if="item.admin" class="d-flex align-center">
-                <v-avatar size="32" class="mr-3">
-                  <v-img 
-                    v-if="item.admin.avatar" 
-                    :src="`http://localhost:8000/storage/avatars/${item.admin.avatar}`"
-                  ></v-img>
-                  <v-icon v-else size="18" color="primary">mdi-shield-account</v-icon>
-                </v-avatar>
-                <div>
-                  <div class="font-weight-medium">{{ item.admin.name }}</div>
-                </div>
-              </div>
-              <span v-else class="text-grey">-</span>
-            </td>
-            
-            <!-- Date -->
-            <td>
-              <div class="font-weight-medium">{{ formatDate(item.created_at) }} {{ formatTime(item.created_at) }}</div>
-            </td>
-            
-            <!-- Nombre d'exercices -->
-            <td>
-              <v-chip
-                color="secondary"
-                size="small"
-                variant="tonal"
-              >
-                <v-icon start size="14">mdi-dumbbell</v-icon>
-                {{ item.trainings_count || 0 }} exercice{{ (item.trainings_count || 0) > 1 ? 's' : '' }}
-              </v-chip>
-            </td>
-            
-            <!-- Statut -->
-            <td>
-              <v-chip 
-                :color="getStatusColor(item.validated)" 
-                size="small" 
-                variant="flat"
-              >
-                <v-icon start size="14">{{ getStatusIcon(item.validated) }}</v-icon>
-                {{ formatValidatedStatus(item.validated) }}
-              </v-chip>
-            </td>
-            
-            <!-- Actions -->
-            <td>
-              <v-btn
-                icon="mdi-eye"
-                size="small"
-                color="info"
-                variant="text"
-                @click="viewSeance(item.id)"
-              ></v-btn>
-              <v-btn
-                v-if="item.validated === null"
-                icon="mdi-pencil"
-                size="small"
-                color="warning"
-                variant="text"
-                @click="editSeance(item)"
-              ></v-btn>
-              <v-btn
-                v-if="item.validated === null"
-                icon="mdi-delete"
-                size="small"
-                color="error"
-                variant="text"
-                @click="confirmDelete(item)"
-              ></v-btn>
-              <v-tooltip
-                v-if="item.validated !== null"
-                text="Séance en cours de traitement - Modification impossible"
-              >
-                <template v-slot:activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon="mdi-lock"
-                    size="small"
-                    color="grey"
-                    variant="text"
-                    disabled
-                  ></v-btn>
-                </template>
-              </v-tooltip>
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
+            </div>
+            <v-chip v-else color="primary" variant="flat" size="small" class="solo-chip">
+              <v-icon start size="14">mdi-account-solo</v-icon>
+              Solo
+            </v-chip>
+          </div>
+          
+          <div class="col-date">
+            <div class="date-info">
+              <div class="date-main">{{ formatDate(item.created_at) }}</div>
+              <div class="date-time">{{ formatTime(item.created_at) }}</div>
+            </div>
+          </div>
+          
+          <div class="col-exercises">
+            <v-chip
+              color="secondary"
+              size="small"
+              variant="tonal"
+              class="exercise-chip"
+            >
+              <v-icon start size="14">mdi-dumbbell</v-icon>
+              {{ item.trainings_count || 0 }}
+            </v-chip>
+          </div>
+          
+          <div class="col-status">
+            <v-chip 
+              :color="getStatusColor(item.validated)" 
+              size="small" 
+              variant="flat"
+              class="status-chip"
+            >
+              <v-icon start size="14">{{ getStatusIcon(item.validated) }}</v-icon>
+              {{ formatValidatedStatus(item.validated) }}
+            </v-chip>
+          </div>
+          
+          <div class="col-actions" @click.stop>
+            <v-btn
+              icon="mdi-eye"
+              size="small"
+              color="info"
+              variant="text"
+              @click="viewSeance(item.id)"
+            ></v-btn>
+            <v-btn
+              v-if="item.validated === null"
+              icon="mdi-pencil"
+              size="small"
+              color="warning"
+              variant="text"
+              @click="editSeance(item)"
+            ></v-btn>
+            <v-btn
+              v-if="item.validated === null"
+              icon="mdi-delete"
+              size="small"
+              color="error"
+              variant="text"
+              @click="confirmDelete(item)"
+            ></v-btn>
+            <v-tooltip
+              v-if="item.validated !== null"
+              text="Séance en cours de traitement - Modification impossible"
+            >
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  icon="mdi-lock"
+                  size="small"
+                  color="grey"
+                  variant="text"
+                  disabled
+                ></v-btn>
+              </template>
+            </v-tooltip>
+          </div>
+        </div>
+      </div>
 
       <!-- Loading overlay -->
       <v-overlay v-if="seanceStore.loading" contained class="d-flex align-center justify-center">
@@ -315,15 +271,15 @@
       </v-overlay>
 
       <!-- Pagination -->
-      <v-card-actions class="justify-center">
+      <div class="table-pagination">
         <v-pagination
           v-model="currentPage"
           :length="seanceStore.pagination.last_page"
           :total-visible="7"
           @update:modelValue="loadSeances"
         ></v-pagination>
-      </v-card-actions>
-    </v-card>
+      </div>
+    </div>
 
     <!-- Create/Edit Dialog -->
     <v-dialog v-model="dialog" max-width="600px" persistent>
@@ -605,18 +561,201 @@ onMounted(() => {
   padding: 20px;
 }
 
-.text-truncate {
+/* Table Container */
+.seances-table-container {
+  border: 1px solid rgb(var(--v-theme-outline-variant));
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgb(var(--v-theme-surface));
+}
+
+.table-header-section {
+  padding: 16px;
+  background: rgb(var(--v-theme-primary));
+  color: rgb(var(--v-theme-on-primary));
+}
+
+.table-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Table Styles */
+.seances-table {
+  position: relative;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 140px 100px 120px 120px;
+  gap: 16px;
+  padding: 12px 16px;
+  background: rgb(var(--v-theme-surface-variant));
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+  border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr 140px 100px 120px 120px;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background: rgb(var(--v-theme-surface-variant));
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+/* Column Styles */
+.col-id,
+.col-challenger,
+.col-coach,
+.col-date,
+.col-exercises,
+.col-status,
+.col-actions {
+  display: flex;
+  align-items: center;
+}
+
+.col-actions {
+  gap: 4px;
+}
+
+/* Sort Buttons */
+.sort-btn {
+  padding: 0 !important;
+  min-width: auto !important;
+  text-transform: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface)) !important;
+}
+
+/* Data Styles */
+.seance-id {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-primary));
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-avatar {
+  flex-shrink: 0;
+}
+
+.user-details {
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.row-locked {
-  background-color: rgba(0, 0, 0, 0.03);
-  opacity: 0.8;
+.no-data {
+  font-size: 0.875rem;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-style: italic;
 }
 
-.row-locked td {
-  color: rgba(0, 0, 0, 0.6) !important;
+.solo-chip {
+  font-size: 0.75rem;
+  height: 24px;
+  font-weight: 500;
+}
+
+.date-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.date-main {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.date-time {
+  font-size: 0.75rem;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.exercise-chip {
+  font-size: 0.75rem;
+  height: 24px;
+}
+
+.status-chip {
+  font-size: 0.75rem;
+  height: 24px;
+}
+
+/* Row States */
+.row-locked {
+  opacity: 0.7;
+  background: rgba(var(--v-theme-surface-variant), 0.3);
+}
+
+.row-locked:hover {
+  background: rgba(var(--v-theme-surface-variant), 0.5);
+}
+
+/* Pagination */
+.table-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(var(--v-theme-surface));
+  border-top: 1px solid rgb(var(--v-theme-outline-variant));
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .seance-admin {
+    padding: 8px;
+  }
+  
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .col-id,
+  .col-challenger,
+  .col-coach,
+  .col-date,
+  .col-exercises,
+  .col-status,
+  .col-actions {
+    justify-content: flex-start;
+  }
+  
+  .user-info {
+    gap: 12px;
+  }
 }
 </style>

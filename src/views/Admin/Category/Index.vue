@@ -57,7 +57,7 @@
 
     <v-row>
       <!-- Liste des catégories -->
-      <v-col cols="12" md="8">
+      <v-col cols="12" md="7">
         <v-card elevation="3">
           <v-card-title class="text-h6 pa-4 bg-primary text-white">
             <v-icon start>mdi-muscle</v-icon>
@@ -111,12 +111,11 @@
                     v-if="item.image"
                     :src="`http://127.0.0.1:8000/storage/categories/${item.image}`"
                     :alt="item.name"
-                    width="40"
-                    height="40"
+                    width="50"
+                    height="50"
                     cover
                     class="table-muscle-image"
                   ></v-img>
-                  <v-icon v-else size="40" color="grey">mdi-muscle</v-icon>
                 </td>
                 <td>{{ item.name }}</td>
                 <td>
@@ -149,26 +148,25 @@
       </v-col>
 
       <!-- Colonne trainings inspirée de Equipment/Show.vue -->
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="5">
         <div v-if="selectedCategory" class="suggestions-column">
           <!-- Image et nom du muscle -->
           <div class="muscle-header">
+            <div class="muscle-info">
+              <h1 class="title">Muscle sélectionné</h1>
+              <h2 class="muscle-name">{{ selectedCategory.name }}</h2>
+            </div>
             <v-img
               v-if="selectedCategory.image"
               :src="`http://127.0.0.1:8000/storage/categories/${selectedCategory.image}`"
               :alt="selectedCategory.name"
               width="100%"
-              height="200"
+              height="350px"
               cover
               class="muscle-image"
             ></v-img>
             <div v-else class="muscle-placeholder">
-              <v-icon size="80" color="grey">mdi-muscle</v-icon>
-            </div>
-            
-            <div class="muscle-info">
-              <h2 class="muscle-name">{{ selectedCategory.name }}</h2>
-              <p class="muscle-subtitle">Muscle sélectionné</p>
+              <v-icon size="" color="grey">mdi-muscle</v-icon>
             </div>
           </div>
           
@@ -635,7 +633,7 @@ export default defineComponent({
 
 .muscle-placeholder {
   width: 100%;
-  height: 200px;
+  height: 350px;
   display: flex;
   align-items: center;
   justify-content: center;
