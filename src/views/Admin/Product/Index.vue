@@ -343,7 +343,7 @@ const viewProduct = (id: number) => {
 }
 
 const editProduct = (id: number) => {
-  router.push(`/admin/product/${id}`)
+  router.push(`/admin/product/${id}/edit`)
 }
 
 const confirmDelete = (product: any) => {

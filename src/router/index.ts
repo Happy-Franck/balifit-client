@@ -23,6 +23,7 @@ import UserSeanceAdmin from '../views/Admin/Seance/Show.vue'
 import ProductAdmin from '../views/Admin/Product/Index.vue'
 import ProductItemAdmin from '../views/Admin/Product/Show.vue'
 import ProductCreateAdmin from '../views/Admin/Product/Create.vue'
+import ProductEditAdmin from '../views/Admin/Product/Edit.vue'
 //coach
 import Coach from '../layouts/Coach.vue'
 import DashboardCoach from '../views/Coach/DashboardCoach.vue'
@@ -164,6 +165,12 @@ const routes = [
         path: 'product/create',
         name: 'adminProductCreate',
         component: ProductCreateAdmin
+      },
+      {
+        path: 'product/:id/edit',
+        name: 'adminProductEdit',
+        component: ProductEditAdmin,
+        props: true
       },
       {
         path: 'profile',
