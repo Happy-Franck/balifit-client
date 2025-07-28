@@ -1,6 +1,47 @@
 <template>
   <v-container>
     <h1>Liste des trainings</h1>
+    
+    <!-- Barre de recherche et filtres -->
+    <v-text-field
+      v-model="searchQuery"
+      label="Rechercher un training..."
+      prepend-inner-icon="mdi-magnify"
+      variant="outlined"
+      density="compact"
+      clearable
+      @input="filterTrainings"
+    ></v-text-field>
+
+    <!-- Tabs des catégories -->
+    <v-card class="mt-4 mb-6" elevation="1">
+      <v-card-text>
+        <div class="d-flex flex-wrap gap-2">
+          <v-btn
+            :variant="selectedCategoryTab === 'all' ? 'elevated' : 'outlined'"
+            :color="selectedCategoryTab === 'all' ? 'primary' : 'primary'"
+            size="small"
+            @click="selectedCategoryTab = 'all'; filterTrainings()"
+            class="mb-2"
+          >
+            <v-icon start size="small">mdi-dumbbell</v-icon>
+            Tous
+          </v-btn>
+          <v-btn
+            v-for="category in categoryStore.categories"
+            :key="category.id"
+            :variant="selectedCategoryTab === category.id ? 'elevated' : 'outlined'"
+            :color="selectedCategoryTab === category.id ? 'primary' : 'primary'"
+            size="small"
+            @click="selectedCategoryTab = category.id; filterTrainings()"
+            class="mb-2"
+          >
+            {{ category.name }}
+          </v-btn>
+        </div>
+      </v-card-text>
+    </v-card>
+
     <v-card
       class="mx-auto mt-6"
       width="344"
@@ -62,6 +103,8 @@
                     :items="categoryStore.categories"
                     item-title="name"
                     item-value="id"
+                    :loading="categoryStore.loading"
+                    :disabled="categoryStore.loading"
                   >
                   <template v-slot:selection="{ item, index }">
                     <v-chip v-if="index < 4">
@@ -74,7 +117,13 @@
                       (+{{ categories.length - 4 }} autres)
                     </span>
                   </template>
+                  <template v-slot:prepend-inner>
+                    <v-icon v-if="categoryStore.loading" class="mr-2">mdi-loading mdi-spin</v-icon>
+                  </template>
                   </v-select>
+                  <div v-if="!categoryStore.loading && categoryStore.categories.length === 0" class="text-caption text-grey-darken-1 mt-1">
+                    Aucune catégorie disponible. Contactez l'administrateur pour ajouter des catégories.
+                  </div>
                 </v-col>
                 <v-col cols="12">
                   <v-select
@@ -86,6 +135,8 @@
                     item-value="id"
                     hint="Sélectionnez les équipements nécessaires pour cet exercice"
                     persistent-hint
+                    :loading="equipmentStore.loading"
+                    :disabled="equipmentStore.loading"
                   >
                   <template v-slot:selection="{ item, index }">
                     <v-chip v-if="index < 3">
@@ -98,7 +149,13 @@
                       (+{{ equipments.length - 3 }} autres)
                     </span>
                   </template>
+                  <template v-slot:prepend-inner>
+                    <v-icon v-if="equipmentStore.loading" class="mr-2">mdi-loading mdi-spin</v-icon>
+                  </template>
                   </v-select>
+                  <div v-if="!equipmentStore.loading && equipmentStore.equipments.length === 0" class="text-caption text-grey-darken-1 mt-1">
+                    Aucun équipement disponible. Contactez l'administrateur pour ajouter des équipements.
+                  </div>
                 </v-col>
               </v-row>
             </v-container>
@@ -126,37 +183,115 @@
 
     </v-dialog>
 
-    <div class="category-list">
-      <span v-for="(item , index) in categoryStore.categories" :key="index">
-        {{item.name}} ----
-      </span>
-    </div>
-    <div class="training-list">
-      <li v-for="(training , index) in trainingStore.trainings" :key="index">
-        {{training.name}}
-        <span v-if="AuthStore.userAuth?.id == training.user_id">**</span>
-        <div>
-          <span v-for="(elem , index) in training.categories" :key="index">
-            {{elem.name}} -
-          </span>
-        </div>
-        <div v-if="training.equipments && training.equipments.length > 0">
-          <strong>Équipements:</strong>
-          <span v-for="(equipment, index) in training.equipments" :key="index">
-            {{equipment.name}}<span v-if="index < training.equipments.length - 1">, </span>
-          </span>
-        </div>
-
-        <router-link :to="{name: 'coachTrainingItem', params: {id: training.id}}">
-          Voir
-        </router-link>
-      </li>
-    </div>
+    <!-- Grille des trainings -->
+    <v-row class="mt-6">
+      <v-col 
+        v-for="training in displayedTrainings" 
+        :key="training.id"
+        cols="12"
+        sm="6"
+        md="4"
+        lg="3"
+      >
+        <v-card class="training-card" elevation="2" hover>
+          <v-img
+            v-if="training.image"
+            :src="`/storage/trainings/${training.image}`"
+            height="200"
+            cover
+            class="bg-grey-lighten-2"
+          >
+            <template v-slot:placeholder>
+              <div class="d-flex align-center justify-center fill-height">
+                <v-icon size="64" color="grey-lighten-1">mdi-dumbbell</v-icon>
+              </div>
+            </template>
+          </v-img>
+          
+          <v-card-title class="text-truncate">
+            {{ training.name }}
+            <v-chip
+              v-if="AuthStore.userAuth?.id == training.user_id"
+              size="small"
+              color="primary"
+              class="ml-2"
+            >
+              Moi
+            </v-chip>
+          </v-card-title>
+          
+          <v-card-text>
+            <p class="text-body-2 text-grey-darken-1 mb-3">
+              {{ training.description }}
+            </p>
+            
+            <!-- Catégories -->
+            <div v-if="training.categories && training.categories.length > 0" class="mb-3">
+              <div class="text-caption text-grey-darken-1 mb-1">Catégories :</div>
+              <div class="d-flex flex-wrap gap-1">
+                <v-chip
+                  v-for="category in training.categories"
+                  :key="category.id"
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                >
+                  {{ category.name }}
+                </v-chip>
+              </div>
+            </div>
+            
+            <!-- Équipements -->
+            <div v-if="training.equipments && training.equipments.length > 0">
+              <div class="text-caption text-grey-darken-1 mb-1">Équipements :</div>
+              <div class="d-flex flex-wrap gap-1">
+                <v-chip
+                  v-for="equipment in training.equipments"
+                  :key="equipment.id"
+                  size="small"
+                  variant="outlined"
+                  color="success"
+                >
+                  {{ equipment.name }}
+                </v-chip>
+              </div>
+            </div>
+          </v-card-text>
+          
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              :to="{name: 'coachTrainingItem', params: {id: training.id}}"
+              color="primary"
+              variant="outlined"
+              size="small"
+            >
+              Voir détails
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+    
+    <!-- Message si aucun training -->
+    <v-row v-if="!trainingStore.loading && displayedTrainings.length === 0">
+      <v-col cols="12">
+        <v-card class="text-center pa-6">
+          <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-dumbbell</v-icon>
+          <div class="text-h6 text-grey-darken-1">
+            {{ trainingStore.trainings.length === 0 ? 'Aucun training disponible' : 'Aucun training ne correspond à vos critères' }}
+          </div>
+          <div class="text-body-2 text-grey-darken-1 mt-2">
+            {{ trainingStore.trainings.length === 0 ? 'Commencez par créer votre premier training !' : 'Essayez de modifier vos filtres de recherche.' }}
+          </div>
+        </v-card>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
 <script lang="ts">
-import { defineComponent , ref , reactive , toRefs , watch } from 'vue'
+import { defineComponent , ref , reactive , toRefs , watch, computed } from 'vue'
 import { useCategoryStore } from '../../../store/CoachStore/CategoryStore'
 import { useTrainingStore } from '../../../store/CoachStore/TrainingStore'
 import { useEquipmentStore } from '../../../store/CoachStore/EquipmentStore'
@@ -165,6 +300,9 @@ import { useAuthStore } from '../../../store/AuthStore'
 export default defineComponent({
   setup() {
     const dialog = ref(false)
+    const searchQuery = ref('')
+    const selectedCategoryTab = ref('all')
+    
     const state = reactive({
       name: '',
       description: '',
@@ -185,6 +323,36 @@ export default defineComponent({
     
     const AuthStore = useAuthStore()
     AuthStore.getUserAuth()
+    
+    // Computed property pour les trainings filtrés
+    const displayedTrainings = computed(() => {
+      let trainings = trainingStore.trainings;
+      
+      // Filtrage par recherche
+      if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        trainings = trainings.filter(training => 
+          training.name.toLowerCase().includes(query) ||
+          training.description.toLowerCase().includes(query) ||
+          training.categories?.some(cat => cat.name.toLowerCase().includes(query)) ||
+          training.equipments?.some(eq => eq.name.toLowerCase().includes(query))
+        );
+      }
+      
+      // Filtrage par catégorie (tab sélectionné)
+      if (selectedCategoryTab.value !== 'all') {
+        trainings = trainings.filter(training =>
+          training.categories?.some(cat => cat.id === selectedCategoryTab.value)
+        );
+      }
+      
+      return trainings;
+    });
+    
+    const filterTrainings = () => {
+      // Cette méthode est appelée par les événements de filtrage
+      // La computed property se met à jour automatiquement
+    };
     
     watch(
       [() => trainingStore.message, () => trainingStore.alert],
@@ -233,7 +401,52 @@ export default defineComponent({
       state.video = null
       state.vidaka = null
     }
-    return {categoryStore , equipmentStore , createTraining , trainingStore , AuthStore , dialog , ...toRefs(state) , uploadImage , uploadVideo }
+    return {
+      categoryStore, 
+      equipmentStore, 
+      createTraining, 
+      trainingStore, 
+      AuthStore, 
+      dialog, 
+      searchQuery,
+      selectedCategoryTab,
+      displayedTrainings,
+      filterTrainings,
+      ...toRefs(state), 
+      uploadImage, 
+      uploadVideo 
+    }
   }
 })
 </script>
+
+<style scoped>
+.training-card {
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.training-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.training-card .v-card-text {
+  flex-grow: 1;
+}
+
+.category-list {
+  margin: 20px 0;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .training-card {
+    margin-bottom: 16px;
+  }
+}
+</style>

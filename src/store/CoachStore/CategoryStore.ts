@@ -14,13 +14,30 @@ export const useCategoryStore = defineStore('categoryCoach', {
   },
   actions: {
     async getCategories() {
-      const response = await http.get('/coach/category');
-      this.categories = response.data.categories;
-      this.loading = false
+      try {
+        this.loading = true;
+        const response = await http.get('/coach/category');
+        this.categories = response.data.categories;
+      } catch (error) {
+        console.error('Erreur lors de la récupération des catégories:', error);
+        this.message = 'Erreur lors de la récupération des catégories';
+        this.alert = true;
+      } finally {
+        this.loading = false;
+      }
     },
     async showCategory(id: number) {
-      const response = await http.get('/coach/category/'+id);
-      this.currentCategory = response.data.category
+      try {
+        this.loading = true;
+        const response = await http.get('/coach/category/'+id);
+        this.currentCategory = response.data.category;
+      } catch (error) {
+        console.error('Erreur lors de la récupération de la catégorie:', error);
+        this.message = 'Erreur lors de la récupération de la catégorie';
+        this.alert = true;
+      } finally {
+        this.loading = false;
+      }
     },
   }
 });

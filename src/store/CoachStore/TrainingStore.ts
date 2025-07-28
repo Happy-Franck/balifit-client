@@ -14,9 +14,17 @@ export const useTrainingStore = defineStore('trainingCoach', {
   },
   actions: {
     async getTrainings() {
-      const response = await http.get('/coach/training');
-      this.trainings = response.data.trainings;
-      this.loading = false
+      try {
+        this.loading = true;
+        const response = await http.get('/coach/training');
+        this.trainings = response.data.trainings;
+      } catch (error) {
+        console.error('Erreur lors de la récupération des trainings:', error);
+        this.message = 'Erreur lors de la récupération des trainings';
+        this.alert = true;
+      } finally {
+        this.loading = false;
+      }
     },
     async storeTraining(data: any, formData: FormData) {
       console.log(data)
@@ -30,9 +38,17 @@ export const useTrainingStore = defineStore('trainingCoach', {
       this.alert = true;
     },
     async showTraining(id: number) {
-      const response = await http.get('/coach/training/'+id);
-      this.currentTraining = response.data.training
-      this.loading = false
+      try {
+        this.loading = true;
+        const response = await http.get('/coach/training/'+id);
+        this.currentTraining = response.data.training;
+      } catch (error) {
+        console.error('Erreur lors de la récupération du training:', error);
+        this.message = 'Erreur lors de la récupération du training';
+        this.alert = true;
+      } finally {
+        this.loading = false;
+      }
     },
     async updateTraining(id: number, data: any, formData: FormData) {
       const response = await http.post('/coach/training/'+id, formData, {

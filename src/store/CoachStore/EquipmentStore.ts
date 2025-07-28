@@ -16,20 +16,44 @@ export const useEquipmentStore = defineStore('equipmentCoach', {
   },
   actions: {
     async getEquipments() {
-      const response = await http.get('/coach/equipment');
-      this.equipments = response.data.equipments;
-      this.loading = false;
+      try {
+        this.loading = true;
+        const response = await http.get('/coach/equipment');
+        this.equipments = response.data.equipments;
+      } catch (error) {
+        console.error('Erreur lors de la récupération des équipements:', error);
+        this.message = 'Erreur lors de la récupération des équipements';
+        this.alert = true;
+      } finally {
+        this.loading = false;
+      }
     },
     async showEquipment(id: number) {
-      const response = await http.get('/coach/equipment/' + id);
-      this.currentEquipment = response.data.equipment;
-      this.loading = false;
+      try {
+        this.loading = true;
+        const response = await http.get('/coach/equipment/' + id);
+        this.currentEquipment = response.data.equipment;
+      } catch (error) {
+        console.error('Erreur lors de la récupération de l\'équipement:', error);
+        this.message = 'Erreur lors de la récupération de l\'équipement';
+        this.alert = true;
+      } finally {
+        this.loading = false;
+      }
     },
     async getTrainingsByEquipment(id: number) {
-      const response = await http.get('/coach/equipment/' + id + '/trainings');
-      this.currentEquipment = response.data.equipment;
-      this.equipmentTrainings = response.data.trainings;
-      this.loading = false;
+      try {
+        this.loading = true;
+        const response = await http.get('/coach/equipment/' + id + '/trainings');
+        this.currentEquipment = response.data.equipment;
+        this.equipmentTrainings = response.data.trainings;
+      } catch (error) {
+        console.error('Erreur lors de la récupération des trainings par équipement:', error);
+        this.message = 'Erreur lors de la récupération des trainings par équipement';
+        this.alert = true;
+      } finally {
+        this.loading = false;
+      }
     }
   }
 }); 

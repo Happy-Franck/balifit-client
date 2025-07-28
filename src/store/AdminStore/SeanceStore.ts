@@ -22,6 +22,9 @@ export const useSeanceStore = defineStore('seanceAdmin', {
     currentSeanceAdmin: null as User | null,
     currentSeanceCoach: null as User | null,
     currentSeanceChallenger: null as User | null,
+    // Nouvelles propriétés pour les statistiques
+    seancesStats: [] as any[],
+    statsLoading: false,
   }),
   getters: {
   },
@@ -50,6 +53,91 @@ export const useSeanceStore = defineStore('seanceAdmin', {
         this.loading = false
       }
     },
+    async getSeancesStats(month?: string, year?: string) {
+      try {
+        this.statsLoading = true
+        
+        // Récupérer toutes les séances pour le mois spécifié
+        const params: any = {
+          page: 1,
+          per_page: 1000, // Récupérer beaucoup de séances pour avoir toutes les données
+          sort_by: 'created_at',
+          sort_order: 'asc'
+        }
+        
+        const response = await http.get('/admin/seance', { params });
+        const allSeances = response.data.seances || []
+        
+        // Filtrer les séances pour le mois spécifié
+        const targetMonth = month ? parseInt(month) : new Date().getMonth() + 1
+        const targetYear = year ? parseInt(year) : new Date().getFullYear()
+        
+        const filteredSeances = allSeances.filter((seance: any) => {
+          const seanceDate = new Date(seance.created_at)
+          return seanceDate.getMonth() + 1 === targetMonth && 
+                 seanceDate.getFullYear() === targetYear
+        })
+        
+        // Grouper les séances par jour
+        const statsByDay = new Map()
+        
+        // Initialiser tous les jours du mois avec 0
+        const daysInMonth = new Date(targetYear, targetMonth, 0).getDate()
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateKey = `${day.toString().padStart(2, '0')}/${targetMonth.toString().padStart(2, '0')}`
+          statsByDay.set(dateKey, {
+            count: 0,
+            validated: 0,    // validated = 1 (terminées)
+            pending: 0,      // validated = 0 (en attente)
+            inProgress: 0    // validated = null (en cours)
+          })
+        }
+        
+        // Compter les séances par jour et par statut
+        filteredSeances.forEach((seance: any) => {
+          const seanceDate = new Date(seance.created_at)
+          const day = seanceDate.getDate()
+          const dateKey = `${day.toString().padStart(2, '0')}/${targetMonth.toString().padStart(2, '0')}`
+          
+          const currentStats = statsByDay.get(dateKey) || {
+            count: 0,
+            validated: 0,
+            pending: 0,
+            inProgress: 0
+          }
+          
+          // Incrémenter le total
+          currentStats.count++
+          
+          // Classifier selon le statut validated
+          if (seance.validated === 1) {
+            currentStats.validated++
+          } else if (seance.validated === 0) {
+            currentStats.pending++
+          } else if (seance.validated === null) {
+            currentStats.inProgress++
+          }
+          
+          statsByDay.set(dateKey, currentStats)
+        })
+        
+        // Convertir en format attendu par le graphique
+        this.seancesStats = Array.from(statsByDay.entries()).map(([date, stats]) => ({
+          date,
+          count: stats.count,
+          validated: stats.validated,
+          pending: stats.pending,
+          inProgress: stats.inProgress
+        }))
+        
+        this.statsLoading = false
+      } catch (error) {
+        console.error('Erreur lors du chargement des statistiques:', error)
+        this.seancesStats = []
+        this.statsLoading = false
+      }
+    },
+    
     async storeSeance(data: any) {
       try {
         const response = await http.post('/admin/seance', data);
