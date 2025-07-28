@@ -6,7 +6,7 @@
           class="me-10 ms-4"
           color="grey-darken-1"
           size="32"
-          :image="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''"
+          :image="AuthStore.userAuth?.avatar ? `${APP_CONFIG.STORAGE_BASE_URL}/avatars/${AuthStore.userAuth.avatar}` : ''"
         ></v-avatar>
 
         <v-btn
@@ -44,7 +44,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { APP_CONFIG } from '@/config/constants'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/store/AuthStore'
 import { useRouter, useRoute } from 'vue-router'
 import ThemeToggle from '@/components/ThemeToggle.vue'
@@ -59,7 +60,14 @@ const drawer = ref(true)
 const router = useRouter()
 const route = useRoute()
 
-AuthStore.getUserAuth()
+// Charger les données utilisateur au montage du composant
+onMounted(async () => {
+  try {
+    await AuthStore.getUserAuth()
+  } catch (error) {
+    console.error('Erreur lors du chargement des données utilisateur:', error)
+  }
+})
 
 const links = [
   {icon:'mdi-folder',text:'Dashboard', path:'/coach/dashboard'},

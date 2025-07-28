@@ -66,7 +66,7 @@
                   Image actuelle
                 </v-card-subtitle>
                 <v-img
-                  :src="`http://127.0.0.1:8000/storage/equipments/${equipment.image}`"
+                  :src="`${APP_CONFIG.STORAGE_BASE_URL}/equipments/${equipment.image}`"
                   :alt="equipment.name"
                   max-height="200"
                   class="rounded"
@@ -153,6 +153,7 @@
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useEquipmentStore } from '../../../store/AdminStore/EquipmentStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 const route = useRoute()
 const router = useRouter()

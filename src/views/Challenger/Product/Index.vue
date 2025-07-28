@@ -31,7 +31,7 @@
                   indeterminate
                 ></v-progress-linear>
               </template>
-              <v-img cover height="375" :src="`http://localhost:8000/storage/produits/${product.image}`"></v-img>
+              <v-img cover height="375" :src="`${APP_CONFIG.STORAGE_BASE_URL}/produits/${product.image}`"></v-img>
               <v-card-item>
                 <v-card-title>{{product.name}}</v-card-title>
                 <v-card-subtitle>
@@ -56,7 +56,7 @@
                     <v-card-title class="text-h5">{{ product.name }}</v-card-title>
                     <v-row>
                       <v-col cols="12" sm="6">
-                        <v-img :src="`http://localhost:8000/storage/produits/${product.image}`"></v-img>
+                        <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/produits/${product.image}`"></v-img>
                       </v-col>
                       <v-col cols="12" sm="6">
                         <p>{{ product.description }}</p>
@@ -121,6 +121,7 @@
 import { defineComponent, ref, watch } from 'vue';
 import { useProductStore } from '../../../store/ChallengerStore/ProductStore';
 import { useAuthStore } from '../../../store/AuthStore';
+import { APP_CONFIG } from '../../../config/constants'
 
 export default defineComponent({
   setup() {

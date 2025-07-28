@@ -264,7 +264,7 @@
                       </v-card-title>
                       <v-card-text class="text-center">
                         <v-img
-                          :src="imagePreview || `http://localhost:8000/storage/produits/${productStore.currentProduct.image}`"
+                          :src="imagePreview || `${APP_CONFIG.STORAGE_BASE_URL}/produits/${productStore.currentProduct.image}`"
                           max-height="300"
                           max-width="300"
                           class="mx-auto rounded-lg"
@@ -576,24 +576,40 @@
                           <h6 class="text-subtitle-2 mb-3">Attributs de la variante</h6>
                           
                           <!-- Afficher les attributs sélectionnés OU les attributs existants de la variante -->
-                          <v-row v-if="selectedAttributes.length > 0">
+                          <v-row v-if="selectedAttributes.length > 0 || (variant.attributes && Object.keys(variant.attributes).length > 0)">
                             <v-col
-                              v-for="attrId in selectedAttributes"
+                              v-for="attrId in (selectedAttributes.length > 0 ? selectedAttributes : Object.keys(variant.attributes || {}))"
                               :key="attrId"
                               cols="12"
                               md="6"
                             >
+                              <!-- Alerte si pas de valeurs disponibles -->
+                              <v-alert
+                                v-if="!hasAvailableValues(attrId, index)"
+                                type="warning"
+                                variant="tonal"
+                                class="mb-3"
+                                density="compact"
+                              >
+                                <v-icon start size="16">mdi-alert</v-icon>
+                                {{ getNoValuesMessage(attrId) }}
+                              </v-alert>
+                              
                               <v-select
-                                v-model="variant.attributes[attrId]"
-                                :items="getAttributeValues(attrId)"
+                                :model-value="getAttributeLabel(variant, attrId)"
+                                :items="getAttributeValues(attrId, index)"
                                 :label="getAttributeName(attrId)"
                                 item-title="label"
-                                item-value="id"
+                                item-value="label"
                                 variant="outlined"
                                 density="comfortable"
                                 :rules="[rules.required]"
                                 required
                                 clearable
+                                :disabled="!hasAvailableValues(attrId, index)"
+                                :hint="!hasAvailableValues(attrId, index) ? 'Aucune valeur disponible' : ''"
+                                persistent-hint
+                                @update:model-value="(label) => updateAttributeLabel(variant, attrId, label)"
                               >
                                 <template v-slot:item="{ props, item }">
                                   <v-list-item v-bind="props">
@@ -618,33 +634,10 @@
                                 prepend-icon="mdi-plus"
                                 @click="openAddValueDialog(attrId)"
                                 class="mt-2"
+                                :disabled="!hasAvailableValues(attrId, index)"
                               >
                                 Ajouter {{ getAttributeName(attrId).toLowerCase() }}
                               </v-btn>
-                            </v-col>
-                          </v-row>
-                          
-                          <!-- Afficher les attributs existants si pas d'attributs sélectionnés -->
-                          <v-row v-else-if="variant.attributes && Object.keys(variant.attributes).length > 0">
-                            <v-col cols="12">
-                              <v-alert type="warning" variant="tonal" class="mb-3">
-                                <v-icon start>mdi-alert</v-icon>
-                                <strong>Attributs en lecture seule :</strong> 
-                                Sélectionnez les attributs correspondants dans l'étape précédente pour pouvoir les modifier.
-                              </v-alert>
-                              
-                              <div class="d-flex flex-wrap gap-2">
-                                <v-chip
-                                  v-for="(valueId, attrId) in variant.attributes"
-                                  :key="attrId"
-                                  color="info"
-                                  variant="outlined"
-                                  size="small"
-                                >
-                                  <v-icon start size="16">mdi-tag</v-icon>
-                                  Attribut {{ attrId }}: Valeur {{ valueId }}
-                                </v-chip>
-                              </div>
                             </v-col>
                           </v-row>
                           
@@ -677,7 +670,7 @@
                             <v-card variant="outlined" class="pa-2">
                               <div class="d-flex align-center">
                                 <v-img
-                                  :src="variantImagePreviews[index] || `http://localhost:8000/storage/variants/${variant.image}`"
+                                  :src="variantImagePreviews[index] || `${APP_CONFIG.STORAGE_BASE_URL}/variants/${variant.image}`"
                                   max-height="80"
                                   max-width="80"
                                   class="rounded me-3"
@@ -1004,11 +997,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useProductStore } from '../../../store/AdminStore/ProductStore'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { APP_CONFIG } from '../../../config/constants'
 
-const route = useRoute()
-const router = useRouter()
 const productStore = useProductStore()
+const router = useRouter()
+const route = useRoute()
 
 // Étapes du formulaire
 const currentStep = ref(1)
@@ -1168,13 +1162,6 @@ const uploadVariantImage = (event: Event, variantIndex: number) => {
   if (target.files && target.files[0]) {
     const file = target.files[0]
     
-    // Debug: vérifier le fichier sélectionné
-    console.log(`Fichier sélectionné pour la variante ${variantIndex}:`, {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    });
-    
     // S'assurer que l'objet variant existe
     if (!variants.value[variantIndex]) {
       console.error(`Variante ${variantIndex} n'existe pas`);
@@ -1188,13 +1175,10 @@ const uploadVariantImage = (event: Event, variantIndex: number) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       variantImagePreviews.value[variantIndex] = e.target?.result as string
-      console.log(`Prévisualisation créée pour la variante ${variantIndex}`);
     }
     reader.readAsDataURL(file)
     
-    console.log(`Image stockée dans variantImages.value[${variantIndex}]:`, variantImages.value[variantIndex]);
   } else {
-    console.log(`Aucun fichier sélectionné pour la variante ${variantIndex}`);
     delete variantImages.value[variantIndex]
     delete variantImagePreviews.value[variantIndex]
   }
@@ -1204,11 +1188,6 @@ const uploadVariantImage = (event: Event, variantIndex: number) => {
 const removeVariantImage = (variantIndex: number) => {
   delete variantImages.value[variantIndex]
   delete variantImagePreviews.value[variantIndex]
-  
-  // Si c'est une variante existante, on peut aussi supprimer l'image actuelle
-  if (variants.value[variantIndex] && variants.value[variantIndex].image) {
-    variants.value[variantIndex].image = null
-  }
 }
 
 // Product type handling
@@ -1246,14 +1225,159 @@ const toggleAttribute = (attributeId: number) => {
   }
 }
 
-const getAttributeValues = (attributeId: number) => {
+const getAttributeValues = (attributeId: number, currentVariantIndex?: number) => {
   const attribute = typeAttributes.value.find(attr => attr.id === attributeId)
-  return attribute ? attribute.values : []
+  if (!attribute || !attribute.values) {
+    // Si l'attribut n'est pas trouvé dans typeAttributes, essayer de le récupérer depuis le store
+    console.warn(`Attribut ${attributeId} non trouvé dans typeAttributes`)
+    return []
+  }
+  
+  // Si on est en mode édition d'une variante spécifique, filtrer les valeurs déjà utilisées
+  if (currentVariantIndex !== undefined && variants.value.length > 0) {
+    const usedLabels = new Set()
+    
+    // Collecter toutes les valeurs utilisées par les autres variantes pour cet attribut
+    variants.value.forEach((variant, index) => {
+      if (index !== currentVariantIndex && variant.attributes && variant.attributes[attributeId]) {
+        const attr = variant.attributes[attributeId]
+        const label = typeof attr === 'object' ? attr.label : ''
+        if (label) {
+          usedLabels.add(label)
+        }
+      }
+    })
+    
+    // Retourner seulement les valeurs non utilisées
+    return attribute.values.filter(value => !usedLabels.has(value.label))
+  }
+  
+  // Sinon, retourner toutes les valeurs
+  return attribute.values
+}
+
+// Fonction pour normaliser les attributs (gérer l'ancien et le nouveau format)
+const normalizeAttribute = (variant, attrId) => {
+  const attr = variant.attributes[attrId]
+  if (!attr) return null
+  
+  if (typeof attr === 'object' && attr.value_id !== undefined) {
+    // Nouveau format
+    return attr
+  } else {
+    // Ancien format - convertir
+    return {
+      value_id: attr,
+      value: '',
+      label: '',
+      attribute_name: getAttributeName(attrId),
+      attribute_type: getAttributeType(attrId)
+    }
+  }
+}
+
+// Fonction pour obtenir la valeur d'un attribut
+const getAttributeValue = (variant, attrId) => {
+  const normalized = normalizeAttribute(variant, attrId)
+  return normalized ? normalized.value_id : null
+}
+
+// Fonction pour obtenir le label d'un attribut
+const getAttributeLabel = (variant, attrId) => {
+  const normalized = normalizeAttribute(variant, attrId)
+  return normalized ? normalized.label : ''
+}
+
+// Fonction pour mettre à jour la valeur d'un attribut
+const updateAttributeValue = (variant, attrId, value) => {
+  if (!variant.attributes[attrId]) {
+    // Créer la structure si elle n'existe pas
+    variant.attributes[attrId] = {
+      value_id: null,
+      value: '',
+      label: '',
+      attribute_name: getAttributeName(attrId),
+      attribute_type: getAttributeType(attrId)
+    }
+  }
+  
+  // Mettre à jour la valeur
+  variant.attributes[attrId].value_id = value
+  
+  // Mettre à jour le label et la valeur si possible
+  const attribute = typeAttributes.value.find(attr => attr.id === attrId)
+  if (attribute && attribute.values) {
+    const selectedValue = attribute.values.find(v => v.id === value)
+    if (selectedValue) {
+      variant.attributes[attrId].value = selectedValue.value
+      variant.attributes[attrId].label = selectedValue.label
+    }
+  }
+}
+
+// Fonction pour mettre à jour le label d'un attribut
+const updateAttributeLabel = (variant, attrId, label) => {
+  if (!variant.attributes[attrId]) {
+    // Créer la structure si elle n'existe pas
+    variant.attributes[attrId] = {
+      value_id: null,
+      value: '',
+      label: '',
+      attribute_name: getAttributeName(attrId),
+      attribute_type: getAttributeType(attrId)
+    }
+  }
+  
+  // Mettre à jour le label
+  variant.attributes[attrId].label = label
+  
+  // Trouver l'ID correspondant au label
+  const attribute = typeAttributes.value.find(attr => attr.id === attrId)
+  if (attribute && attribute.values) {
+    const selectedValue = attribute.values.find(v => v.label === label)
+    if (selectedValue) {
+      variant.attributes[attrId].value_id = selectedValue.id
+      variant.attributes[attrId].value = selectedValue.value
+    }
+  }
+}
+
+const hasAvailableValues = (attributeId: number, currentVariantIndex?: number) => {
+  const availableValues = getAttributeValues(attributeId, currentVariantIndex)
+  return availableValues.length > 0
+}
+
+const getNoValuesMessage = (attributeId: number) => {
+  const attribute = typeAttributes.value.find(attr => attr.id === attributeId)
+  if (!attribute) return ''
+  
+  const usedLabels = new Set()
+  variants.value.forEach(variant => {
+    if (variant.attributes && variant.attributes[attributeId]) {
+      const attr = variant.attributes[attributeId]
+      const label = typeof attr === 'object' ? attr.label : ''
+      if (label) {
+        usedLabels.add(label)
+      }
+    }
+  })
+  
+  const usedLabelsList = attribute.values
+    .filter(value => usedLabels.has(value.label))
+    .map(value => value.label)
+    .join(', ')
+  
+  return `Toutes les valeurs de "${attribute.name}" sont déjà utilisées (${usedLabelsList}). Ajoutez de nouvelles valeurs ou supprimez une variante.`
 }
 
 const getAttributeName = (attributeId: number) => {
   const attribute = typeAttributes.value.find(attr => attr.id === attributeId)
-  return attribute ? attribute.name : ''
+  if (!attribute) {
+    // Si l'attribut n'est pas trouvé, retourner un nom par défaut
+    console.warn(`Attribut ${attributeId} non trouvé pour getAttributeName`)
+    return `Attribut ${attributeId}`
+  }
+  return attribute.name
 }
 
 const getAttributeType = (attributeId: number) => {
@@ -1301,7 +1425,14 @@ const generateVariantsFromCombinations = () => {
     }
 
     combination.forEach(attr => {
-      variant.attributes[attr.attributeId] = attr.valueId
+      // Utiliser la nouvelle structure des attributs
+      variant.attributes[attr.attributeId] = {
+        value_id: attr.valueId,
+        value: attr.label,
+        label: attr.label,
+        attribute_name: getAttributeName(attr.attributeId),
+        attribute_type: getAttributeType(attr.attributeId)
+      }
     })
 
     newVariants.push(variant)
@@ -1353,6 +1484,18 @@ const addVariant = () => {
     is_active: true,
     attributes: {}
   }
+  
+  // Initialiser les attributs sélectionnés avec la nouvelle structure
+  selectedAttributes.value.forEach(attrId => {
+    newVariant.attributes[attrId] = {
+      value_id: null,
+      value: '',
+      label: '',
+      attribute_name: getAttributeName(attrId),
+      attribute_type: getAttributeType(attrId)
+    }
+  })
+  
   variants.value.push(newVariant)
 }
 
@@ -1388,6 +1531,10 @@ const removeVariant = (index) => {
   
   variantImages.value = newImages
   variantImagePreviews.value = newPreviews
+  
+  // Forcer la réactivité pour mettre à jour les listes de valeurs disponibles
+  // Cela va déclencher les watchers et recalculer les valeurs disponibles
+  variants.value = [...variants.value]
 }
 
 // Add attribute value dialog
@@ -1452,87 +1599,76 @@ const getProductTypeName = () => {
   return type ? type.name : ''
 }
 
-// Initialize form data from current product
-const initializeFormData = () => {
+// Load product data
+const loadProductData = async () => {
   if (productStore.currentProduct) {
     const product = productStore.currentProduct
     
-    console.log('Initialisation des données du formulaire:', {
-      productId: product.id,
-      hasVariants: product.has_variants,
-      variantsCount: product.variants?.length || 0,
-      availableAttributes: product.available_attributes?.length || 0,
-      variants: product.variants
-    })
-    
-    // Informations de base
+    // Remplir les champs de base
     name.value = product.name
     description.value = product.description
-    poid.value = product.poid
     price.value = product.price
+    poid.value = product.poid
     product_type_id.value = product.product_type_id
-    stock_quantity.value = product.stock_quantity
     is_active.value = product.is_active
+    stock_quantity.value = product.stock_quantity
     
-    // Attributs sélectionnés
-    if (product.available_attributes) {
-      selectedAttributes.value = product.available_attributes.map(attr => attr.id)
-      console.log('Attributs sélectionnés:', selectedAttributes.value)
+    // Charger les attributs du type de produit
+    if (product.product_type_id) {
+      await loadTypeAttributes()
     }
     
-    // Variantes - Initialiser même si les attributs ne sont pas encore chargés
+    // Charger les variantes existantes si elles existent
     if (product.variants && product.variants.length > 0) {
-      variants.value = product.variants.map(variant => {
-        console.log('Initialisation de la variante:', {
-          id: variant.id,
-          sku: variant.sku,
-          name: variant.name,
-          attributes: variant.attributes
-        })
-        
-        return {
-          id: variant.id,
-          tempId: variant.id,
-          sku: variant.sku,
-          name: variant.name,
-          price: variant.price,
-          stock_quantity: variant.stock_quantity,
-          barcode: variant.barcode,
-          is_active: variant.is_active,
-          image: variant.image,
-          attributes: variant.attributes.reduce((acc, attr) => {
-            acc[attr.attribute_id] = attr.value_id
-            return acc
-          }, {})
+      variants.value = product.variants.map(variant => ({
+        id: variant.id,
+        tempId: Date.now() + Math.random(), // Pour les nouvelles variantes
+        sku: variant.sku,
+        name: variant.name,
+        price: variant.price,
+        stock_quantity: variant.stock_quantity,
+        barcode: variant.barcode,
+        is_active: variant.is_active,
+        attributes: variant.attributes.reduce((acc, attr) => {
+          // Préserver les informations complètes de l'attribut
+          acc[attr.attribute_id] = {
+            value_id: attr.value_id,
+            value: attr.value,
+            label: attr.label,
+            attribute_name: attr.attribute_name,
+            attribute_type: attr.attribute_type
+          }
+          return acc
+        }, {})
+      }))
+      
+      // Détecter automatiquement les attributs utilisés par les variantes existantes
+      const usedAttributes = new Set()
+      variants.value.forEach(variant => {
+        if (variant.attributes) {
+          Object.keys(variant.attributes).forEach(attrId => {
+            usedAttributes.add(parseInt(attrId))
+          })
         }
       })
       
-      console.log('Variantes initialisées:', variants.value)
-    } else {
-      variants.value = []
+      // Ajouter les attributs détectés à selectedAttributes
+      selectedAttributes.value = Array.from(usedAttributes)
     }
-  }
-}
-
-// Load product data
-const loadProduct = async () => {
-  const productId = Number(route.params.id)
-  await productStore.showProduct(productId)
-  
-  // Après avoir chargé le produit, initialiser les données du formulaire
-  if (productStore.currentProduct) {
-    initializeFormData()
     
-    // Charger les attributs du type de produit si nécessaire
-    if (productStore.currentProduct.product_type_id) {
-      await loadTypeAttributes()
+    // Charger les attributs sélectionnés si le produit en a (en plus de ceux détectés)
+    if (product.available_attributes && product.available_attributes.length > 0) {
+      const availableAttrIds = product.available_attributes.map(attr => attr.id)
+      // Fusionner avec les attributs détectés, en évitant les doublons
+      const allAttributes = new Set([...selectedAttributes.value, ...availableAttrIds])
+      selectedAttributes.value = Array.from(allAttributes)
     }
   }
 }
 
 // Update product
 const updateProduct = async () => {
-  if (!isFormValid.value) return
+  if (!isFormValid.value || !productStore.currentProduct?.id) return
 
   try {
     const formData = new FormData()
@@ -1586,16 +1722,39 @@ const updateProduct = async () => {
       
       // Envoyer les variantes comme JSON
       const variantsData = variants.value.map(variant => ({
-        id: variant.id || null, // ID pour les variantes existantes
         sku: variant.sku,
         name: variant.name,
         price: Number(variant.price),
         stock_quantity: Number(variant.stock_quantity),
         barcode: variant.barcode,
         is_active: variant.is_active,
-        attributes: variant.attributes
+        attributes: Object.keys(variant.attributes).reduce((acc, attrId) => {
+          // Transformer les attributs dans le format attendu par l'API
+          const attr = variant.attributes[attrId]
+          if (typeof attr === 'object' && attr.value_id) {
+            // Nouveau format avec informations complètes
+            acc[attrId] = attr.value_id
+          } else {
+            // Ancien format (fallback)
+            acc[attrId] = attr
+          }
+          return acc
+        }, {})
       }))
       formData.append('variants', JSON.stringify(variantsData))
+      
+      // Debug: vérifier l'état des variantes avant l'envoi
+      console.log('État des variantes avant envoi:', variants.value.map((variant, index) => ({
+        index,
+        sku: variant.sku,
+        name: variant.name,
+        hasImage: variantImages.value[index] instanceof File,
+        imageInfo: variantImages.value[index] instanceof File ? {
+          name: variantImages.value[index].name,
+          size: variantImages.value[index].size,
+          type: variantImages.value[index].type
+        } : null
+      })));
       
       // Ajouter les images des variantes avec validation
       variants.value.forEach((variant, index) => {
@@ -1638,7 +1797,7 @@ const updateProduct = async () => {
     }
 
     // Debug: afficher le contenu du FormData
-    console.log('=== CONTENU DU FORMDATA POUR MISE À JOUR ===');
+    console.log('=== CONTENU DU FORMDATA ===');
     // @ts-ignore - FormData.entries() est supporté dans les navigateurs modernes
     for (let [key, value] of formData.entries()) {
       if (value instanceof File) {
@@ -1649,27 +1808,21 @@ const updateProduct = async () => {
     }
 
     // Utiliser le store pour mettre à jour le produit
-    const productId = Number(route.params.id)
-    await productStore.updateProduct(productId, null, formData)
+    await productStore.updateProduct(productStore.currentProduct.id, null, formData)
 
     if (productStore.alert && productStore.message) {
       setTimeout(() => {
-        router.push('/admin/product')
+        router.push(`/admin/product/${productStore.currentProduct.id}`)
       }, 2000)
     }
   } catch (error) {
-    console.error('Erreur lors de la modification du produit:', error)
+    console.error('Erreur lors de la mise à jour du produit:', error)
   }
 }
 
 // Watchers
 watch(selectedAttributes, (newValue) => {
   if (newValue.length === 0) {
-    // Ne supprimer les variantes que si ce n'est pas lors de l'initialisation
-    if (productStore.currentProduct && productStore.currentProduct.variants && productStore.currentProduct.variants.length > 0) {
-      console.log('Attributs désélectionnés mais produit avec variantes existantes, conservation des variantes')
-      return
-    }
     variants.value = []
     // Nettoyer aussi les images des variantes
     variantImages.value = {}
@@ -1677,33 +1830,30 @@ watch(selectedAttributes, (newValue) => {
   }
 })
 
-watch(() => productStore.currentProduct, (newProduct) => {
-  // Ne pas réinitialiser si le produit est déjà chargé
-  if (newProduct && !variants.value.length) {
-    console.log('Nouveau produit détecté, initialisation des données')
-    initializeFormData()
-    if (product_type_id.value) {
-      loadTypeAttributes()
-    }
-  }
-})
+// Watcher pour les variantes - forcer la réactivité quand les attributs changent
+watch(variants, () => {
+  // Forcer la réactivité pour mettre à jour les listes de valeurs disponibles
+  variants.value = [...variants.value]
+}, { deep: true })
 
-// Watcher pour détecter quand les attributs sont chargés
-watch(typeAttributes, (newAttributes) => {
-  if (newAttributes && newAttributes.length > 0) {
-    console.log('Attributs du type chargés:', newAttributes.length)
-    // Forcer le re-render des variantes si elles existent
-    if (productStore.currentProduct && productStore.currentProduct.variants && productStore.currentProduct.variants.length > 0) {
-      console.log('Re-render des variantes avec les attributs chargés')
-    }
+// Watch pour charger les données du produit quand il est disponible
+watch(() => productStore.currentProduct, async (newProduct) => {
+  if (newProduct) {
+    await loadProductData()
   }
-})
+}, { immediate: true })
 
 // Lifecycle
 onMounted(async () => {
+  // Charger les types de produits et attributs
   await productStore.getProductTypes()
   await productStore.getAttributes()
-  await loadProduct()
+  
+  // Charger le produit à modifier
+  const productId = Number(route.params.id)
+  if (productId) {
+    await productStore.showProduct(productId)
+  }
 })
 </script>
 

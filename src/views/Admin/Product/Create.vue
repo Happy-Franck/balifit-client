@@ -559,9 +559,21 @@
                               cols="12"
                               md="6"
                             >
+                              <!-- Alerte si pas de valeurs disponibles -->
+                              <v-alert
+                                v-if="!hasAvailableValues(attrId, index)"
+                                type="warning"
+                                variant="tonal"
+                                class="mb-3"
+                                density="compact"
+                              >
+                                <v-icon start size="16">mdi-alert</v-icon>
+                                {{ getNoValuesMessage(attrId) }}
+                              </v-alert>
+                              
                               <v-select
                                 v-model="variant.attributes[attrId]"
-                                :items="getAttributeValues(attrId)"
+                                :items="getAttributeValues(attrId, index)"
                                 :label="getAttributeName(attrId)"
                                 item-title="label"
                                 item-value="id"
@@ -570,6 +582,9 @@
                                 :rules="[rules.required]"
                                 required
                                 clearable
+                                :disabled="!hasAvailableValues(attrId, index)"
+                                :hint="!hasAvailableValues(attrId, index) ? 'Aucune valeur disponible' : ''"
+                                persistent-hint
                               >
                                 <template v-slot:item="{ props, item }">
                                   <v-list-item v-bind="props">
@@ -594,6 +609,7 @@
                                 prepend-icon="mdi-plus"
                                 @click="openAddValueDialog(attrId)"
                                 class="mt-2"
+                                :disabled="!hasAvailableValues(attrId, index)"
                               >
                                 Ajouter {{ getAttributeName(attrId).toLowerCase() }}
                               </v-btn>
@@ -1182,9 +1198,51 @@ const toggleAttribute = (attributeId: number) => {
   }
 }
 
-const getAttributeValues = (attributeId: number) => {
+const getAttributeValues = (attributeId: number, currentVariantIndex?: number) => {
   const attribute = typeAttributes.value.find(attr => attr.id === attributeId)
-  return attribute ? attribute.values : []
+  if (!attribute || !attribute.values) return []
+  
+  // Si on est en mode édition d'une variante spécifique, filtrer les valeurs déjà utilisées
+  if (currentVariantIndex !== undefined && variants.value.length > 0) {
+    const usedValues = new Set()
+    
+    // Collecter toutes les valeurs utilisées par les autres variantes pour cet attribut
+    variants.value.forEach((variant, index) => {
+      if (index !== currentVariantIndex && variant.attributes && variant.attributes[attributeId]) {
+        usedValues.add(variant.attributes[attributeId])
+      }
+    })
+    
+    // Retourner seulement les valeurs non utilisées
+    return attribute.values.filter(value => !usedValues.has(value.id))
+  }
+  
+  // Sinon, retourner toutes les valeurs
+  return attribute.values
+}
+
+const hasAvailableValues = (attributeId: number, currentVariantIndex?: number) => {
+  const availableValues = getAttributeValues(attributeId, currentVariantIndex)
+  return availableValues.length > 0
+}
+
+const getNoValuesMessage = (attributeId: number) => {
+  const attribute = typeAttributes.value.find(attr => attr.id === attributeId)
+  if (!attribute) return ''
+  
+  const usedValues = new Set()
+  variants.value.forEach(variant => {
+    if (variant.attributes && variant.attributes[attributeId]) {
+      usedValues.add(variant.attributes[attributeId])
+    }
+  })
+  
+  const usedLabels = attribute.values
+    .filter(value => usedValues.has(value.id))
+    .map(value => value.label)
+    .join(', ')
+  
+  return `Toutes les valeurs de "${attribute.name}" sont déjà utilisées (${usedLabels}). Ajoutez de nouvelles valeurs ou supprimez une variante.`
 }
 
 const getAttributeName = (attributeId: number) => {
@@ -1324,6 +1382,10 @@ const removeVariant = (index) => {
   
   variantImages.value = newImages
   variantImagePreviews.value = newPreviews
+  
+  // Forcer la réactivité pour mettre à jour les listes de valeurs disponibles
+  // Cela va déclencher les watchers et recalculer les valeurs disponibles
+  variants.value = [...variants.value]
 }
 
 // Add attribute value dialog
@@ -1540,6 +1602,12 @@ watch(selectedAttributes, (newValue) => {
     variantImagePreviews.value = {}
   }
 })
+
+// Watcher pour les variantes - forcer la réactivité quand les attributs changent
+watch(variants, () => {
+  // Forcer la réactivité pour mettre à jour les listes de valeurs disponibles
+  variants.value = [...variants.value]
+}, { deep: true })
 
 // Lifecycle
 onMounted(() => {

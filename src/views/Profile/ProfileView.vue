@@ -4,7 +4,7 @@
     <div class="cover-section">
       <div class="cover-image">
         <v-img
-          :src="user?.cover_photo ? `http://localhost:8000/storage/covers/${user.cover_photo}` : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'"
+          :src="user?.cover_photo ? `${APP_CONFIG.STORAGE_BASE_URL}/covers/${user.cover_photo}` : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'"
           height="300"
           cover
           class="cover-bg"
@@ -23,7 +23,7 @@
         >
           <v-img 
             v-if="user?.avatar" 
-            :src="`http://localhost:8000/storage/avatars/${user.avatar}`"
+            :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${user.avatar}`"
             cover
           ></v-img>
           <v-icon v-else size="75" color="white">mdi-account</v-icon>
@@ -192,7 +192,7 @@
           <v-avatar size="300" class="mb-4">
             <v-img 
               v-if="user?.avatar" 
-              :src="`http://localhost:8000/storage/avatars/${user.avatar}`"
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${user.avatar}`"
               cover
             ></v-img>
             <v-icon v-else size="150">mdi-account</v-icon>
@@ -222,11 +222,11 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/AuthStore'
+import { APP_CONFIG } from '../../config/constants'
 import type User from '../../types/User'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const user = ref<User | null>(null)
 const weightHistory = ref<Array<{date: string, valeur: number}>>([])
 const showAllWeight = ref(false)
 const showAvatarModal = ref(false)
@@ -236,6 +236,9 @@ const snackbar = reactive({
   message: '',
   color: 'success'
 })
+
+// Utiliser directement authStore.userAuth au lieu d'une variable locale
+const user = computed(() => authStore.userAuth)
 
 const currentWeight = computed(() => {
   if (weightHistory.value.length > 0) {
@@ -263,18 +266,6 @@ const goToEdit = () => {
       break
     default:
       router.push('/profile/edit')
-  }
-}
-
-const loadProfile = async () => {
-  try {
-    const userData = await authStore.getProfile()
-    user.value = userData
-    
-    // Charger l'historique de poids
-    await loadWeightHistory()
-  } catch (error) {
-    showSnackbar('Erreur lors du chargement du profil', 'error')
   }
 }
 
@@ -316,7 +307,8 @@ const showSnackbar = (message: string, color: string) => {
 }
 
 onMounted(() => {
-  loadProfile()
+  // Charger seulement l'historique de poids car les données utilisateur sont déjà chargées par le layout
+  loadWeightHistory()
 })
 </script>
 

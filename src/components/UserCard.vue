@@ -14,7 +14,7 @@
       >
         <v-img
           v-if="user.avatar"
-          :src="`http://localhost:8000/storage/avatars/${user.avatar}`"
+          :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${user.avatar}`"
           cover
         ></v-img>
         <v-icon
@@ -91,6 +91,7 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue'
+import { APP_CONFIG } from '../config/constants'
 
 interface User {
   id: number

@@ -161,7 +161,7 @@
               <v-avatar size="32" class="user-avatar">
                 <v-img 
                   v-if="item.challenger.avatar" 
-                  :src="`http://localhost:8000/storage/avatars/${item.challenger.avatar}`"
+                  :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${item.challenger.avatar}`"
                 ></v-img>
                 <v-icon v-else size="18" color="info">mdi-account</v-icon>
               </v-avatar>
@@ -177,7 +177,7 @@
               <v-avatar size="32" class="user-avatar">
                 <v-img 
                   v-if="item.coach.avatar" 
-                  :src="`http://localhost:8000/storage/avatars/${item.coach.avatar}`"
+                  :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${item.coach.avatar}`"
                 ></v-img>
                 <v-icon v-else size="18" color="success">mdi-account-tie</v-icon>
               </v-avatar>
@@ -368,6 +368,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useSeanceStore } from '../../../store/AdminStore/SeanceStore'
 import { useUserStore } from '../../../store/AdminStore/UserStore'
 import { useRouter } from 'vue-router'
+import { APP_CONFIG } from '../../../config/constants'
 
 const seanceStore = useSeanceStore()
 const userStore = useUserStore()

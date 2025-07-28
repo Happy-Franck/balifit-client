@@ -17,7 +17,7 @@
           </div>
           <div class="d-flex flex-wrap justify-center btn-container" v-for="(category, index) in categoryStore.categories" :key="index">
             <v-btn icon size="x-large" :data-type-filter="`.${category.name}`" @click="filterItems($event,`.${category.name}`)">
-              <img class="sary-categ" :src="`http://localhost:8000/storage/categories/${category.image}`"/>
+              <img class="sary-categ" :src="`${APP_CONFIG.STORAGE_BASE_URL}/categories/${category.image}`"/>
             </v-btn>
             <h4 class="btn-name">{{ category.name }}</h4>
           </div>
@@ -33,7 +33,7 @@
               <v-img
                 class="align-end text-white"
                 height="auto"
-                :src="`http://localhost:8000/storage/trainings/${training.image}`"
+                :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
                 cover
               >
                 <v-card-title>{{ training.name }}</v-card-title>
@@ -77,6 +77,7 @@
   import Isotope from 'isotope-layout';
   //import Masonry from 'masonry-layout';
   import imagesLoaded from 'imagesloaded';
+  import { APP_CONFIG } from '../../../config/constants'
 
   export default defineComponent({
     setup() {

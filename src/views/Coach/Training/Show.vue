@@ -51,7 +51,7 @@
           class="bg-white"
           width="300"
           :aspect-ratio="1"
-          :src="`http://localhost:8000/storage/trainings/${trainingStore.currentTraining.image}`"
+          :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${trainingStore.currentTraining.image}`"
           cover
         ></v-img>
       </div>
@@ -177,6 +177,7 @@ import { useTrainingStore } from '../../..//store/CoachStore/TrainingStore'
 import { useAuthStore } from '../../..//store/AuthStore'
 import { useCategoryStore } from '../../..//store/CoachStore/CategoryStore'
 import { useEquipmentStore } from '../../../store/CoachStore/EquipmentStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 export default defineComponent({
   setup() {

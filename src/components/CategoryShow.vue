@@ -2,7 +2,7 @@
   <div class="category-image">
     <p @click="adminStore.removeCurrentCategory()">X</p>
     <p>{{category.name}}</p>
-    <img :src="`http://127.0.0.1:8000/storage/categories/${category.image}`">
+    <img :src="`${APP_CONFIG.STORAGE_BASE_URL}/categories/${category.image}`">
     <div v-for="training in category.trainings" :key="training.id">
       <li>
         <p>Name :{{training.name}}</p>
@@ -19,6 +19,7 @@ import { defineComponent , ref } from 'vue'
 import http from '../axios'
 import Category from '../types/Category';
 import { useCategoryStore } from '../store/AdminStore/CategoryStore'
+import { APP_CONFIG } from '../config/constants'
 
 export default defineComponent({
   setup() {

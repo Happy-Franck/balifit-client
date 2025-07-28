@@ -36,7 +36,7 @@
                   ></v-img>
                   <v-img 
                     v-else-if="currentAvatar" 
-                    :src="`http://localhost:8000/storage/avatars/${currentAvatar}`"
+                    :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${currentAvatar}`"
                     cover
                   ></v-img>
                   <v-icon v-else size="60" color="grey-lighten-1">mdi-account</v-icon>
@@ -223,6 +223,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useAuthStore } from '../../store/AuthStore'
 import { useRouter, useRoute } from 'vue-router'
 import type User from '../../types/User'
+import { APP_CONFIG } from '../../config/constants'
 
 const authStore = useAuthStore()
 const router = useRouter()

@@ -25,7 +25,7 @@
         <v-card class="mx-auto" max-width="400">
           <v-img
             v-if="equipment.image"
-            :src="`http://localhost:8000/storage/equipments/${equipment.image}`"
+            :src="`${APP_CONFIG.STORAGE_BASE_URL}/equipments/${equipment.image}`"
             height="200px"
             cover
           ></v-img>
@@ -108,6 +108,7 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
 import { useEquipmentStore } from '../../../store/ChallengerStore/EquipmentStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 export default defineComponent({
   setup() {

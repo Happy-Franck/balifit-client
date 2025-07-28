@@ -32,7 +32,7 @@
         <div class="video-container">
           <div v-if="equipment.image" class="image-container">
             <v-img
-              :src="`http://127.0.0.1:8000/storage/equipments/${equipment.image}`"
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/equipments/${equipment.image}`"
               :alt="equipment.name"
               class="youtube-image"
               cover
@@ -117,7 +117,7 @@
               <!-- Image par défaut -->
               <v-img
                 v-if="training.image"
-                :src="`http://127.0.0.1:8000/storage/trainings/${training.image}`"
+                :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
                 :alt="training.name"
                 height="94"
                 cover
@@ -131,7 +131,7 @@
               <video
                 v-if="training.video"
                 :id="`video-${training.id}`"
-                :src="`http://127.0.0.1:8000/storage/training_videos/${training.video}`"
+                :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
                 class="suggestion-video"
                 muted
                 loop
@@ -210,6 +210,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useEquipmentStore } from '../../../store/AdminStore/EquipmentStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 const route = useRoute()
 const router = useRouter()

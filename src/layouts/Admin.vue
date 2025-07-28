@@ -9,7 +9,7 @@
             <v-avatar
               size="80"
               class="mb-4"
-              :image="AuthStore.userAuth?.avatar ? `http://localhost:8000/storage/avatars/${AuthStore.userAuth.avatar}` : ''"
+              :image="AuthStore.userAuth?.avatar ? `${APP_CONFIG.STORAGE_BASE_URL}/avatars/${AuthStore.userAuth.avatar}` : ''"
             >
               <v-icon v-if="!AuthStore.userAuth?.avatar" size="40">mdi-account</v-icon>
             </v-avatar>
@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/store/AuthStore'
 import { useRoute, useRouter } from 'vue-router'
 import ThemeToggle from '@/components/ThemeToggle.vue'
@@ -148,13 +148,21 @@ import { useSeanceStore } from '@/store/AdminStore/SeanceStore'
 import { useUserStore } from '@/store/AdminStore/UserStore'
 import { useTrainingStore } from '@/store/AdminStore/TrainingStore'
 import { useEquipmentStore } from '@/store/AdminStore/EquipmentStore'
+import { APP_CONFIG } from '@/config/constants'
 
 const AuthStore = useAuthStore()
 const drawer = ref(null)
 const route = useRoute()
 const router = useRouter()
 
-AuthStore.getUserAuth()
+// Charger les données utilisateur au montage du composant
+onMounted(async () => {
+  try {
+    await AuthStore.getUserAuth()
+  } catch (error) {
+    console.error('Erreur lors du chargement des données utilisateur:', error)
+  }
+})
 
 // Fonction pour déterminer si un lien est actif
 const isActive = (path) => {

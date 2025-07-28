@@ -98,7 +98,7 @@
                   Image actuelle
                 </v-card-subtitle>
                 <v-img
-                  :src="`http://127.0.0.1:8000/storage/trainings/${training.image}`"
+                  :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
                   :alt="training.name"
                   max-height="200"
                   class="rounded"
@@ -140,7 +140,7 @@
                   Vidéo actuelle
                 </v-card-subtitle>
                 <video
-                  :src="`http://127.0.0.1:8000/storage/training_videos/${training.video}`"
+                  :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
                   controls
                   style="width: 100%; max-height: 200px;"
                   class="rounded"
@@ -217,6 +217,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useTrainingStore } from '../../../store/AdminStore/TrainingStore'
 import { useCategoryStore } from '../../../store/AdminStore/CategoryStore'
 import { useEquipmentStore } from '../../../store/AdminStore/EquipmentStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 const route = useRoute()
 const router = useRouter()

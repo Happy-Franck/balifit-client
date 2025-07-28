@@ -32,7 +32,7 @@
           <template #[`item.image`]="{ item }">
             <v-img
               v-if="item.image"
-              :src="`http://localhost:8000/storage/product_types/${item.image}`"
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/product_types/${item.image}`"
               width="50"
               height="50"
               cover
@@ -182,6 +182,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useProductStore } from '../../../store/AdminStore/ProductStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 const productStore = useProductStore()
 

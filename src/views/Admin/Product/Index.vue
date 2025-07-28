@@ -137,7 +137,7 @@
           <div class="col-image" @click.stop>
             <div class="image-preview" v-if="product.image">
               <v-img
-                :src="`http://localhost:8000/storage/produits/${product.image}`"
+                :src="`${APP_CONFIG.STORAGE_BASE_URL}/produits/${product.image}`"
                 :alt="product.name"
                 width="50"
                 height="50"
@@ -243,7 +243,7 @@
               size="small"
               color="warning"
               variant="text"
-              @click="editProduct(product.id)"
+              @click.stop="editProduct(product.id)"
             ></v-btn>
             <v-btn
               icon="mdi-delete"
@@ -316,12 +316,13 @@
 import { ref, onMounted, watch } from 'vue'
 import { useProductStore } from '../../../store/AdminStore/ProductStore'
 import { useRouter } from 'vue-router'
+import { APP_CONFIG } from '../../../config/constants'
 
 const productStore = useProductStore()
 const router = useRouter()
 
 // Configuration
-const baseURL = 'http://localhost:8000'
+const baseURL = APP_CONFIG.API_BASE_URL
 
 // Reactive data
 const deleteDialog = ref(false)

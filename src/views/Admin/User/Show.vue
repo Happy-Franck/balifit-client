@@ -31,7 +31,7 @@
       <div class="cover-section">
         <div class="cover-image">
           <v-img
-            :src="user?.cover_photo ? `http://localhost:8000/storage/covers/${user.cover_photo}` : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'"
+            :src="user?.cover_photo ? `${APP_CONFIG.STORAGE_BASE_URL}/covers/${user.cover_photo}` : 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'"
             height="300"
             cover
             class="cover-bg"
@@ -50,7 +50,7 @@
           >
             <v-img 
               v-if="user?.avatar" 
-              :src="`http://localhost:8000/storage/avatars/${user.avatar}`"
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${user.avatar}`"
               cover
             ></v-img>
             <v-icon v-else size="75" color="white">mdi-account</v-icon>
@@ -263,7 +263,7 @@
                               <v-avatar size="20" class="mx-2">
                                 <v-img 
                                   v-if="seance.coach.avatar" 
-                                  :src="`http://localhost:8000/storage/avatars/${seance.coach.avatar}`"
+                                  :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${seance.coach.avatar}`"
                                   cover
                                 ></v-img>
                                 <v-icon v-else size="10">mdi-account</v-icon>
@@ -278,7 +278,7 @@
                               <v-avatar size="20" class="mx-2">
                                 <v-img 
                                   v-if="seance.challenger.avatar" 
-                                  :src="`http://localhost:8000/storage/avatars/${seance.challenger.avatar}`"
+                                  :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${seance.challenger.avatar}`"
                                   cover
                                 ></v-img>
                                 <v-icon v-else size="10">mdi-account</v-icon>
@@ -322,7 +322,7 @@
           <v-avatar size="300" class="mb-4">
             <v-img 
               v-if="user?.avatar" 
-              :src="`http://localhost:8000/storage/avatars/${user.avatar}`"
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${user.avatar}`"
               cover
             ></v-img>
             <v-icon v-else size="150">mdi-account</v-icon>
@@ -360,6 +360,7 @@ import { defineComponent, ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '../../../store/AdminStore/UserStore'
 import { useAuthStore } from '../../../store/AuthStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 export default defineComponent({
   setup() {
@@ -616,9 +617,10 @@ export default defineComponent({
       confirmDelete, 
       deleteUser,
       getStateColor,
-      formatState
+      formatState,
+      APP_CONFIG
     }
-    }
+  }
 })
 </script>
 
@@ -832,6 +834,15 @@ export default defineComponent({
   .info-value {
     text-align: left;
   }
+}
+
+/* Classes utilitaires */
+.no-radius-btn {
+  border-radius: 0 !important;
+}
+
+.role-chip-no-radius {
+  border-radius: 0 !important;
 }
 
 /* Styles pour les séances */

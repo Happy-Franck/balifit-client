@@ -270,7 +270,7 @@
             <v-row v-if="!seanceStore.currentSeance.coach_id">
               <v-col cols="6">
                 <div v-if="seanceStore.currentSeance?.img_debut">
-                  <v-img :src="`http://localhost:8000/storage/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_debut}`" width="200px"></v-img>
+                  <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_debut}`" width="200px"></v-img>
                   <v-btn @click="supprChallengerDebut(seanceStore.currentSeance.id)">x</v-btn>
                 </div>
                 <div v-else-if="seanceStore.currentSeance?.img_debut == null">
@@ -282,7 +282,7 @@
               </v-col>
               <v-col cols="6">
                 <div v-if="seanceStore.currentSeance?.img_fin">
-                  <v-img :src="`http://localhost:8000/storage/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_fin}`" width="200px"></v-img>
+                  <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_fin}`" width="200px"></v-img>
                   <v-btn @click="supprChallengerFin(seanceStore.currentSeance.id)">x</v-btn>
                 </div>
                 <div v-else-if="seanceStore.currentSeance?.img_fin == null">
@@ -304,7 +304,7 @@
           <div>Trainings:
             <v-sheet height="100px" class="mb-3 pr-5" style="display: flex !important; justify-content: space-between; align-items: center; overflow: hidden;" rounded elevation="10" v-for="(kotrana, index) in seanceStore.currentSeanceTrainings" :key="index">
               <div v-if="kotrana.image">
-                <v-img :src="`http://localhost:8000/storage/trainings/${kotrana.image}`" width="140px" height="100px" class="img-train" cover></v-img>
+                <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${kotrana.image}`" width="140px" height="100px" class="img-train" cover></v-img>
               </div>
               <p class="ml-5">{{kotrana.name}}</p>
               <div>
@@ -354,6 +354,7 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Chart, registerables } from 'chart.js';
+import { APP_CONFIG } from '../../../config/constants'
 
 export default defineComponent({
   setup(){

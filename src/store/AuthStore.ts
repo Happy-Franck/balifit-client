@@ -108,7 +108,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async getUserAuth(){
       try {
-        const response = await http.get('/user')
+        const response = await http.get('/profile')
         this.userAuth = response.data.user
         return response.data.user
       } catch (error) {

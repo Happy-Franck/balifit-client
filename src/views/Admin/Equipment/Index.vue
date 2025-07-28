@@ -117,7 +117,7 @@
             <td>
               <v-avatar
                 v-if="item.image"
-                :image="`http://127.0.0.1:8000/storage/equipments/${item.image}`"
+                :image="`${APP_CONFIG.STORAGE_BASE_URL}/equipments/${item.image}`"
                 size="40"
               ></v-avatar>
               <v-icon v-else size="40" color="grey">mdi-weight-lifter</v-icon>
@@ -271,6 +271,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useEquipmentStore } from '../../../store/AdminStore/EquipmentStore'
 import { useRouter } from 'vue-router'
+import { APP_CONFIG } from '../../../config/constants'
 
 const equipmentStore = useEquipmentStore()
 const router = useRouter()

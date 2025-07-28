@@ -104,18 +104,29 @@ export const useProductStore = defineStore('productAdmin', {
     },
 
     async updateProduct(id: number, data: any, formData: FormData) {
+      this.loading = true
       try {
-        this.loading = true
-        const response = await http.post(`/admin/produit/${id}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-        this.message = response.data.message
+        let response: any
+        
+        if (formData) {
+          // Si on a un FormData (avec images), utiliser la route POST
+          response = await http.post(`/admin/produit/${id}`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+        } else {
+          // Sinon, envoyer les données JSON avec PUT
+          response = await http.put(`/admin/produit/${id}`, data)
+        }
+        
         this.alert = true
+        this.message = response.data.message
         return response.data
       } catch (error: any) {
-        console.error('Erreur lors de la mise à jour:', error)
+        console.error('Erreur lors de la mise à jour du produit:', error)
+        this.alert = true
+        this.message = error.response?.data?.message || 'Erreur lors de la mise à jour du produit'
         throw error
       } finally {
         this.loading = false

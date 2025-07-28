@@ -32,16 +32,16 @@
         <div class="video-container">
           <video
             v-if="training.video"
-            :src="`http://127.0.0.1:8000/storage/training_videos/${training.video}`"
+            :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
             controls
             class="youtube-video"
-            :poster="training.image ? `http://127.0.0.1:8000/storage/trainings/${training.image}` : ''"
+            :poster="training.image ? `${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}` : ''"
           >
             Votre navigateur ne supporte pas la lecture vidéo.
           </video>
           <div v-else-if="training.image" class="image-container">
             <v-img
-              :src="`http://127.0.0.1:8000/storage/trainings/${training.image}`"
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
               :alt="training.name"
               class="youtube-image"
               cover
@@ -155,7 +155,7 @@
               <!-- Image par défaut -->
               <v-img
                 v-if="suggestion.image"
-                :src="`http://127.0.0.1:8000/storage/trainings/${suggestion.image}`"
+                :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${suggestion.image}`"
                 :alt="suggestion.name"
                 height="94"
                 cover
@@ -169,7 +169,7 @@
               <video
                 v-if="suggestion.video"
                 :id="`video-${suggestion.id}`"
-                :src="`http://127.0.0.1:8000/storage/training_videos/${suggestion.video}`"
+                :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${suggestion.video}`"
                 class="suggestion-video"
                 muted
                 loop
@@ -245,6 +245,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useTrainingStore } from '../../../store/AdminStore/TrainingStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 const route = useRoute()
 const router = useRouter()

@@ -4,13 +4,13 @@
     <div v-if="challengerStore.currentChallenger">
       <h5>{{challengerStore.currentChallenger.name}}</h5>
       <p>{{challengerStore.currentChallenger.email}}</p>
-      <v-img :src="`http://localhost:8000/storage/avatars/${challengerStore.currentChallenger.avatar}`" width="100px">
+      <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${challengerStore.currentChallenger.avatar}`" width="100px">
       </v-img>
       <hr/>
       <v-row>
         <v-col cols="3" v-for="(item , index) in challengerStore.currentChallenger.challenger_seances" :key="index">
-          <v-img :src="`http://localhost:8000/storage/seance/${item.challenger_id}/${item.img_debut}`" width="100px"></v-img>
-          <v-img :src="`http://localhost:8000/storage/seance/${item.challenger_id}/${item.img_fin}`" width="100px"></v-img>
+          <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${item.challenger_id}/${item.img_debut}`" width="100px"></v-img>
+          <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${item.challenger_id}/${item.img_fin}`" width="100px"></v-img>
           <p>Admin : {{item.admin_id}}</p>
           <p>Coach : {{item.coach_id}}</p>
           <v-chip v-if="AuthStore.userAuth?.id == item.coach_id" color="cyan">
@@ -54,6 +54,7 @@ import { defineComponent , ref , toRefs , reactive , watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useChallengerStore } from '../../../store/CoachStore/ChallengerStore'
 import { useAuthStore } from '../../../store/AuthStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 export default defineComponent({
   setup() {

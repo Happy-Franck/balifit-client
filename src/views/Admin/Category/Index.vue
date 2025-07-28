@@ -109,7 +109,7 @@
                 <td>
                   <v-img
                     v-if="item.image"
-                    :src="`http://127.0.0.1:8000/storage/categories/${item.image}`"
+                    :src="`${APP_CONFIG.STORAGE_BASE_URL}/categories/${item.image}`"
                     :alt="item.name"
                     width="50"
                     height="50"
@@ -158,7 +158,7 @@
             </div>
             <v-img
               v-if="selectedCategory.image"
-              :src="`http://127.0.0.1:8000/storage/categories/${selectedCategory.image}`"
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/categories/${selectedCategory.image}`"
               :alt="selectedCategory.name"
               width="100%"
               height="350px"
@@ -186,7 +186,7 @@
               <div class="suggestion-thumbnail">
                 <v-img
                   v-if="training.image"
-                  :src="`http://127.0.0.1:8000/storage/trainings/${training.image}`"
+                  :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
                   :alt="training.name"
                   height="94"
                   cover
@@ -200,7 +200,7 @@
                 <video
                   v-if="training.video"
                   :id="`video-${training.id}`"
-                  :src="`http://127.0.0.1:8000/storage/training_videos/${training.video}`"
+                  :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
                   class="suggestion-video"
                   muted
                   loop
@@ -329,6 +329,7 @@
 import { defineComponent, watch, reactive, toRefs, ref, computed, onMounted } from 'vue'
 import { useCategoryStore } from '../../../store/AdminStore/CategoryStore'
 import { useRouter } from 'vue-router'
+import { APP_CONFIG } from '../../../config/constants'
 
 export default defineComponent({
   setup() {

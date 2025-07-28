@@ -14,7 +14,7 @@
         <v-col cols="12" sm="6">
           <h5>DEBUT: {{seanceStore.currentSeance.img_debut}}</h5>
           <div v-if="seanceStore.currentSeance.img_debut">
-            <v-img :src="`http://localhost:8000/storage/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_debut}`" width="200px"></v-img>
+            <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_debut}`" width="200px"></v-img>
             <v-btn @click="supprImgDebut">x</v-btn>
           </div>
           <div v-else-if="seanceStore.currentSeance.img_debut == null">
@@ -27,7 +27,7 @@
         <v-col cols="12" sm="6">
           <h5>FIN: {{seanceStore.currentSeance.img_fin}}</h5>
           <div v-if="seanceStore.currentSeance.img_fin">
-            <v-img :src="`http://localhost:8000/storage/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_fin}`" width="200px"></v-img>
+            <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_fin}`" width="200px"></v-img>
             <v-btn @click="supprImgFin">x</v-btn>
           </div>
           <div v-else-if="seanceStore.currentSeance.img_fin == null">
@@ -63,6 +63,7 @@
 import { defineComponent , watch, reactive, toRefs } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSeanceStore } from '../../../store/CoachStore/SeanceStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 export default defineComponent({
   setup() {

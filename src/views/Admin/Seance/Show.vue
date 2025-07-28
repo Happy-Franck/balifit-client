@@ -78,7 +78,7 @@
           <v-avatar 
             size="40" 
             class="perfect-avatar"
-            :image="challenger?.avatar ? `http://127.0.0.1:8000/storage/avatars/${challenger.avatar}` : ''"
+            :image="challenger?.avatar ? `${APP_CONFIG.STORAGE_BASE_URL}/avatars/${challenger.avatar}` : ''"
           >
             <v-icon v-if="!challenger?.avatar">mdi-account</v-icon>
           </v-avatar>
@@ -92,7 +92,7 @@
           <v-avatar 
             size="40" 
             class="perfect-avatar"
-            :image="coach?.avatar ? `http://127.0.0.1:8000/storage/avatars/${coach.avatar}` : ''"
+            :image="coach?.avatar ? `${APP_CONFIG.STORAGE_BASE_URL}/avatars/${coach.avatar}` : ''"
           >
             <v-icon v-if="!coach?.avatar">mdi-account-tie</v-icon>
           </v-avatar>
@@ -139,7 +139,7 @@
             </div>
             <div v-if="seance.img_debut" class="image-container">
               <v-img
-                :src="`http://127.0.0.1:8000/storage/seance/${challenger?.id}/${seance.img_debut}`"
+                :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${challenger?.id}/${seance.img_debut}`"
                 :alt="'Image avant séance'"
                 class="seance-image"
                 cover
@@ -157,7 +157,7 @@
             </div>
             <div v-if="seance.img_fin" class="image-container">
               <v-img
-                :src="`http://127.0.0.1:8000/storage/seance/${challenger?.id}/${seance.img_fin}`"
+                :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${challenger?.id}/${seance.img_fin}`"
                 :alt="'Image après séance'"
                 class="seance-image"
                 cover
@@ -195,7 +195,7 @@
                   <!-- Image par défaut -->
                   <v-img
                     v-if="training.image"
-                    :src="`http://127.0.0.1:8000/storage/trainings/${training.image}`"
+                    :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
                     :alt="training.name"
                     height="60"
                     width="80"
@@ -210,7 +210,7 @@
                   <video
                     v-if="training.video"
                     :id="`video-${training.id}`"
-                    :src="`http://127.0.0.1:8000/storage/training_videos/${training.video}`"
+                    :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
                     class="training-video"
                     muted
                     loop
@@ -307,6 +307,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSeanceStore } from '../../../store/AdminStore/SeanceStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 const route = useRoute()
 const router = useRouter()

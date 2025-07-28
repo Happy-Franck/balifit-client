@@ -63,7 +63,7 @@
                 >
                   <v-img
                     v-if="user.avatar"
-                    :src="`http://localhost:8000/storage/avatars/${user.avatar}`"
+                    :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${user.avatar}`"
                     cover
                   ></v-img>
                   <v-icon
@@ -139,6 +139,7 @@ import { ref, onMounted, watch, defineOptions } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../../../store/AdminStore/UserStore'
 import { useRolePermissionStore } from '../../../store/AdminStore/RolePermissionStore'
+import { APP_CONFIG } from '../../../config/constants'
 
 // Définir le nom du composant pour keep-alive
 defineOptions({
