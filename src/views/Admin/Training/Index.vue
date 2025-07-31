@@ -2,7 +2,7 @@
   <div class="training-admin">
     <div class="d-flex justify-space-between align-center mb-6">
       <h1 class="text-h4 font-weight-bold">Gestion des Entraînements</h1>
-      <v-btn color="primary" size="large" @click="openCreateDialog">
+      <v-btn color="primary" size="large" @click="dialog = true">
         <v-icon start>mdi-plus</v-icon>
         Nouvel Entraînement
       </v-btn>
@@ -213,76 +213,152 @@
     </v-card>
 
     <!-- Create/Edit Dialog -->
-    <v-dialog v-model="dialog" max-width="600px" persistent>
+    <v-dialog v-model="dialog" max-width="800px" persistent scrollable>
       <v-card>
         <v-card-title class="text-h5 pa-4 bg-primary text-white">
-          <v-icon start>{{ isEditing ? 'mdi-pencil' : 'mdi-plus' }}</v-icon>
-          {{ isEditing ? 'Modifier l\'Entraînement' : 'Nouvel Entraînement' }}
+          <v-icon start>mdi-plus</v-icon>
+          Nouvel Entraînement
         </v-card-title>
 
         <v-form ref="form" v-model="valid" @submit.prevent="saveTraining">
           <v-card-text class="pa-6">
             <v-row>
-              <v-col cols="12">
+              <!-- Nom -->
+              <v-col cols="12" md="6">
                 <v-text-field
                   v-model="editedTraining.name"
-                  label="Nom de l'entraînement"
+                  label="Nom de l'entraînement *"
                   :rules="[rules.required]"
                   variant="outlined"
                   prepend-inner-icon="mdi-dumbbell"
+                  required
                 ></v-text-field>
               </v-col>
 
-              <v-col cols="12">
+              <!-- Description -->
+              <v-col cols="12" md="6">
                 <v-textarea
                   v-model="editedTraining.description"
-                  label="Description"
+                  label="Description *"
                   :rules="[rules.required]"
                   variant="outlined"
-                  rows="3"
                   prepend-inner-icon="mdi-text"
+                  rows="4"
+                  required
                 ></v-textarea>
               </v-col>
 
-              <v-col cols="12">
+              <!-- Catégories (Muscles) -->
+              <v-col cols="12" md="6">
                 <v-select
                   v-model="editedTraining.category_ids"
                   :items="categoryOptions"
                   item-title="name"
                   item-value="id"
-                  label="Muscles cibles"
+                  label="Muscles ciblés"
                   variant="outlined"
                   prepend-inner-icon="mdi-muscle"
                   multiple
                   chips
                   closable-chips
-                ></v-select>
+                  :loading="categoryStore.loading"
+                  :disabled="categoryStore.loading"
+                >
+                  <template v-slot:prepend-inner>
+                    <v-icon v-if="categoryStore.loading" class="mr-2">mdi-loading mdi-spin</v-icon>
+                  </template>
+                </v-select>
+                <div v-if="!categoryStore.loading && categoryOptions.length === 0" class="text-caption text-grey-darken-1 mt-1">
+                  Aucune catégorie disponible.
+                </div>
               </v-col>
 
-              <v-col cols="12">
+              <!-- Équipements -->
+              <v-col cols="12" md="6">
                 <v-select
                   v-model="editedTraining.equipment_ids"
                   :items="equipmentOptions"
                   item-title="name"
                   item-value="id"
-                  label="Équipements utilisés"
+                  label="Équipements nécessaires"
                   variant="outlined"
                   prepend-inner-icon="mdi-weight-lifter"
                   multiple
                   chips
                   closable-chips
-                ></v-select>
+                  :loading="equipmentStore.loading"
+                  :disabled="equipmentStore.loading"
+                >
+                  <template v-slot:prepend-inner>
+                    <v-icon v-if="equipmentStore.loading" class="mr-2">mdi-loading mdi-spin</v-icon>
+                  </template>
+                </v-select>
+                <div v-if="!equipmentStore.loading && equipmentOptions.length === 0" class="text-caption text-grey-darken-1 mt-1">
+                  Aucun équipement disponible.
+                </div>
+              </v-col>
+
+              <!-- Upload Image -->
+              <v-col cols="12" md="6">
+                <v-file-input
+                  v-model="imageFile"
+                  label="Image de l'entraînement"
+                  accept="image/*"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-camera"
+                  show-size
+                  @change="previewImage"
+                ></v-file-input>
+                
+                <!-- Aperçu image -->
+                <v-card v-if="imagePreview" variant="outlined" class="mt-2 pa-4">
+                  <v-card-subtitle class="pa-0 mb-2">
+                    <v-icon start size="16">mdi-eye</v-icon>
+                    Aperçu
+                  </v-card-subtitle>
+                  <v-img
+                    :src="imagePreview"
+                    max-height="200"
+                    class="rounded"
+                  ></v-img>
+                </v-card>
+              </v-col>
+
+              <!-- Upload Vidéo -->
+              <v-col cols="12" md="6">
+                <v-file-input
+                  v-model="videoFile"
+                  label="Vidéo de l'entraînement"
+                  accept="video/*"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-video"
+                  show-size
+                ></v-file-input>
               </v-col>
             </v-row>
           </v-card-text>
 
-          <v-card-actions class="pa-4">
-            <v-spacer></v-spacer>
-            <v-btn color="grey" variant="text" @click="closeDialog">
+          <v-card-actions class="pa-6 pt-0">
+            <v-btn
+              color="grey"
+              variant="outlined"
+              @click="closeDialog"
+              :disabled="trainingStore.loading"
+            >
+              <v-icon start>mdi-close</v-icon>
               Annuler
             </v-btn>
-            <v-btn color="primary" variant="elevated" type="submit" :disabled="!valid">
-              {{ isEditing ? 'Modifier' : 'Créer' }}
+            
+            <v-spacer></v-spacer>
+            
+            <v-btn
+              color="primary"
+              type="submit"
+              :loading="trainingStore.loading"
+              :disabled="!valid"
+            >
+              <v-icon start>mdi-content-save</v-icon>
+              Créer
             </v-btn>
           </v-card-actions>
         </v-form>
@@ -330,29 +406,22 @@ const router = useRouter()
 const dialog = ref(false)
 const deleteDialog = ref(false)
 const valid = ref(false)
-const isEditing = ref(false)
-const itemToDelete = ref(null)
 const currentPage = ref(1)
 const searchQuery = ref('')
 const sortBy = ref('id')
 const sortOrder = ref('asc')
+const itemToDelete = ref(null)
+const imageFile = ref<File[]>([])
+const videoFile = ref<File[]>([])
+const imagePreview = ref<string | null>(null)
 let searchTimeout: number | null = null
 
 const editedTraining = reactive({
-  id: null,
   name: '',
   description: '',
   category_ids: [],
   equipment_ids: []
 })
-
-const defaultTraining = {
-  id: null,
-  name: '',
-  description: '',
-  category_ids: [],
-  equipment_ids: []
-}
 
 const difficulties = ['Débutant', 'Intermédiaire', 'Avancé', 'Expert']
 
@@ -380,43 +449,64 @@ const loadTrainings = (page = 1) => {
   trainingStore.getTrainings(page, searchQuery.value, sortBy.value, sortOrder.value)
 }
 
-const openCreateDialog = () => {
-  isEditing.value = false
-  Object.assign(editedTraining, defaultTraining)
-  dialog.value = true
-}
-
 const editTraining = (training: any) => {
-  isEditing.value = true
-  Object.assign(editedTraining, {
-    ...training,
-    category_ids: training.categories ? training.categories.map(c => c.id) : [],
-    equipment_ids: training.equipments ? training.equipments.map(e => e.id) : []
-  })
-  dialog.value = true
+  router.push(`/admin/training/${training.id}/edit`)
 }
 
 const closeDialog = () => {
   dialog.value = false
-  Object.assign(editedTraining, defaultTraining)
+  Object.assign(editedTraining, { name: '', description: '', category_ids: [], equipment_ids: [] })
+  imageFile.value = []
+  videoFile.value = []
+  imagePreview.value = null
+}
+
+const previewImage = () => {
+  if (imageFile.value && imageFile.value.length > 0) {
+    const file = imageFile.value[0]
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      imagePreview.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  } else {
+    imagePreview.value = null
+  }
 }
 
 const saveTraining = async () => {
-  const trainingData = {
-    ...editedTraining,
-    categories: editedTraining.category_ids,
-    equipments: editedTraining.equipment_ids
-  }
-  delete trainingData.category_ids
-  delete trainingData.equipment_ids
+  const formData = new FormData()
+  
+  // Ajouter les données de base
+  formData.append('name', editedTraining.name)
+  formData.append('description', editedTraining.description)
 
-  if (isEditing.value) {
-    await trainingStore.updateTraining(editedTraining.id, trainingData)
-  } else {
-    await trainingStore.storeTraining(trainingData)
+  // Ajouter les catégories
+  editedTraining.category_ids.forEach((id, index) => {
+    formData.append(`categories[${index}]`, id.toString())
+  })
+
+  // Ajouter les équipements
+  editedTraining.equipment_ids.forEach((id, index) => {
+    formData.append(`equipments[${index}]`, id.toString())
+  })
+
+  // Ajouter les fichiers si présents
+  if (imageFile.value && imageFile.value.length > 0) {
+    formData.append('image', imageFile.value[0])
   }
-  closeDialog()
-  loadTrainings(currentPage.value)
+
+  if (videoFile.value && videoFile.value.length > 0) {
+    formData.append('video', videoFile.value[0])
+  }
+
+  try {
+    await trainingStore.storeTraining({}, formData)
+    closeDialog()
+    loadTrainings(currentPage.value)
+  } catch (error) {
+    console.error('Erreur lors de la création:', error)
+  }
 }
 
 const viewTraining = (id: number) => {
@@ -429,7 +519,7 @@ const confirmDelete = (training: any) => {
 }
 
 const deleteTraining = async () => {
-  if (itemToDelete.value) {
+  if (itemToDelete.value?.id) {
     await trainingStore.deleteTraining(itemToDelete.value.id)
     deleteDialog.value = false
     loadTrainings()

@@ -83,22 +83,22 @@
             <v-container>
               <v-row>
                 <v-col cols="12">
-                  <v-text-field required v-model="name" label="Name" density="compact" variant="outlined"></v-text-field>
+                  <v-text-field required v-model="state.name" label="Name" density="compact" variant="outlined"></v-text-field>
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field required v-model="description" label="Description" density="compact" variant="outlined"></v-text-field>
+                  <v-text-field required v-model="state.description" label="Description" density="compact" variant="outlined"></v-text-field>
                 </v-col>
                 <v-col cols="12">
-                  <v-file-input @change="uploadImage" show-size prepend-icon="mdi-camera" v-model="image" clearable label="Image"></v-file-input>
+                  <v-file-input @change="uploadImage" show-size prepend-icon="mdi-camera" v-model="state.image" clearable label="Image"></v-file-input>
                 </v-col>
                 <v-col cols="12">
-                  <v-file-input @change="uploadVideo" show-size prepend-icon="mdi-video" v-model="video" clearable label="Video"></v-file-input>
+                  <v-file-input @change="uploadVideo" show-size prepend-icon="mdi-video" v-model="state.video" clearable label="Video"></v-file-input>
                 </v-col>
                 <v-col cols="12">
                   <v-select
                     required
                     multiple
-                    v-model="categories"
+                    v-model="state.categories"
                     label="Catégories musculaires"
                     :items="categoryStore.categories"
                     item-title="name"
@@ -114,7 +114,7 @@
                       v-if="index === 4"
                       class="text-grey text-caption align-self-center"
                     >
-                      (+{{ categories.length - 4 }} autres)
+                      (+{{ state.categories.length - 4 }} autres)
                     </span>
                   </template>
                   <template v-slot:prepend-inner>
@@ -128,7 +128,7 @@
                 <v-col cols="12">
                   <v-select
                     multiple
-                    v-model="equipments"
+                    v-model="state.equipments"
                     label="Équipements nécessaires"
                     :items="equipmentStore.equipments"
                     item-title="name"
@@ -146,7 +146,7 @@
                       v-if="index === 3"
                       class="text-grey text-caption align-self-center"
                     >
-                      (+{{ equipments.length - 3 }} autres)
+                      (+{{ state.equipments.length - 3 }} autres)
                     </span>
                   </template>
                   <template v-slot:prepend-inner>
@@ -166,7 +166,7 @@
             <v-btn
               color="blue-darken-1"
               variant="text"
-              @click="dialog = false"
+              @click="closeDialog"
             >
               Close
             </v-btn>
@@ -193,20 +193,42 @@
         md="4"
         lg="3"
       >
-        <v-card class="training-card" elevation="2" hover>
-          <v-img
-            v-if="training.image"
-            :src="`/storage/trainings/${training.image}`"
-            height="200"
-            cover
-            class="bg-grey-lighten-2"
-          >
-            <template v-slot:placeholder>
-              <div class="d-flex align-center justify-center fill-height">
-                <v-icon size="64" color="grey-lighten-1">mdi-dumbbell</v-icon>
-              </div>
-            </template>
-          </v-img>
+        <v-card 
+          class="training-card" 
+          elevation="2" 
+          hover
+          @mouseenter="playVideo(training.id)"
+          @mouseleave="pauseVideo(training.id)"
+        >
+          <div class="training-media-container">
+            <!-- Image par défaut -->
+            <img
+              v-if="training.image"
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
+              :alt="training.name"
+              class="training-image"
+            />
+            <div v-else class="training-placeholder">
+              <v-icon size="64" color="grey-lighten-1">mdi-dumbbell</v-icon>
+            </div>
+            
+            <!-- Vidéo qui apparaît au hover -->
+            <video
+              v-if="training.video"
+              :id="`video-${training.id}`"
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
+              class="training-video"
+              muted
+              loop
+              preload="metadata"
+            >
+            </video>
+            
+            <!-- Play overlay pour les vidéos -->
+            <div v-if="training.video" class="play-overlay">
+              <v-icon size="20" color="white">mdi-play</v-icon>
+            </div>
+          </div>
           
           <v-card-title class="text-truncate">
             {{ training.name }}
@@ -290,133 +312,168 @@
   </v-container>
 </template>
 
-<script lang="ts">
-import { defineComponent , ref , reactive , toRefs , watch, computed } from 'vue'
+<script setup lang="ts">
+import { ref, reactive, toRefs, watch, computed, onMounted } from 'vue'
 import { useCategoryStore } from '../../../store/CoachStore/CategoryStore'
 import { useTrainingStore } from '../../../store/CoachStore/TrainingStore'
 import { useEquipmentStore } from '../../../store/CoachStore/EquipmentStore'
 import { useAuthStore } from '../../../store/AuthStore'
+import { APP_CONFIG } from '../../../config/constants'
 
-export default defineComponent({
-  setup() {
-    const dialog = ref(false)
-    const searchQuery = ref('')
-    const selectedCategoryTab = ref('all')
-    
-    const state = reactive({
-      name: '',
-      description: '',
-      image: null as null | any,
-      video: null as null | any,
-      categories: [] as any,
-      equipments: [] as any,
-      sary: null as null | any,
-      vidaka: null as null | any,
-    })
-    const categoryStore = useCategoryStore()
-    const trainingStore = useTrainingStore()
-    const equipmentStore = useEquipmentStore()
-    
-    categoryStore.getCategories()
-    trainingStore.getTrainings()
-    equipmentStore.getEquipments()
-    
-    const AuthStore = useAuthStore()
-    AuthStore.getUserAuth()
-    
-    // Computed property pour les trainings filtrés
-    const displayedTrainings = computed(() => {
-      let trainings = trainingStore.trainings;
-      
-      // Filtrage par recherche
-      if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        trainings = trainings.filter(training => 
-          training.name.toLowerCase().includes(query) ||
-          training.description.toLowerCase().includes(query) ||
-          training.categories?.some(cat => cat.name.toLowerCase().includes(query)) ||
-          training.equipments?.some(eq => eq.name.toLowerCase().includes(query))
-        );
-      }
-      
-      // Filtrage par catégorie (tab sélectionné)
-      if (selectedCategoryTab.value !== 'all') {
-        trainings = trainings.filter(training =>
-          training.categories?.some(cat => cat.id === selectedCategoryTab.value)
-        );
-      }
-      
-      return trainings;
-    });
-    
-    const filterTrainings = () => {
-      // Cette méthode est appelée par les événements de filtrage
-      // La computed property se met à jour automatiquement
-    };
-    
-    watch(
-      [() => trainingStore.message, () => trainingStore.alert],
-      ([newMessage, newAlert]) => {
-        if (newMessage !== '' && newAlert) {
-          trainingStore.getTrainings()
-          setTimeout(() => {
-            trainingStore.message = '';
-            trainingStore.alert = false;
-          }, 5000);
-        }
-      }
+const dialog = ref(false)
+const searchQuery = ref('')
+const selectedCategoryTab = ref('all')
+
+const state = reactive({
+  name: '',
+  description: '',
+  image: null as null | any,
+  video: null as null | any,
+  categories: [] as any,
+  equipments: [] as any,
+  sary: null as null | any,
+  vidaka: null as null | any,
+})
+
+const categoryStore = useCategoryStore()
+const trainingStore = useTrainingStore()
+const equipmentStore = useEquipmentStore()
+
+categoryStore.getCategories()
+trainingStore.getTrainings()
+equipmentStore.getEquipments()
+
+const AuthStore = useAuthStore()
+AuthStore.getUserAuth()
+
+// Computed property pour les trainings filtrés
+const displayedTrainings = computed(() => {
+  let trainings = trainingStore.trainings;
+  
+  // Test: afficher les trainings avec vidéos
+  const trainingsWithVideo = trainings.filter(t => t.video)
+  console.log('Trainings avec vidéo:', trainingsWithVideo.length)
+  
+  // Filtrage par recherche
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    trainings = trainings.filter(training => 
+      training.name.toLowerCase().includes(query) ||
+      training.description.toLowerCase().includes(query) ||
+      training.categories?.some(cat => cat.name.toLowerCase().includes(query)) ||
+      training.equipments?.some(eq => eq.name.toLowerCase().includes(query))
     );
-    
-    const uploadImage = (e: any) => {
-      state.sary = e.target.files[0]
-    }
-    const uploadVideo = (e: any) => {
-      state.vidaka = e.target.files[0]
-    }
-    const createTraining = () => {
-      dialog.value = false
-      trainingStore.loading = true;
-      const formData = new FormData();
-      if (state.image) {
-        formData.append('image', state.sary);
-      }
-      if (state.video) {
-        formData.append('video', state.vidaka);
-      }
-      trainingStore.storeTraining(
-        {
-          name: state.name,
-          description: state.description,
-          categories: state.categories,
-          equipments: state.equipments,
-        },
-        formData
-      )
-      state.name = ''
-      state.description = ''
-      state.categories = []
-      state.equipments = []
-      state.image = null
-      state.sary = null
-      state.video = null
-      state.vidaka = null
-    }
-    return {
-      categoryStore, 
-      equipmentStore, 
-      createTraining, 
-      trainingStore, 
-      AuthStore, 
-      dialog, 
-      searchQuery,
-      selectedCategoryTab,
-      displayedTrainings,
-      filterTrainings,
-      ...toRefs(state), 
-      uploadImage, 
-      uploadVideo 
+  }
+  
+  // Filtrage par catégorie (tab sélectionné)
+  if (selectedCategoryTab.value !== 'all') {
+    trainings = trainings.filter(training =>
+      training.categories?.some(cat => cat.id === selectedCategoryTab.value)
+    );
+  }
+  
+  return trainings;
+});
+
+const filterTrainings = () => {
+  // Cette méthode est appelée par les événements de filtrage
+  // La computed property se met à jour automatiquement
+};
+
+watch(
+  [() => trainingStore.message, () => trainingStore.alert],
+  ([newMessage, newAlert]) => {
+    if (newMessage !== '' && newAlert) {
+      trainingStore.getTrainings()
+      setTimeout(() => {
+        trainingStore.message = '';
+        trainingStore.alert = false;
+      }, 5000);
     }
   }
+);
+
+const uploadImage = (e: any) => {
+  state.sary = e.target.files[0]
+}
+
+const uploadVideo = (e: any) => {
+  state.vidaka = e.target.files[0]
+}
+
+const playVideo = (trainingId: number) => {
+  const videoElement = document.querySelector(`#video-${trainingId}`) as HTMLVideoElement
+  if (videoElement) {
+    videoElement.currentTime = 0
+    videoElement.play().catch(error => {
+      console.log('Erreur lecture vidéo:', error)
+    })
+  }
+}
+
+const pauseVideo = (trainingId: number) => {
+  const videoElement = document.querySelector(`#video-${trainingId}`) as HTMLVideoElement
+  if (videoElement) {
+    videoElement.pause()
+    videoElement.currentTime = 0
+  }
+}
+
+const createTraining = async () => {
+  try {
+    trainingStore.loading = true;
+    const formData = new FormData();
+    
+    if (state.image) {
+      formData.append('image', state.sary);
+    }
+    if (state.video) {
+      formData.append('video', state.vidaka);
+    }
+    
+    await trainingStore.storeTraining(
+      {
+        name: state.name,
+        description: state.description,
+        categories: state.categories,
+        equipments: state.equipments,
+      },
+      formData
+    )
+    
+    // Reset form only on success
+    resetForm()
+    
+    // Close dialog only on success
+    dialog.value = false
+  } catch (error) {
+    console.error('Erreur lors de la création:', error)
+  } finally {
+    trainingStore.loading = false
+  }
+}
+
+const resetForm = () => {
+  state.name = ''
+  state.description = ''
+  state.categories = []
+  state.equipments = []
+  state.image = null
+  state.sary = null
+  state.video = null
+  state.vidaka = null
+}
+
+const closeDialog = () => {
+  dialog.value = false
+  resetForm()
+}
+
+// Lifecycle
+onMounted(() => {
+  // Réinitialiser le modal au chargement de la page
+  dialog.value = false
+  resetForm()
 })
 </script>
 
@@ -435,6 +492,65 @@ export default defineComponent({
 
 .training-card .v-card-text {
   flex-grow: 1;
+}
+
+/* Container pour les médias */
+.training-media-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #000;
+}
+
+.training-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.training-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+}
+
+.training-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* Effet hover */
+.training-card:hover .training-image {
+  opacity: 0;
+}
+
+.training-card:hover .training-video {
+  opacity: 1;
+}
+
+.play-overlay {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.8);
+  border-radius: 4px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
 }
 
 .category-list {

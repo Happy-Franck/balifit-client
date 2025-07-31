@@ -1,285 +1,801 @@
 <template>
-  <v-container>
-    <v-card
-      width="auto"
-      absolute
-      style="z-index: 50;"
+  <v-container class="training-show">
+    <!-- Breadcrumbs -->
+    <v-breadcrumbs 
+      :items="breadcrumbItems" 
+      class="pa-0 mb-4"
+      divider="/"
     >
-    <v-progress-linear
-        :active="trainingStore.loading"
-        :indeterminate="trainingStore.loading"
-        bottom
-        color="deep-purple-accent-4"
-      ></v-progress-linear>
-    </v-card>
+      <template v-slot:item="{ item }">
+        <v-breadcrumbs-item
+          :to="item.href"
+          :disabled="item.disabled"
+        >
+          <v-icon v-if="item.icon" :icon="item.icon" size="16" class="mr-1"></v-icon>
+          {{ item.title }}
+        </v-breadcrumbs-item>
+      </template>
+    </v-breadcrumbs>
+
+    <!-- Loading state -->
+    <div v-if="trainingStore.loading" class="loading-container">
+      <v-progress-circular indeterminate size="64" color="primary"></v-progress-circular>
+      <p class="loading-text mt-4">Chargement...</p>
+    </div>
+
+    <!-- Alert messages -->
     <v-alert
-      border="start"
+      v-if="trainingStore.alert"
+      :text="trainingStore.message"
+      color="success"
       variant="tonal"
       closable
-      close-label="Close Alert"
-      color="deep-purple-accent-4"
-      v-if="trainingStore.alert" :text="trainingStore.message"
-      ></v-alert>
-    <div v-if="trainingStore.currentTraining">
-      <p>Name: {{trainingStore.currentTraining.name}}</p>
-      <p>Description: {{trainingStore.currentTraining.description}}</p>
-      <p>Categories:
-        <span v-for="(category , index) in trainingStore.currentTraining.categories" :key="index">
-          <v-chip
-            class="ma-2"
-            color="red"
-            text-color="white"
-          >
-            {{category.name}}
-          </v-chip>
-        </span>
-      </p>
-      <p v-if="trainingStore.currentTraining.equipments && trainingStore.currentTraining.equipments.length > 0">
-        Équipements:
-        <span v-for="(equipment, index) in trainingStore.currentTraining.equipments" :key="index">
-          <v-chip
-            class="ma-2"
-            color="blue"
-            text-color="white"
-          >
-            {{equipment.name}}
-          </v-chip>
-        </span>
-      </p>
-      <div v-if="trainingStore.currentTraining.image">
-        <v-img
-          class="bg-white"
-          width="300"
-          :aspect-ratio="1"
-          :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${trainingStore.currentTraining.image}`"
-          cover
-        ></v-img>
-      </div>
-      <div v-if="AuthStore.userAuth?.id == trainingStore.currentTraining.user_id">
-        <v-btn @click="supprimerTraining(trainingStore.currentTraining.id)">Supprimer</v-btn>
-        <v-dialog
-          v-model="dialog"
-          transition="dialog-top-transition"
-          persistent
-          scrollable
-          width="1024"
-        >
-          <template v-slot:activator="{ props }">
+      class="mb-4"
+      @click:close="trainingStore.alert = false"
+    ></v-alert>
+
+    <!-- Training Content -->
+    <div v-if="training && !trainingStore.loading" class="training-content">
+      <!-- Debug info -->
+      <v-img v-if="training.image" :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`" width="100%" height="100%"></v-img>
+      
+      <!-- Header avec image/vidéo et infos principales -->
+      <v-card class="training-header-card" elevation="2">
+        <div class="media-section">
+          
+          <!-- Vidéo -->
+          <div v-if="training.video" class="video-container">
+            <video
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
+              controls
+              class="main-video"
+            >
+              Votre navigateur ne supporte pas la lecture vidéo.
+            </video>
+          </div>
+          
+          <!-- Placeholder si pas de média -->
+          <div v-if="!training.image && !training.video" class="no-media">
+            <v-icon size="80" color="grey-lighten-2">mdi-play-circle-outline</v-icon>
+            <p class="no-media-text">Aucun média disponible</p>
+          </div>
+        </div>
+
+        <!-- Informations principales -->
+        <div class="info-section">
+          <div class="training-header">
+            <h1 class="training-title">{{ training.name }}</h1>
+            <div class="training-meta">
+              <v-chip
+                v-if="AuthStore.userAuth?.id == training.user_id"
+                color="primary"
+                size="small"
+                class="ml-2"
+              >
+                <v-icon start size="16">mdi-account</v-icon>
+                Mon training
+              </v-chip>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="description-section">
+            <h3 class="section-title">Description</h3>
+            <p class="description-text">{{ training.description || 'Aucune description disponible' }}</p>
+          </div>
+
+          <!-- Catégories musculaires -->
+          <div v-if="training.categories && training.categories.length > 0" class="categories-section">
+            <h3 class="section-title">Muscles ciblés</h3>
+            <div class="categories-list">
+              <v-chip
+                v-for="category in training.categories"
+                :key="category.id"
+                size="small"
+                color="primary"
+                variant="flat"
+                class="category-chip"
+              >
+                <v-icon start size="14">mdi-muscle</v-icon>
+                {{ category.name }}
+              </v-chip>
+            </div>
+          </div>
+
+          <!-- Équipements -->
+          <div v-if="training.equipments && training.equipments.length > 0" class="equipment-section">
+            <h3 class="section-title">Équipements nécessaires</h3>
+            <div class="equipment-list">
+              <v-chip
+                v-for="equipment in training.equipments"
+                :key="equipment.id"
+                size="small"
+                color="success"
+                variant="flat"
+                class="equipment-chip"
+              >
+                <v-icon start size="14">mdi-weight-lifter</v-icon>
+                {{ equipment.name }}
+              </v-chip>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div v-if="AuthStore.userAuth?.id == training.user_id" class="actions-section">
+            <v-divider class="my-4"></v-divider>
+            <div class="actions-buttons">
+              <v-btn
+                color="primary"
+                variant="outlined"
+                @click="editTraining"
+                class="action-btn"
+              >
+                <v-icon start>mdi-pencil</v-icon>
+                Modifier
+              </v-btn>
+              <v-btn
+                color="error"
+                variant="outlined"
+                @click="confirmDelete"
+                class="action-btn"
+              >
+                <v-icon start>mdi-delete</v-icon>
+                Supprimer
+              </v-btn>
+            </div>
+          </div>
+        </div>
+      </v-card>
+    </div>
+
+    <!-- État vide -->
+    <div v-if="!training && !trainingStore.loading" class="empty-state">
+      <v-icon size="80" color="grey-lighten-1">mdi-dumbbell-off</v-icon>
+      <h3 class="empty-title">Training introuvable</h3>
+      <p class="empty-subtitle">Ce training n'existe pas ou a été supprimé.</p>
+      <v-btn color="primary" @click="goBack" class="mt-4">
+        <v-icon start>mdi-arrow-left</v-icon>
+        Retour à la liste
+      </v-btn>
+    </div>
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog v-model="deleteDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="text-h6 pa-4">
+          <v-icon class="mr-2" color="error">mdi-delete</v-icon>
+          Confirmer la suppression
+        </v-card-title>
+        <v-card-text class="pa-4">
+          <p>Êtes-vous sûr de vouloir supprimer le training <strong>{{ training?.name }}</strong> ?</p>
+          <v-alert type="warning" variant="tonal" class="mt-3">
+            Cette action est irréversible.
+          </v-alert>
+        </v-card-text>
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="deleteDialog = false">Annuler</v-btn>
+          <v-btn color="error" variant="flat" @click="deleteTraining">Supprimer</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Edit Training Dialog -->
+    <v-dialog v-model="editDialog" max-width="800px" persistent scrollable>
+      <v-card>
+        <v-card-title class="text-h5 pa-4 bg-primary text-white">
+          <v-icon start>mdi-pencil</v-icon>
+          Modifier l'entraînement
+        </v-card-title>
+
+        <v-form ref="editForm" v-model="editValid" @submit.prevent="saveTraining">
+          <v-card-text class="pa-6">
+            <v-row>
+              <!-- Nom -->
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="editFormData.name"
+                  label="Nom de l'entraînement *"
+                  :rules="[rules.required]"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-dumbbell"
+                  required
+                ></v-text-field>
+              </v-col>
+
+              <!-- Description -->
+              <v-col cols="12" md="6">
+                <v-textarea
+                  v-model="editFormData.description"
+                  label="Description *"
+                  :rules="[rules.required]"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-text"
+                  rows="4"
+                  required
+                ></v-textarea>
+              </v-col>
+
+              <!-- Catégories (Muscles) -->
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="editFormData.category_ids"
+                  :items="categoryOptions"
+                  item-title="name"
+                  item-value="id"
+                  label="Muscles ciblés"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-muscle"
+                  multiple
+                  chips
+                  closable-chips
+                  :loading="categoryStore.loading"
+                  :disabled="categoryStore.loading"
+                >
+                  <template v-slot:prepend-inner>
+                    <v-icon v-if="categoryStore.loading" class="mr-2">mdi-loading mdi-spin</v-icon>
+                  </template>
+                </v-select>
+                <div v-if="!categoryStore.loading && categoryOptions.length === 0" class="text-caption text-grey-darken-1 mt-1">
+                  Aucune catégorie disponible.
+                </div>
+              </v-col>
+
+              <!-- Équipements -->
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="editFormData.equipment_ids"
+                  :items="equipmentOptions"
+                  item-title="name"
+                  item-value="id"
+                  label="Équipements nécessaires"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-weight-lifter"
+                  multiple
+                  chips
+                  closable-chips
+                  :loading="equipmentStore.loading"
+                  :disabled="equipmentStore.loading"
+                >
+                  <template v-slot:prepend-inner>
+                    <v-icon v-if="equipmentStore.loading" class="mr-2">mdi-loading mdi-spin</v-icon>
+                  </template>
+                </v-select>
+                <div v-if="!equipmentStore.loading && equipmentOptions.length === 0" class="text-caption text-grey-darken-1 mt-1">
+                  Aucun équipement disponible.
+                </div>
+              </v-col>
+
+              <!-- Image actuelle -->
+              <v-col cols="12" md="6" v-if="training?.image">
+                <v-card variant="outlined" class="pa-4">
+                  <v-card-subtitle class="pa-0 mb-2">
+                    <v-icon start size="16">mdi-image</v-icon>
+                    Image actuelle
+                  </v-card-subtitle>
+                  <v-img
+                    :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
+                    :alt="training.name"
+                    max-height="200"
+                    class="rounded"
+                  ></v-img>
+                </v-card>
+              </v-col>
+
+              <!-- Upload nouvelle image -->
+              <v-col cols="12" :md="training?.image ? 6 : 12">
+                <v-file-input
+                  v-model="imageFile"
+                  label="Nouvelle image (optionnel)"
+                  accept="image/*"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-camera"
+                  show-size
+                  @change="previewImage"
+                ></v-file-input>
+                
+                <!-- Aperçu nouvelle image -->
+                <v-card v-if="imagePreview" variant="outlined" class="mt-2 pa-4">
+                  <v-card-subtitle class="pa-0 mb-2">
+                    <v-icon start size="16">mdi-eye</v-icon>
+                    Aperçu
+                  </v-card-subtitle>
+                  <v-img
+                    :src="imagePreview"
+                    max-height="200"
+                    class="rounded"
+                  ></v-img>
+                </v-card>
+              </v-col>
+
+              <!-- Vidéo actuelle -->
+              <v-col cols="12" md="6" v-if="training?.video">
+                <v-card variant="outlined" class="pa-4">
+                  <v-card-subtitle class="pa-0 mb-2">
+                    <v-icon start size="16">mdi-video</v-icon>
+                    Vidéo actuelle
+                  </v-card-subtitle>
+                  <video
+                    :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
+                    controls
+                    style="width: 100%; max-height: 200px;"
+                    class="rounded"
+                  >
+                    Votre navigateur ne supporte pas la lecture vidéo.
+                  </video>
+                </v-card>
+              </v-col>
+
+              <!-- Upload nouvelle vidéo -->
+              <v-col cols="12" :md="training?.video ? 6 : 12">
+                <v-file-input
+                  v-model="videoFile"
+                  label="Nouvelle vidéo (optionnel)"
+                  accept="video/*"
+                  variant="outlined"
+                  prepend-inner-icon="mdi-video"
+                  show-size
+                ></v-file-input>
+              </v-col>
+            </v-row>
+          </v-card-text>
+
+          <v-card-actions class="pa-6 pt-0">
+            <v-btn
+              color="grey"
+              variant="outlined"
+              @click="closeEditDialog"
+              :disabled="trainingStore.loading"
+            >
+              <v-icon start>mdi-close</v-icon>
+              Annuler
+            </v-btn>
+            
+            <v-spacer></v-spacer>
+            
             <v-btn
               color="primary"
-              v-bind="props"
+              type="submit"
+              :loading="trainingStore.loading"
+              :disabled="!editValid"
             >
-              Editer training
+              <v-icon start>mdi-content-save</v-icon>
+              Sauvegarder
             </v-btn>
-          </template>
-          <form @submit.prevent="editTraining(trainingStore.currentTraining.id)">
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">Editer training</span>
-              </v-card-title>
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col cols="12">
-                      <v-text-field required v-model="name" label="Name" density="compact" variant="outlined"></v-text-field>
-                    </v-col>
-                    <v-col cols="12">
-                      <v-text-field required v-model="description" label="Description" density="compact" variant="outlined"></v-text-field>
-                    </v-col>
-                    <v-col cols="12">
-                      <v-file-input @change="uploadImage" show-size prepend-icon="mdi-camera" v-model="image" clearable label="Image"></v-file-input>
-                    </v-col>
-                    <v-col cols="12">
-                      <v-file-input @change="uploadVideo" show-size prepend-icon="mdi-video" v-model="video" clearable label="Video"></v-file-input>
-                    </v-col>
-                    <v-col cols="12">
-                      <p>{{categories}}</p>
-                      <v-select
-                        required
-                        multiple
-                        v-model="categories"
-                        label="Catégories musculaires"
-                        :items="categoryStore.categories"
-                        item-title="name"
-                        item-value="id"
-                      >
-                      <template v-slot:selection="{ item, index }">
-                        <v-chip v-if="index < 4">
-                          <span>{{ item.title }}</span>
-                        </v-chip>
-                        <span
-                          v-if="index === 4"
-                          class="text-grey text-caption align-self-center"
-                        >
-                          (+{{ categories.length - 4 }} autres)
-                        </span>
-                      </template>
-                      </v-select>
-                    </v-col>
-                    <v-col cols="12">
-                      <v-select
-                        multiple
-                        v-model="equipments"
-                        label="Équipements nécessaires"
-                        :items="equipmentStore.equipments"
-                        item-title="name"
-                        item-value="id"
-                        hint="Sélectionnez les équipements nécessaires pour cet exercice"
-                        persistent-hint
-                      >
-                      <template v-slot:selection="{ item, index }">
-                        <v-chip v-if="index < 3">
-                          <span>{{ item.title }}</span>
-                        </v-chip>
-                        <span
-                          v-if="index === 3"
-                          class="text-grey text-caption align-self-center"
-                        >
-                          (+{{ equipments.length - 3 }} autres)
-                        </span>
-                      </template>
-                      </v-select>
-                    </v-col>
-                  </v-row>
-                </v-container>
-                <small>*indicates required field</small>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  color="blue-darken-1"
-                  variant="text"
-                  @click="dialog = false"
-                >
-                  Close
-                </v-btn>
-                <v-btn
-                  color="blue-darken-1"
-                  variant="text"
-                  type="submit"
-                >
-                  Save
-                </v-btn>
-              </v-card-actions>
-            </v-card>
-          </form>
-        </v-dialog>
-      </div>
-    </div>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
-<script lang="ts">
-import { defineComponent , ref , toRefs , reactive , watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { useRoute } from 'vue-router'
-import { useTrainingStore } from '../../..//store/CoachStore/TrainingStore'
-import { useAuthStore } from '../../..//store/AuthStore'
-import { useCategoryStore } from '../../..//store/CoachStore/CategoryStore'
-import { useEquipmentStore } from '../../../store/CoachStore/EquipmentStore'
+<script setup lang="ts">
+import { ref, computed, onMounted, watch, reactive } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useTrainingStore } from '../../../store/CoachStore/TrainingStore'
+import { useAuthStore } from '../../../store/AuthStore'
 import { APP_CONFIG } from '../../../config/constants'
+import { useCategoryStore } from '../../../store/CoachStore/CategoryStore'
+import { useEquipmentStore } from '../../../store/CoachStore/EquipmentStore'
 
-export default defineComponent({
-  setup() {
-    const dialog = ref(false)
-    const state = reactive({
-      name: '',
-      description: '',
-      image: null as null | any,
-      video: null as null | any,
-      categories: [] as any,
-      equipments: [] as any,
-      sary: null as null | any,
-      vidaka: null as null | any,
-    })
-    const trainingStore = useTrainingStore()
-    const AuthStore = useAuthStore()
-    const categoryStore = useCategoryStore()
-    const equipmentStore = useEquipmentStore()
-    
-    categoryStore.getCategories()
-    equipmentStore.getEquipments()
-    
-    const route = useRoute()
-    const router = useRouter()
-    
-    watch(
-      () => trainingStore.currentTraining,
-      (newTraining) => {
-        if (newTraining !== null) {
-          state.name = newTraining.name
-          state.description = newTraining.description
-          state.categories = newTraining.categories?.map(function(item) {
-            return item.id;
-          });
-          state.equipments = newTraining.equipments?.map(function(item) {
-            return item.id;
-          }) || [];
-        }
-      }
-    );
-    
-    watch(
-      [() => trainingStore.message, () => trainingStore.alert],
-      ([newMessage, newAlert]) => {
-        if (newMessage !== '' && newAlert) {
-          trainingStore.showTraining(Number(route.params.id))
-          setTimeout(() => {
-            trainingStore.message = '';
-            trainingStore.alert = false;
-          }, 5000);
-        }
-      }
-    )
+const route = useRoute()
+const router = useRouter()
+const trainingStore = useTrainingStore()
+const AuthStore = useAuthStore()
+const categoryStore = useCategoryStore()
+const equipmentStore = useEquipmentStore()
 
-    if(trainingStore.currentTraining){
-      if(trainingStore.currentTraining.id != Number(route.params.id)){
-        trainingStore.loading = true
-        trainingStore.currentTraining = null
-        trainingStore.showTraining(Number(route.params.id))
-      }
-    }
-    if(!trainingStore.currentTraining){
-      trainingStore.loading = true
-      trainingStore.currentTraining = null
-      trainingStore.showTraining(Number(route.params.id))
-    }
-    AuthStore.getUserAuth()
-    
-    const editTraining = (idTraining : number) => {
-      console.log(state.categories)
-      dialog.value = false
-      trainingStore.loading = true;
-      const formData = new FormData();
-      if (state.image) {
-        formData.append('image', state.sary);
-      }
-      if (state.video) {
-        formData.append('video', state.vidaka);
-      }
-      trainingStore.updateTraining(
-        idTraining,
-        {
-          name: state.name,
-          description: state.description,
-          categories: state.categories,
-          equipments: state.equipments,
-        },
-        formData
-      )
-    }
-    const supprimerTraining = (idTraining : number) => {
-      trainingStore.deleteTraining(idTraining)
-      router.push('/coach/training')
-      trainingStore.loading = true
-    }
-    const uploadImage = (e: any) => {
-      state.sary = e.target.files[0]
-    }
-    const uploadVideo = (e: any) => {
-      state.vidaka = e.target.files[0]
-    }
-    return {trainingStore , categoryStore , equipmentStore , uploadImage , uploadVideo , AuthStore , supprimerTraining , editTraining , dialog , ...toRefs(state) }
+// Reactive data
+const deleteDialog = ref(false)
+const editDialog = ref(false)
+const editValid = ref(false)
+const editForm = ref(null)
+const imageFile = ref<File | null>(null)
+const videoFile = ref<File | null>(null)
+const imagePreview = ref<string | null>(null)
+
+// Form data for editing
+const editFormData = reactive({
+  name: '',
+  description: '',
+  category_ids: [] as number[],
+  equipment_ids: [] as number[]
+})
+
+// Computed
+const training = computed(() => trainingStore.currentTraining)
+
+const breadcrumbItems = computed(() => [
+  {
+    title: 'Accueil',
+    href: '/coach/dashboard',
+    icon: 'mdi-home'
+  },
+  {
+    title: 'Trainings',
+    href: '/coach/training',
+    icon: 'mdi-dumbbell'
+  },
+  {
+    title: training.value?.name || 'Détail',
+    disabled: true,
+    icon: 'mdi-eye'
   }
+])
+
+const categoryOptions = computed(() => categoryStore.categories.map(c => ({
+  id: c.id,
+  name: c.name
+})))
+
+const equipmentOptions = computed(() => equipmentStore.equipments.map(e => ({
+  id: e.id,
+  name: e.name
+})))
+
+const rules = {
+  required: (value: string) => !!value || 'Champ requis',
+}
+
+// Methods
+const loadTraining = async () => {
+  const id = Number(route.params.id)
+  if (id) {
+    await trainingStore.showTraining(id)
+  }
+}
+
+const goBack = () => {
+  router.push('/coach/training')
+}
+
+const editTraining = () => {
+  editDialog.value = true
+  // Charger les données si pas encore fait
+  if (categoryStore.categories.length === 0) {
+    categoryStore.getCategories()
+  }
+  if (equipmentStore.equipments.length === 0) {
+    equipmentStore.getEquipments()
+  }
+  
+  // Préremplir le formulaire avec les données actuelles
+  if (training.value) {
+    editFormData.name = training.value.name
+    editFormData.description = training.value.description
+    editFormData.category_ids = training.value.categories?.map(c => c.id) || []
+    editFormData.equipment_ids = training.value.equipments?.map(e => e.id) || []
+  }
+}
+
+const viewTraining = (id: number) => {
+  router.push(`/coach/training/${id}`)
+}
+
+const confirmDelete = () => {
+  deleteDialog.value = true
+}
+
+const deleteTraining = async () => {
+  if (training.value) {
+    await trainingStore.deleteTraining(training.value.id)
+    deleteDialog.value = false
+    router.push('/coach/training')
+  }
+}
+
+const previewImage = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    const file = target.files[0];
+    imagePreview.value = URL.createObjectURL(file);
+  } else {
+    imagePreview.value = null;
+  }
+};
+
+const closeEditDialog = () => {
+  editDialog.value = false;
+  editForm.value?.reset();
+  imagePreview.value = null;
+  videoFile.value = null;
+  // Réinitialiser les données du formulaire
+  editFormData.name = '';
+  editFormData.description = '';
+  editFormData.category_ids = [];
+  editFormData.equipment_ids = [];
+};
+
+const saveTraining = async () => {
+  if (!editForm.value) return;
+
+  const isValid = await editForm.value.validate();
+  if (!isValid) {
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('name', editFormData.name);
+  formData.append('description', editFormData.description);
+  
+  // Ajouter les catégories
+  editFormData.category_ids.forEach((id, index) => {
+    formData.append(`categories[${index}]`, id.toString());
+  });
+
+  // Ajouter les équipements
+  editFormData.equipment_ids.forEach((id, index) => {
+    formData.append(`equipments[${index}]`, id.toString());
+  });
+
+  if (imageFile.value) {
+    formData.append('image', imageFile.value);
+  }
+  if (videoFile.value) {
+    formData.append('video', videoFile.value);
+  }
+
+  try {
+    await trainingStore.updateTraining(
+      training.value?.id || 0,
+      {
+        name: editFormData.name,
+        description: editFormData.description,
+        categories: editFormData.category_ids,
+        equipments: editFormData.equipment_ids,
+      },
+      formData
+    );
+    editDialog.value = false;
+    await trainingStore.showTraining(training.value?.id || 0); // Refresh training data
+  } catch (error) {
+    console.error('Error saving training:', error);
+  }
+};
+
+const formatDate = (dateString: string) => {
+  if (!dateString) return 'Non défini'
+  return new Date(dateString).toLocaleDateString('fr-FR', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return ''
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text
+}
+
+// Watchers
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    if (newId !== oldId) {
+      loadTraining()
+    }
+  }
+)
+
+// Watcher pour les alertes
+watch(
+  [() => trainingStore.message, () => trainingStore.alert],
+  ([newMessage, newAlert]) => {
+    if (newMessage !== '' && newAlert) {
+      setTimeout(() => {
+        trainingStore.message = '';
+        trainingStore.alert = false;
+      }, 5000);
+    }
+  }
+)
+
+// Lifecycle
+onMounted(() => {
+  loadTraining()
+  AuthStore.getUserAuth()
+  categoryStore.getCategories()
+  equipmentStore.getEquipments()
 })
 </script>
+
+<style scoped>
+.training-show {
+  max-width: 1200px;
+  padding: 16px;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.loading-text {
+  font-size: 1rem;
+  color: #606060;
+}
+
+/* Training content */
+.training-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header card */
+.training-header-card {
+  overflow: hidden;
+}
+
+.media-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.image-container {
+  width: 100%;
+}
+
+.main-image {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.video-container {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.main-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-media {
+  width: 100%;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f9f9f9;
+}
+
+.no-media-text {
+  margin-top: 8px;
+  color: #606060;
+  font-size: 0.875rem;
+}
+
+/* Info section */
+.info-section {
+  padding: 24px;
+}
+
+.training-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.training-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.training-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Sections */
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.description-section {
+  margin-bottom: 24px;
+}
+
+.description-text {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+.categories-section,
+.equipment-section {
+  margin-bottom: 24px;
+}
+
+.categories-list,
+.equipment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-chip,
+.equipment-chip {
+  font-size: 0.75rem;
+  height: 24px;
+}
+
+/* Actions */
+.actions-section {
+  margin-top: 16px;
+}
+
+.actions-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  text-transform: none;
+  font-size: 0.875rem;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 80px 24px;
+}
+
+.empty-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+  margin: 16px 0 8px 0;
+}
+
+.empty-subtitle {
+  font-size: 0.875rem;
+  color: rgb(var(--v-theme-on-surface-variant));
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .training-show {
+    padding: 8px;
+  }
+  
+  .training-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .info-section {
+    padding: 16px;
+  }
+  
+  .actions-buttons {
+    flex-direction: column;
+  }
+  
+  .suggestion-card {
+    margin-bottom: 16px;
+  }
+}
+</style>

@@ -16,8 +16,8 @@ export const useCategoryStore = defineStore('categoryCoach', {
     async getCategories() {
       try {
         this.loading = true;
-        const response = await http.get('/coach/category');
-        this.categories = response.data.categories;
+      const response = await http.get('/coach/category');
+      this.categories = response.data.categories;
       } catch (error) {
         console.error('Erreur lors de la récupération des catégories:', error);
         this.message = 'Erreur lors de la récupération des catégories';
@@ -29,7 +29,7 @@ export const useCategoryStore = defineStore('categoryCoach', {
     async showCategory(id: number) {
       try {
         this.loading = true;
-        const response = await http.get('/coach/category/'+id);
+      const response = await http.get('/coach/category/'+id);
         this.currentCategory = response.data.category;
       } catch (error) {
         console.error('Erreur lors de la récupération de la catégorie:', error);

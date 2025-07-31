@@ -23,6 +23,10 @@ export const useChallengerStore = defineStore('challengerCoach', {
     async showChallenger(id : number) {
       const response = await http.get('/coach/challenger/'+id);
       this.currentChallenger = response.data.challenger;
+      // Ajouter les données d'exercices par jour
+      if (response.data.exerciseCountByDay && this.currentChallenger) {
+        (this.currentChallenger as any).exerciseCountByDay = response.data.exerciseCountByDay;
+      }
       this.loading = false
     },
   }

@@ -1,32 +1,134 @@
 <template>
   <v-container>
-    <h1>Editer la seance</h1>
-    <v-form @submit.prevent="editSeance" enctype="multipart/form-data">
-      <h2>Trainings:</h2>
-      <v-row v-for="(kotrana, index) in seanceStore.currentSeanceTrainings" :key="index">
-        <v-col cols="12" sm="3">
-          <v-select
-            v-model="kotrana.pivot.training_id"
-            :items="trainingStore.trainings"
-            item-title="name"
-            item-value="id"
-            label="Training"
-            required
-          ></v-select>
-        </v-col>
-        <v-col cols="12" sm="3">
-          <v-text-field v-model="kotrana.pivot.series" label="Series" type="number" required></v-text-field>
-        </v-col>
-        <v-col cols="12" sm="3">
-          <v-text-field v-model="kotrana.pivot.repetitions" label="Repetitions" type="number" required></v-text-field>
-        </v-col>
-        <v-col cols="12" sm="3">
-          <v-text-field v-model="kotrana.pivot.duree" label="Duration" type="number" required></v-text-field>
-        </v-col>
-      </v-row>
+    <v-card class="mx-auto" max-width="1200" elevation="3">
+      <v-card-title class="text-h4 font-weight-bold text-center py-6 bg-primary text-white">
+        <v-icon size="large" class="mr-3">mdi-dumbbell</v-icon>
+        Éditer la Séance
+      </v-card-title>
 
-      <v-btn type="submit" color="primary">Enregistrer</v-btn>
-    </v-form>
+      <v-card-text class="pa-6">
+        <v-form @submit.prevent="editSeance" enctype="multipart/form-data">
+          <div class="mb-6">
+            <h2 class="text-h5 font-weight-bold mb-4 d-flex align-center">
+              <v-icon color="primary" class="mr-2">mdi-format-list-checks</v-icon>
+              Configuration des Exercices
+            </h2>
+            <p class="text-caption text-medium-emphasis mb-4">
+              Modifiez les paramètres de chaque exercice pour optimiser l'entraînement
+            </p>
+          </div>
+
+          <v-row v-for="(kotrana, index) in seanceStore.currentSeanceTrainings" :key="index" class="mb-4">
+            <v-col cols="12">
+              <v-card variant="outlined" class="pa-4">
+                <div class="d-flex align-center mb-3">
+                  <v-icon color="primary" class="mr-2">mdi-dumbbell</v-icon>
+                  <span class="text-h6 font-weight-medium">Exercice #{{ index + 1 }}</span>
+                </div>
+                
+                <v-row>
+                  <v-col cols="12" sm="6" md="3">
+                    <v-select
+                      v-model="kotrana.pivot.training_id"
+                      :items="trainingStore.trainings"
+                      item-title="name"
+                      item-value="id"
+                      label="Exercice"
+                      variant="outlined"
+                      prepend-icon="mdi-format-list-bulleted"
+                      required
+                      class="mb-2"
+                    ></v-select>
+                  </v-col>
+                  
+                  <v-col cols="12" sm="6" md="3">
+                    <v-text-field 
+                      v-model="kotrana.pivot.series" 
+                      label="Séries" 
+                      type="number" 
+                      variant="outlined"
+                      prepend-icon="mdi-repeat"
+                      required
+                      class="mb-2"
+                    ></v-text-field>
+                  </v-col>
+                  
+                  <v-col cols="12" sm="6" md="3">
+                    <v-text-field 
+                      v-model="kotrana.pivot.repetitions" 
+                      label="Répétitions" 
+                      type="number" 
+                      variant="outlined"
+                      prepend-icon="mdi-counter"
+                      class="mb-2"
+                      v-show="kotrana.pivot.useRepetitions"
+                    ></v-text-field>
+                    <v-text-field 
+                      v-model="kotrana.pivot.duree" 
+                      label="Durée (secondes)" 
+                      type="number" 
+                      variant="outlined"
+                      prepend-icon="mdi-timer"
+                      class="mb-2"
+                      v-show="!kotrana.pivot.useRepetitions"
+                    ></v-text-field>
+                  </v-col>
+                  
+                  <v-col cols="12" sm="6" md="3">
+                    <!-- Espace réservé pour maintenir l'alignement -->
+                    <div style="height: 56px;"></div>
+                  </v-col>
+                </v-row>
+
+                <v-row>
+                  <v-col cols="12">
+                    <v-checkbox
+                      v-model="kotrana.pivot.useRepetitions"
+                      label="Utiliser les répétitions (décochez pour utiliser la durée)"
+                      color="primary"
+                      class="mt-2"
+                      :true-value="true"
+                      :false-value="false"
+                      @update:model-value="(val) => {
+                        kotrana.pivot.useRepetitions = val;
+                        if (!val) {
+                          kotrana.pivot.repetitions = null;
+                        } else {
+                          kotrana.pivot.duree = null;
+                        }
+                      }"
+                    ></v-checkbox>
+                  </v-col>
+                </v-row>
+              </v-card>
+            </v-col>
+          </v-row>
+
+          <v-divider class="my-6"></v-divider>
+
+          <div class="d-flex justify-space-between align-center">
+            <v-btn 
+              variant="outlined" 
+              color="grey" 
+              prepend-icon="mdi-arrow-left"
+              @click="router.back()"
+            >
+              Retour
+            </v-btn>
+            
+            <v-btn 
+              type="submit" 
+              color="primary" 
+              size="large"
+              prepend-icon="mdi-content-save"
+              :loading="seanceStore.loading"
+            >
+              Enregistrer les Modifications
+            </v-btn>
+          </div>
+        </v-form>
+      </v-card-text>
+    </v-card>
   </v-container>
 </template>
 
@@ -66,6 +168,13 @@ export default defineComponent({
           inputs.duree = seanceStore.currentSeanceTrainings?.map(function(elem) {
             return elem.pivot.duree;
           })
+          
+          // Initialiser useRepetitions pour chaque exercice
+          seanceStore.currentSeanceTrainings?.forEach((elem) => {
+            if (elem.pivot.useRepetitions === undefined) {
+              elem.pivot.useRepetitions = elem.pivot.repetitions ? true : false;
+            }
+          });
         }
       }
     );

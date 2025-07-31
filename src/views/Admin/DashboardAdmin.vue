@@ -277,7 +277,7 @@ const goToSeances = () => {
 }
 
 const goToUsers = () => {
-  router.push('/admin/users')
+  router.push('/admin/user')
 }
 
 // Lifecycle

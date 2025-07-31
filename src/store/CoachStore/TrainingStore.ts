@@ -16,8 +16,8 @@ export const useTrainingStore = defineStore('trainingCoach', {
     async getTrainings() {
       try {
         this.loading = true;
-        const response = await http.get('/coach/training');
-        this.trainings = response.data.trainings;
+      const response = await http.get('/coach/training');
+      this.trainings = response.data.trainings;
       } catch (error) {
         console.error('Erreur lors de la récupération des trainings:', error);
         this.message = 'Erreur lors de la récupération des trainings';
@@ -40,7 +40,7 @@ export const useTrainingStore = defineStore('trainingCoach', {
     async showTraining(id: number) {
       try {
         this.loading = true;
-        const response = await http.get('/coach/training/'+id);
+      const response = await http.get('/coach/training/'+id);
         this.currentTraining = response.data.training;
       } catch (error) {
         console.error('Erreur lors de la récupération du training:', error);
