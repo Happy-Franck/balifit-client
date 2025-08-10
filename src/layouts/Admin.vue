@@ -110,6 +110,16 @@
           :active="isActive('/admin/product')"
           @click="navigateTo('/admin/product')"
         ></v-list-item>
+
+        <!-- Blogs -->
+        <v-list-item 
+          prepend-icon="mdi-note-text-outline" 
+          title="Blogs" 
+          value="blog"
+          color="primary"
+          :active="isActive('/admin/blog')"
+          @click="navigateTo('/admin/blog')"
+        ></v-list-item>
       </v-list>
     </v-navigation-drawer>
 

@@ -7,7 +7,7 @@
           <v-avatar size="80" class="mr-4 avatar-border">
             <v-img 
               v-if="challengerStore.currentChallenger.avatar"
-              :src="getAvatarUrl(challengerStore.currentChallenger.avatar)" 
+              :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${challengerStore.currentChallenger.avatar}`" 
               alt="Profile"
             />
             <v-icon 
@@ -128,14 +128,14 @@
           </v-chip>
                     
                     <v-chip 
-                      v-if="seance.validated === 1" 
+                      v-if="seance.validated === true" 
                       color="success" 
                       size="small"
                     >
             Validé
           </v-chip>
                     <v-chip 
-                      v-else-if="seance.validated === 0" 
+                      v-else-if="seance.validated === false" 
                       color="info" 
                       size="small"
                     >
@@ -216,7 +216,7 @@ import { defineComponent, ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useChallengerStore } from '../../../store/CoachStore/ChallengerStore'
 import { useAuthStore } from '../../../store/AuthStore'
-import { getAvatarUrl } from '../../../config/constants'
+import { getAvatarUrl, APP_CONFIG } from '../../../config/constants'
 import VueApexCharts from 'vue3-apexcharts'
 
 export default defineComponent({
@@ -257,7 +257,7 @@ export default defineComponent({
       if (!challengerStore.currentChallenger?.challenger_seances) return 0
       const totalSeances = challengerStore.currentChallenger.challenger_seances.length
       const completedSeances = challengerStore.currentChallenger.challenger_seances.filter(
-        (seance: any) => seance.validated === 1
+        (seance: any) => seance.validated === true
       ).length
       return Math.round((completedSeances / totalSeances) * 100) || 0
     }
@@ -415,7 +415,8 @@ export default defineComponent({
       chartSeries,
       gaugeOptions,
       gaugeSeries,
-      getAvatarUrl
+      getAvatarUrl,
+      APP_CONFIG
     }
   }
 })

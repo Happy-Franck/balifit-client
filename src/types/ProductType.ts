@@ -1,5 +1,4 @@
 import Product from './Product';
-import ProductAttribute from './ProductAttribute';
 
 interface ProductType {
   id: number,
@@ -12,7 +11,7 @@ interface ProductType {
   updated_at: string,
   produits?: Product[],
   active_produits?: Product[],
-  attributes?: ProductAttribute[]
+  produits_count?: number
 }
 
 export default ProductType; 

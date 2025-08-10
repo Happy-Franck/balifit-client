@@ -17,8 +17,9 @@
             <v-avatar size="80" class="mb-3 avatar-border">
               <v-img 
                 v-if="challenger.image"
-                :src="challenger.image" 
+                :src="`${APP_CONFIG.STORAGE_BASE_URL}/avatars/${challenger.image}`" 
                 alt="Profile"
+                cover
               />
               <v-icon 
                 v-else 
@@ -82,6 +83,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { useChallengerStore } from '../../../store/CoachStore/ChallengerStore'
+import { APP_CONFIG } from '../../../config/constants'
 export default defineComponent({
   setup(){
     const challengerStore = useChallengerStore()
@@ -93,7 +95,7 @@ export default defineComponent({
       return Math.min(Math.round(productivity), 100)
     }
     
-    return { challengerStore, calculateProductivity }
+    return { challengerStore, calculateProductivity, APP_CONFIG }
   }
 })
 </script>

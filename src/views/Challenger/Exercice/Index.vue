@@ -1,5 +1,19 @@
 <template>
   <v-container>
+    <div class="d-flex justify-space-between align-center mb-3">
+      <h2 class="text-h6">Explorer les exercices</h2>
+      <v-text-field
+        v-model="searchQuery"
+        label="Rechercher un exercice..."
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        density="compact"
+        clearable
+        @input="onSearchInput"
+        @click:clear="clearSearch"
+        style="max-width: 340px;"
+      />
+    </div>
     <v-progress-linear
       :active="categoryStore.loading && trainingStore.loading"
       :indeterminate="categoryStore.loading && trainingStore.loading"
@@ -16,7 +30,7 @@
             <h4 class="btn-name">Tout</h4>
           </div>
           <div class="d-flex flex-wrap justify-center btn-container" v-for="(category, index) in categoryStore.categories" :key="index">
-            <v-btn icon size="x-large" :data-type-filter="`.${category.name}`" @click="filterItems($event,`.${category.name}`)">
+            <v-btn icon size="x-large" :data-type-filter="`.` + slugify(category.name)" @click="filterItems($event,`.` + slugify(category.name))">
               <img class="sary-categ" :src="`${APP_CONFIG.STORAGE_BASE_URL}/categories/${category.image}`"/>
             </v-btn>
             <h4 class="btn-name">{{ category.name }}</h4>
@@ -27,13 +41,15 @@
         <h3 class="count" ref="countElement"></h3>
       </v-col>
       <v-col cols="12" sm="12">
-        <div class="grid d-flex justify-space-between flex-wrap py-3" ref="grid" style="width: 100%; height: auto;">
-          <div v-for="(training , index) in trainingStore.trainings" :key="index" :class="['element-item grid-sizer', getTrainingClasses(training)]">
+        <div class="grid py-3" ref="grid" style="width: 100%; height: auto;">
+          <div class="grid-sizer"></div>
+          <div v-for="(training , index) in trainingStore.trainings" :key="index" :class="['element-item', getTrainingClasses(training)]" :data-search="(training.name + ' ' + training.description).toLowerCase()">
             <v-card class="my-3" width="90%" height="auto">
               <v-img
                 class="align-end text-white"
                 height="auto"
                 :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
+                eager
                 cover
               >
                 <v-card-title>{{ training.name }}</v-card-title>
@@ -71,7 +87,7 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, watch, onMounted } from 'vue'
+  import { defineComponent, ref, watch, nextTick } from 'vue'
   import { useCategoryStore } from '../../../store/ChallengerStore/CategoryStore'
   import { useTrainingStore } from '../../../store/ChallengerStore/TrainingStore'
   import Isotope from 'isotope-layout';
@@ -85,68 +101,109 @@
       const dialog = ref<{ [key: number]: boolean }>({});
       const categoryStore = useCategoryStore()
       const trainingStore = useTrainingStore()
+      const searchQuery = ref('')
+      const activeCategoryFilter = ref<string>('')
       categoryStore.getCategories()
       trainingStore.getTrainings()
-      let iso: Isotope;
+      let iso: Isotope | null = null;
       let grid: HTMLElement | null = null;
+      let handleResize: (() => void) | null = null;
+
+      const slugify = (value: string): string => {
+        return 'cat-' + (value || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/gi, '-')
+          .replace(/^-+|-+$/g, '')
+      }
 
       function closeDialog(id: number): void {
         dialog.value[id] = false;
       }
 
       function getTrainingClasses(training: any): string {
-        return training.categories.map((category : any) => category.name).join(' ');
+        return training.categories.map((category : any) => slugify(category.name)).join(' ');
+      }
+
+      const updateCount = (value?: number) => {
+        const n = typeof value === 'number' ? value : (iso ? (iso as any).filteredItems?.length ?? 0 : 0)
+        if (countElement.value) countElement.value.innerText = `Nombre d'éléments : ${n}`
+      }
+
+      const applyFilters = () => {
+        if (!iso) return
+        const q = searchQuery.value.trim().toLowerCase()
+        const catSel = activeCategoryFilter.value // '' means all
+        iso.arrange({
+          filter: (itemElem: Element) => {
+            const text = (itemElem as HTMLElement).getAttribute('data-search') || ''
+            const textMatch = q ? text.includes(q) : true
+            const categoryMatch = catSel ? (itemElem as HTMLElement).matches(catSel) : true
+            return textMatch && categoryMatch
+          }
+        })
+      }
+
+      const onSearchInput = () => {
+        applyFilters()
+        updateCount()
+      }
+
+      const clearSearch = () => {
+        searchQuery.value = ''
+        applyFilters()
+        updateCount()
       }
 
       watch(
         [() => categoryStore.categories, () => trainingStore.trainings],
-        ([categs, traings]) => {
-          if (categs && traings) {
-            grid = document.querySelector('.grid') as HTMLElement;
-            if (grid) {
-              iso = new Isotope(grid, {
-                itemSelector: '.element-item',
-                masonry: {
-                  columnWidth: '.grid-sizer'
-                }
-              });
-              iso.layout()
-              imagesLoaded(grid).on('progress',function(instance, image) {
-                iso.reloadItems()
-                iso.arrange({ filter: '*' });
-                iso.layout()
-              })
+        async ([categs, trainings]) => {
+          if (!categs || !Array.isArray(categs) || categs.length === 0) return
+          if (!trainings || !Array.isArray(trainings) || trainings.length === 0) return
+
+          await nextTick()
+
+          grid = document.querySelector('.grid') as HTMLElement
+          if (!grid) return
+
+          const imgLoader = imagesLoaded(grid as HTMLElement, { background: true } as any)
+
+          imgLoader.on('always', () => {
+            if (iso) {
+              try { (iso as any).destroy?.() } catch {}
             }
-          }
-        }
+            iso = new Isotope(grid as HTMLElement, {
+              layoutMode: 'masonry',
+              itemSelector: '.element-item',
+              percentPosition: true,
+              transitionDuration: 0,
+              masonry: {
+                columnWidth: '.grid-sizer'
+              }
+            })
+            ;(iso as any).on('arrangeComplete', () => updateCount())
+            applyFilters()
+            updateCount()
+            try { (iso as any).layout?.() } catch {}
+
+            // setup resize re-layout
+            if (!handleResize) {
+              handleResize = () => { try { (iso as any)?.layout?.() } catch {} }
+              window.addEventListener('resize', handleResize)
+            }
+          })
+
+          imgLoader.on('progress', () => {
+            if (iso) {
+              try { (iso as any).reloadItems() } catch {}
+              applyFilters()
+              try { (iso as any).layout?.() } catch {}
+            }
+          })
+        },
+        { immediate: true }
       );
 
-      onMounted(()=> {
-        grid = document.querySelector('.grid') as HTMLElement;
-        if (grid) {
-          iso = new Isotope(grid, {
-            itemSelector: '.element-item',
-            masonry: {
-              columnWidth: '.grid-sizer'
-            }
-          });
-          iso.layout()
-          imagesLoaded(grid).on('progress',function(instance, image) {
-            iso.reloadItems()
-            iso.arrange({ filter: '*' });
-            iso.layout()
-          })
-          iso.arrange({ filter: '*' });
-          iso.layout()
-          const filteredElements = document.querySelectorAll('.element-item');
-          const count = filteredElements.length;
-          if (countElement.value) {
-            countElement.value.innerText = `Nombre d'éléments : ${count}`;
-          }
-        }
-      });
-
-      function filterItems(event: MouseEvent, categ : string): void {
+      function filterItems(event: MouseEvent, _categ : string): void {
         const btn = (event.target as HTMLElement)?.closest('button') as HTMLButtonElement | null;
         if (btn) {
           btn.classList.toggle('active');
@@ -168,15 +225,9 @@
             btn.classList.add('active');
           });
         }
-        const filteredElements = document.querySelectorAll('.element-item' + combinedFilter);
-        const count = filteredElements.length;
-
-        if (countElement.value) {
-          countElement.value.innerText = `Nombre d'éléments : ${count}`;
-        }
-
-        iso.arrange({ filter: combinedFilter });
-        iso.layout();
+        activeCategoryFilter.value = combinedFilter
+        applyFilters()
+        updateCount()
       }
 
       function afficheAll(event: MouseEvent) {
@@ -185,14 +236,20 @@
         });
         const btn = event.target as HTMLElement;
         btn.classList.add('active');
-        iso.arrange({ filter: '*' });
-        iso.layout();
-        const filteredElements = document.querySelectorAll('.element-item');
-        const count = filteredElements.length;
-        countElement.value.innerText = `Nombre d'éléments : ${count}`;
+        activeCategoryFilter.value = ''
+        applyFilters()
+        updateCount()
       }
 
-      return { filterItems, afficheAll, dialog, categoryStore, trainingStore, closeDialog, getTrainingClasses, countElement }
+      if (typeof window !== 'undefined') {
+        // safety: cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+          try { (iso as any)?.destroy?.() } catch {}
+          if (handleResize) window.removeEventListener('resize', handleResize)
+        })
+      }
+
+      return { filterItems, afficheAll, dialog, categoryStore, trainingStore, closeDialog, getTrainingClasses, countElement, APP_CONFIG, onSearchInput, clearSearch, searchQuery, slugify }
     }
   })
 </script>
@@ -212,7 +269,11 @@
   height: 45px !important;
   object-fit: cover;
 }
-.grid-sizer{
+.grid{
+  position: relative;
+}
+.grid-sizer,
+.element-item{
   width: 33.33%;
 }
 .active{

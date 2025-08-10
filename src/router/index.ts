@@ -24,6 +24,9 @@ import ProductAdmin from '../views/Admin/Product/Index.vue'
 import ProductItemAdmin from '../views/Admin/Product/Show.vue'
 import ProductCreateAdmin from '../views/Admin/Product/Create.vue'
 import ProductEditAdmin from '../views/Admin/Product/Edit.vue'
+import AdminBlogIndex from '../views/Admin/Blog/index.vue'
+import AdminBlogShow from '../views/Admin/Blog/show.vue'
+import AdminBlogEdit from '../views/Admin/Blog/edit.vue'
 //coach
 import Coach from '../layouts/Coach.vue'
 import DashboardCoach from '../views/Coach/DashboardCoach.vue'
@@ -40,7 +43,10 @@ import Challenger from '../layouts/Challenger.vue'
 import DashboardChallenger from '../views/Challenger/DashboardChallenger.vue'
 import SeanceChallenger from '../views/Challenger/Seance/Index.vue'
 import ProductChallenger from '../views/Challenger/Product/Index.vue'
+import ProductShowChallenger from '../views/Challenger/Product/Show.vue'
 import ExoChallenger from '../views/Challenger/Exercice/Index.vue'
+import ChallengerBlogIndex from '../views/Challenger/Blog/index.vue'
+import ChallengerBlogShow from '../views/Challenger/Blog/show.vue'
 //profile
 import EditProfile from '../views/Profile/EditProfile.vue'
 import ProfileView from '../views/Profile/ProfileView.vue'
@@ -173,6 +179,28 @@ const routes = [
         props: true
       },
       {
+        path: 'blog',
+        name: 'adminBlog',
+        component: AdminBlogIndex
+      },
+      {
+        path: 'blog/create',
+        name: 'adminBlogCreate',
+        component: AdminBlogEdit
+      },
+      {
+        path: 'blog/:slug',
+        name: 'adminBlogShow',
+        component: AdminBlogShow,
+        props: true
+      },
+      {
+        path: 'blog/:slug/edit',
+        name: 'adminBlogEdit',
+        component: AdminBlogEdit,
+        props: true
+      },
+      {
         path: 'profile',
         name: 'adminProfile',
         component: ProfileView
@@ -272,9 +300,26 @@ const routes = [
         component: ProductChallenger,
       },
       {
+        path: 'produit/:id',
+        name: 'challengerProduitShow',
+        component: ProductShowChallenger,
+        props: true
+      },
+      {
         path: 'exercice',
         name: 'exoProduit',
         component: ExoChallenger,
+      },
+      {
+        path: 'blog',
+        name: 'challengerBlog',
+        component: ChallengerBlogIndex
+      },
+      {
+        path: 'blog/:slug',
+        name: 'challengerBlogShow',
+        component: ChallengerBlogShow,
+        props: true
       },
       {
         path: 'profile',

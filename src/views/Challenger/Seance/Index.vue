@@ -815,7 +815,7 @@ export default defineComponent({
 
     function supprTraining(seanceId :number, trainingId :number, pivotId :number) {
       seanceStore.supprTraining(seanceId, trainingId, pivotId)
-    };
+    }
 
     const createSeance = () => {
       dialog.value = false

@@ -19,10 +19,87 @@
     ></v-alert>
     <v-container>
       <h1>Product</h1>
-      <v-row class="product-list">
+      
+      <!-- Search bar -->
+      <v-row class="mb-4">
+        <v-col cols="12" md="8">
+          <v-text-field
+            v-model="searchQuery"
+            label="Rechercher des produits..."
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            clearable
+            @input="onSearchInput"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+
+      <v-row>
+        <!-- Sidebar with product types -->
+        <v-col cols="12" md="3">
+          <v-card class="mb-4">
+            <v-card-title class="text-h6">
+              <v-icon start>mdi-shape</v-icon>
+              Catégories
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-list>
+              <v-list-item
+                :class="{ 'bg-primary': selectedProductTypeId === null }"
+                @click="filterByProductType(null)"
+                style="cursor: pointer;"
+              >
+                <v-list-item-title>
+                  <v-icon start>mdi-view-grid</v-icon>
+                  Tous les produits
+                </v-list-item-title>
+                <template v-slot:append>
+                  <v-chip size="small" color="primary">
+                    {{ productStore.totalProductsCount }}
+                  </v-chip>
+                </template>
+              </v-list-item>
+              <v-list-item
+                v-for="productType in productStore.productTypes"
+                :key="productType.id"
+                :class="{ 'bg-primary': selectedProductTypeId === productType.id }"
+                @click="filterByProductType(productType.id)"
+                style="cursor: pointer;"
+              >
+                <v-list-item-title>
+                  <v-icon start>mdi-tag</v-icon>
+                  {{ productType.name }}
+                </v-list-item-title>
+                <template v-slot:append>
+                  <v-chip size="small" color="secondary">
+                    {{ productType.produits_count }}
+                  </v-chip>
+                </template>
+              </v-list-item>
+            </v-list>
+          </v-card>
+        </v-col>
+
+        <!-- Product list -->
+        <v-col cols="12" md="9">
+          <!-- Debug info -->
+          <v-card v-if="!productStore.products || productStore.products.length === 0" class="mb-4 pa-4">
+            <v-card-title>Debug Info</v-card-title>
+            <v-card-text>
+              <p><strong>Loading:</strong> {{ productStore.loading }}</p>
+              <p><strong>Loading Product:</strong> {{ productStore.loadingProduct }}</p>
+              <p><strong>User authenticated:</strong> {{ !!authStore.userAuth }}</p>
+              <p><strong>User:</strong> {{ authStore.userAuth ? authStore.userAuth.name : 'Non connecté' }}</p>
+              <p><strong>Products count:</strong> {{ productStore.products ? productStore.products.length : 'undefined' }}</p>
+              <p><strong>Alert:</strong> {{ productStore.alert }}</p>
+              <p><strong>Message:</strong> {{ productStore.message }}</p>
+            </v-card-text>
+          </v-card>
+          
+          <v-row class="product-list">
         <v-col cols="12" sm="3" v-for="(product, index) in productStore.products" :key="index">
           <div v-if="product">
-            <v-card :loading="loading" class="mx-auto my-12" max-width="374">
+            <v-card class="mx-auto my-12" max-width="374">
               <template v-slot:loader="{ isActive }">
                 <v-progress-linear
                   :active="isActive"
@@ -31,7 +108,7 @@
                   indeterminate
                 ></v-progress-linear>
               </template>
-              <v-img cover height="375" :src="`${APP_CONFIG.STORAGE_BASE_URL}/produits/${product.image}`"></v-img>
+              <v-img cover height="375" :src="`${appConfig.STORAGE_BASE_URL}/produits/${product.image}`"></v-img>
               <v-card-item>
                 <v-card-title>{{product.name}}</v-card-title>
                 <v-card-subtitle>
@@ -41,76 +118,36 @@
               </v-card-item>
               <v-card-text>
                 <v-row align="center" class="mx-0">
-                  <v-rating v-if="product.rating && product.advices.length" :model-value="product.rating" color="amber" density="compact" half-increments readonly size="small"></v-rating>
-                  <div v-if="product.rating && product.advices.length" class="text-grey ms-4">{{product.rating}} ({{product.advices.length}}<v-icon color="error" icon="mdi-search-circle" size="small"></v-icon>)</div>
+                  <v-rating v-if="product.rating && product.advices && product.advices.length" :model-value="product.rating" color="amber" density="compact" half-increments readonly size="small"></v-rating>
+                  <div v-if="product.rating && product.advices && product.advices.length" class="text-grey ms-4">{{product.rating}} ({{product.advices.length}}<v-icon color="error" icon="mdi-search-circle" size="small"></v-icon>)</div>
                 </v-row>
                 <div class="my-4 text-subtitle-1">MGA • {{product.price}}</div>
                 <div>{{product.description}}</div>
               </v-card-text>
               <v-card-actions>
-                <v-dialog scrollable v-model="dialogStates[product.id]" persistent transition="dialog-top-transition" width="1024">
-                  <template v-slot:activator="{ props }">
-                    <v-btn color="primary" v-bind="props">Explorer</v-btn>
-                  </template>
-                  <v-card>
-                    <v-card-title class="text-h5">{{ product.name }}</v-card-title>
-                    <v-row>
-                      <v-col cols="12" sm="6">
-                        <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/produits/${product.image}`"></v-img>
-                      </v-col>
-                      <v-col cols="12" sm="6">
-                        <p>{{ product.description }}</p>
-                        <p>{{ product.poid }}</p>
-                        <p>{{ product.price }}</p>
-                        <div v-if="product.rating">
-                          <v-rating v-model="product.rating" color="yellow-accent-4"></v-rating>
-                        </div>
-                      </v-col>
-                      <v-col cols="12" sm="12">
-                        <ul style="display: flex; flex-wrap: wrap;">
-                          <li v-for="(commentaire, index) in product.advices" :key="index">
-                              <div v-if="commentaire.user_id == authStore.userAuth.id" style="order:-1;">
-                                <v-btn v-if="edition == false" color="green" @click="ouvrir(commentaire.comment, commentaire.note)">Editer</v-btn>
-                                <v-btn v-if="edition == true" color="blue" @click="fermer">Ne pas editer</v-btn>
-                                <v-btn color="red" @click="supprimerCommentaire(product.id, commentaire.id)">Supprimer</v-btn>
-                                <v-form v-if="edition" enctype="multipart/form-data" @submit.prevent="editerCommentaire(product.id, commentaire.id)">
-                                  <v-rating v-model="note" color="yellow-accent-4"></v-rating>
-                                  <v-text-field v-model="comment" name="comment" label="Commentaire" type="text" dense outlined></v-text-field>
-                                  <v-btn color="green-darken-1" variant="text" type="submit">valider</v-btn>
-                                </v-form>
-                                <div v-if="!edition">
-                                  <v-rating v-model="commentaire.note">
-                                  </v-rating>
-                                  <br>
-                                  {{ commentaire }}
-                                </div>
-                              </div>
-                              <div v-if="commentaire.user_id != authStore.userAuth.id">
-                                  <v-rating v-model="commentaire.note">
-                                  </v-rating>
-                                  <br>
-                                  {{ commentaire }}
-                              </div>
-                          </li>
-                        </ul>
-                        <div v-if="!hasUserCommented(product)">
-                          <v-form enctype="multipart/form-data" @submit.prevent="validateDialog(product.id)">
-                            <v-rating v-model="note" color="yellow-accent-4"></v-rating>
-                            <v-text-field v-model="comment" name="comment" label="Commentaire" type="text" dense outlined></v-text-field>
-                            <v-btn color="green-darken-1" variant="text" type="submit">valider</v-btn>
-                          </v-form>
-                        </div>
-                      </v-col>
-                    </v-row>
-                    <v-card-actions>
-                      <v-spacer></v-spacer>
-                      <v-btn color="green-darken-1" variant="text" @click="closeDialog(product.id)">close</v-btn>
-                    </v-card-actions>
-                  </v-card>
-                </v-dialog>
+                <v-btn 
+                  color="primary" 
+                  @click="goToProductDetail(product.id)"
+                  :loading="productStore.loadingProduct"
+                  :disabled="productStore.loadingProduct"
+                >
+                  Explorer
+                </v-btn>
               </v-card-actions>
             </v-card>
           </div>
+        </v-col>
+      </v-row>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-center mt-6" v-if="productStore.pagination.last_page > 1">
+        <v-pagination
+          v-model="currentPage"
+          :length="productStore.pagination.last_page"
+          :total-visible="7"
+          @update:modelValue="loadProducts"
+        ></v-pagination>
+      </div>
         </v-col>
       </v-row>
     </v-container>
@@ -118,67 +155,57 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
+import { defineComponent, ref, watch, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useProductStore } from '../../../store/ChallengerStore/ProductStore';
 import { useAuthStore } from '../../../store/AuthStore';
-import { APP_CONFIG } from '../../../config/constants'
+import { APP_CONFIG } from '../../../config/constants';
 
 export default defineComponent({
   setup() {
-    const dialogStates = ref({});
-    const comment = ref('');
-    const edition = ref(false);
-    const note = ref(0);
+    const router = useRouter();
+    const currentPage = ref(1);
+    const searchQuery = ref('');
+    const selectedProductTypeId = ref<number | null>(null);
     const productStore = useProductStore();
     const authStore = useAuthStore();
+    const appConfig = APP_CONFIG;
+    
+    let searchTimeout: number | null = null;
 
-    function closeDialog(productId) {
-      dialogStates.value[productId] = false;
-      edition.value = false
-      comment.value = '';
-      note.value = 0;
-    }
+    // Debug authentication on component mount
+    onMounted(() => {
+      console.log('🔐 Auth Debug:');
+      console.log('- User authenticated:', !!authStore.userAuth);
+      console.log('- User data:', authStore.userAuth);
+      console.log('- Token exists:', !!localStorage.getItem('token'));
+    });
 
-    const validateDialog = (productId) => {
-      const data = {
-        comment: comment.value,
-        note: note.value,
-      };
-      productStore.commenter(Number(productId), data);
-      dialogStates.value[productId] = false;
-      comment.value = '';
-      note.value = 0;
+    const loadProducts = (page = 1) => {
+      currentPage.value = page;
+      productStore.getProducts(page, searchQuery.value, selectedProductTypeId.value);
     };
 
-    const hasUserCommented = (product) => {
-      // Logique pour vérifier si l'utilisateur a déjà commenté le produit
-      return product.advices.some(comment => comment.user_id === authStore.userAuth.id);
-    };
-
-    const supprimerCommentaire = (productId : number, commentaireId : number) => {
-      productStore.supprAdvice(productId, commentaireId)
-    }
-
-    const ouvrir = (commentaire, notation) => {
-      edition.value = true
-      if(edition.value){
-        comment.value = commentaire
-        note.value = notation
+    const onSearchInput = () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
       }
-    }
+      searchTimeout = setTimeout(() => {
+        currentPage.value = 1; // Reset to first page when searching
+        loadProducts();
+      }, 500); // Debounce search for 500ms
+    };
 
-    const fermer = () => {
-      edition.value = false
-    }
+    const filterByProductType = (productTypeId: number | null) => {
+      selectedProductTypeId.value = productTypeId;
+      currentPage.value = 1; // Reset to first page when filtering
+      loadProducts();
+    };
 
-    const editerCommentaire = (productId : number, commentaireId : number) => {
-      edition.value = false
-      const data = {
-        comment: comment.value,
-        note: note.value,
-      };
-      productStore.editAdvice(productId, commentaireId, data)
-    }
+    const goToProductDetail = (productId: number) => {
+      // Naviguer vers la page de détail du produit
+      router.push({ name: 'challengerProduitShow', params: { id: productId } });
+    };
 
     watch(
       [() => productStore.message, () => productStore.alert],
@@ -193,9 +220,21 @@ export default defineComponent({
       }
     );
 
-    productStore.getProducts();
+    // Charger les produits au montage du composant
+    loadProducts();
 
-    return { fermer, ouvrir, edition, editerCommentaire, supprimerCommentaire , authStore, comment, note, dialogStates, closeDialog, validateDialog, productStore, hasUserCommented };
+    return { 
+      currentPage,
+      searchQuery,
+      selectedProductTypeId,
+      productStore, 
+      authStore,
+      loadProducts,
+      onSearchInput,
+      filterByProductType,
+      goToProductDetail,
+      appConfig
+    };
   },
 });
 </script>
