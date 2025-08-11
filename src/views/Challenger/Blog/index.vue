@@ -1,37 +1,44 @@
 <template>
   <div class="pa-4">
-    <div class="d-flex justify-space-between align-center mb-4">
-      <h1 class="text-h5">Blog</h1>
-      <v-text-field
-        v-model="search"
-        label="Rechercher un article..."
-        prepend-inner-icon="mdi-magnify"
-        variant="outlined"
-        density="compact"
-        clearable
-        @input="onSearchInput"
-        @click:clear="clearSearch"
-        style="max-width: 340px;"
-      />
-    </div>
-
-    <div class="d-flex justify-space-between align-center mb-2 text-body-2 text-grey-darken-1">
-      <div>
-        <span v-if="search">{{ total }} résultat(s) pour "{{ search }}"</span>
-        <span v-else>{{ total }} article(s)</span>
+    <v-sheet color="surface" class="mb-4 rounded-lg hpfit-shadow-soft">
+      <div class="d-flex flex-wrap align-center justify-space-between px-4 py-3">
+        <div class="d-flex align-center mb-2 mb-sm-0">
+          <v-icon icon="mdi-newspaper-variant-outline" color="primary" class="mr-2" />
+          <h1 class="text-h6 mb-0">Blog</h1>
+        </div>
+        <v-text-field
+          v-model="search"
+          label="Rechercher un article..."
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          density="compact"
+          clearable
+          hide-details
+          @input="onSearchInput"
+          @click:clear="clearSearch"
+          style="max-width: 360px;"
+        />
       </div>
-      <div>Page {{ page }} / {{ lastPage }}</div>
-    </div>
+      <v-divider />
+      <div class="d-flex justify-space-between align-center px-4 py-2 text-body-2 text-grey-darken-1">
+        <div>
+          <span v-if="search">{{ total }} résultat(s) pour "{{ search }}"</span>
+          <span v-else>{{ total }} article(s)</span>
+        </div>
+        <div>Page {{ page }} / {{ lastPage }}</div>
+      </div>
+    </v-sheet>
 
     <v-skeleton-loader v-if="loading && blogs.length === 0" type="image, article@3" />
 
     <v-row v-else>
       <v-col v-for="item in blogs" :key="item.id" cols="12" sm="6" md="4" lg="3">
-        <v-card class="h-100 d-flex flex-column" @click="goShow(item.slug)" style="cursor:pointer;">
-          <v-img v-if="item.image" :src="item.image" height="160" cover />
+        <v-card elevation="0" rounded="lg" class="h-100 d-flex flex-column hpfit-shadow-soft" @click="goShow(item.slug)" style="cursor:pointer;">
+          <v-img v-if="item.image" :src="item.image" height="160" cover class="rounded-t-lg" />
+          <v-sheet v-else height="160" class="rounded-t-lg hpfit-gradient-light"></v-sheet>
           <v-card-text class="flex-grow-1">
             <div class="d-flex align-center justify-space-between mb-2">
-              <v-chip :color="item.published ? 'success' : 'warning'" size="x-small" variant="flat">
+              <v-chip :color="item.published ? 'success' : 'warning'" size="x-small" variant="tonal">
                 {{ item.published ? 'Publié' : 'Brouillon' }}
               </v-chip>
               <span class="text-caption">{{ formatDate(item.created_at) }}</span>
@@ -42,16 +49,16 @@
               {{ item.excerpt || '—' }}
             </div>
           </v-card-text>
-          <v-card-actions>
-            <v-btn variant="text" color="primary" @click.stop="goShow(item.slug)">Lire</v-btn>
+          <v-card-actions class="px-4 pb-4">
+            <v-btn variant="text" color="primary" class="text-none" @click.stop="goShow(item.slug)">Lire</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
 
     <div class="d-flex align-center justify-space-between mt-4">
-      <v-pagination v-model="page" :length="lastPage" @update:modelValue="load" />
-      <v-select :items="[8,12,16,24]" v-model="perPage" label="Par page" density="compact" hide-details style="max-width: 120px;" />
+      <v-pagination v-model="page" :length="lastPage" color="primary" @update:modelValue="load" />
+      <v-select :items="[8,12,16,24]" v-model="perPage" label="Par page" density="compact" variant="outlined" hide-details style="max-width: 120px;" />
     </div>
   </div>
 </template>
