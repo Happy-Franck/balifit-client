@@ -47,6 +47,7 @@ import ProductShowChallenger from '../views/Challenger/Product/Show.vue'
 import ExoChallenger from '../views/Challenger/Exercice/Index.vue'
 import ChallengerBlogIndex from '../views/Challenger/Blog/index.vue'
 import ChallengerBlogShow from '../views/Challenger/Blog/show.vue'
+import ExoShowChallenger from '../views/Challenger/Exercice/Show.vue'
 //profile
 import EditProfile from '../views/Profile/EditProfile.vue'
 import ProfileView from '../views/Profile/ProfileView.vue'
@@ -309,6 +310,12 @@ const routes = [
         path: 'exercice',
         name: 'exoProduit',
         component: ExoChallenger,
+      },
+      {
+        path: 'exercice/:id',
+        name: 'challengerExerciceShow',
+        component: ExoShowChallenger,
+        props: true
       },
       {
         path: 'blog',

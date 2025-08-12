@@ -175,6 +175,89 @@
             </v-row>
           </div>
 
+          <!-- Layout Coach -->
+          <div v-else-if="isCoach" class="coach-layout">
+            <v-row>
+              <!-- Colonne gauche -->
+              <v-col cols="12" md="6">
+                <v-card class="mb-4 custom-card">
+                  <v-card-title class="custom-card-title">
+                    Informations du coach
+                  </v-card-title>
+                  <v-card-text>
+                    <div class="admin-info-grid">
+                      <div class="admin-info-item">
+                        <div class="admin-info-label">Téléphone</div>
+                        <div class="admin-info-value">{{ user?.telephone || 'Non renseigné' }}</div>
+                      </div>
+                      <div class="admin-info-item">
+                        <div class="admin-info-label">Sexe</div>
+                        <div class="admin-info-value">{{ formatSexe(user?.sexe) }}</div>
+                      </div>
+                      <div class="admin-info-item">
+                        <div class="admin-info-label">Membre depuis</div>
+                        <div class="admin-info-value">{{ formatDate(user?.created_at) }}</div>
+                      </div>
+                    </div>
+                  </v-card-text>
+                </v-card>
+
+                <v-card class="custom-card">
+                  <v-card-title class="custom-card-title">
+                    Objectif
+                  </v-card-title>
+                  <v-card-text>
+                    <v-chip 
+                      v-if="user?.objectif" 
+                      color="primary" 
+                      variant="elevated"
+                      size="large"
+                    >
+                      {{ formatObjectif(user.objectif) }}
+                    </v-chip>
+                    <span v-else class="text-medium-emphasis">Non renseigné</span>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
+              <!-- Colonne droite -->
+              <v-col cols="12" md="6">
+                <v-card class="custom-card">
+                  <v-card-title class="custom-card-title">
+                    Rôles et permissions
+                  </v-card-title>
+                  <v-card-text>
+                    <div class="mb-4">
+                      <div class="admin-info-label mb-2">Rôles</div>
+                      <v-chip 
+                        v-for="role in user?.roles" 
+                        :key="role.id"
+                        class="mr-2"
+                        color="success"
+                        variant="elevated"
+                      >
+                        {{ role.name }}
+                      </v-chip>
+                    </div>
+                    <div v-if="user?.permissions && user.permissions.length > 0">
+                      <div class="admin-info-label mb-2">Permissions spéciales</div>
+                      <v-chip 
+                        v-for="permission in user.permissions" 
+                        :key="permission.id"
+                        class="mr-2 mb-1"
+                        color="info"
+                        variant="outlined"
+                        size="small"
+                      >
+                        {{ permission.name }}
+                      </v-chip>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </div>
+
         </v-col>
       </v-row>
     </v-container>
@@ -249,6 +332,10 @@ const currentWeight = computed(() => {
 
 const isAdmin = computed(() => {
   return user.value?.roles?.some(role => role.name === 'administrateur') || false
+})
+
+const isCoach = computed(() => {
+  return user.value?.roles?.some(role => role.name === 'coach') || false
 })
 
 const goToEdit = () => {

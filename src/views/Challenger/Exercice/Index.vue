@@ -60,23 +60,7 @@
               </v-card-text>
 
               <v-card-actions>
-                <v-dialog scrollable v-model="dialog[training.id]" persistent transition="dialog-top-transition" width="1024">
-                  <template v-slot:activator="{ props }">
-                    <v-btn color="primary" v-bind="props">Explorer</v-btn>
-                  </template>
-                  <v-card>
-                    <v-card-title class="text-h5">{{ training.name }}</v-card-title>
-                    <v-row>
-                      <v-col cols="12" sm="6">
-                        <p>{{training}}</p>
-                      </v-col>
-                    </v-row>
-                    <v-card-actions>
-                      <v-spacer></v-spacer>
-                      <v-btn color="green-darken-1" variant="text" @click="closeDialog(training.id)">close</v-btn>
-                    </v-card-actions>
-                  </v-card>
-                </v-dialog>
+                <v-btn color="primary" @click="viewTraining(training.id)">Explorer</v-btn>
               </v-card-actions>
             </v-card>
           </div>
@@ -94,15 +78,16 @@
   //import Masonry from 'masonry-layout';
   import imagesLoaded from 'imagesloaded';
   import { APP_CONFIG } from '../../../config/constants'
+  import { useRouter } from 'vue-router'
 
   export default defineComponent({
     setup() {
       const countElement = ref<HTMLHeadingElement | null>(null);
-      const dialog = ref<{ [key: number]: boolean }>({});
       const categoryStore = useCategoryStore()
       const trainingStore = useTrainingStore()
       const searchQuery = ref('')
       const activeCategoryFilter = ref<string>('')
+      const router = useRouter()
       categoryStore.getCategories()
       trainingStore.getTrainings()
       let iso: Isotope | null = null;
@@ -116,8 +101,8 @@
           .replace(/^-+|-+$/g, '')
       }
 
-      function closeDialog(id: number): void {
-        dialog.value[id] = false;
+      function viewTraining(id: number): void {
+        router.push({ path: `/challenger/exercice/${id}` })
       }
 
       function getTrainingClasses(training: any): string {
@@ -249,7 +234,7 @@
         })
       }
 
-      return { filterItems, afficheAll, dialog, categoryStore, trainingStore, closeDialog, getTrainingClasses, countElement, APP_CONFIG, onSearchInput, clearSearch, searchQuery, slugify }
+      return { filterItems, afficheAll, categoryStore, trainingStore, viewTraining, getTrainingClasses, countElement, APP_CONFIG, onSearchInput, clearSearch, searchQuery, slugify }
     }
   })
 </script>
