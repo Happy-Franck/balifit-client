@@ -6,6 +6,7 @@ interface Product{
   poid: number,
   price: number,
   rating?: number,
+  comments_count?: number,
   user_id: number | null,
   product_type_id?: number | null,
   product_type?: {

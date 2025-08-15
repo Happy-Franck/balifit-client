@@ -23,7 +23,7 @@ export const useProductStore = defineStore('productChallenger', {
   getters: {
   },
   actions: {
-    async getProducts(page: number = 1, search: string = '', productTypeId: number | null = null) {
+    async getProducts(page: number = 1, search: string = '', productTypeId: number | null = null, minPrice: number | null = null, maxPrice: number | null = null) {
       try {
         this.loading = true;
         console.log('🔄 Chargement des produits...');
@@ -31,6 +31,8 @@ export const useProductStore = defineStore('productChallenger', {
         const params: any = { page };
         if (search) params.search = search;
         if (productTypeId) params.product_type_id = productTypeId;
+        if (minPrice !== null) params.min_price = minPrice;
+        if (maxPrice !== null) params.max_price = maxPrice;
         
         const response = await http.get('/challenger/produit', { params });
         

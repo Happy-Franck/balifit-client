@@ -22,9 +22,9 @@
       <v-card class="training-header-card" elevation="2">
         <div class="media-section">
           <!-- Video -->
-          <div v-if="training.video" class="video-container">
+          <div v-if="training.video_url || training.video" class="video-container">
             <video
-              :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
+              :src="training.video_url || training.video"
               controls
               class="main-video"
             >
@@ -33,9 +33,9 @@
           </div>
 
           <!-- Image -->
-          <div v-else-if="training.image" class="image-container">
+          <div v-else-if="training.image_url || training.image" class="image-container">
             <v-img
-              :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
+              :src="training.image_url || training.image"
               :alt="training.name"
               class="main-image"
               cover
@@ -116,7 +116,7 @@
           >
             <v-card class="hoverable" @click="viewTraining(rt.id)" style="cursor: pointer;">
               <v-img
-                :src="rt.image ? `${APP_CONFIG.STORAGE_BASE_URL}/trainings/${rt.image}` : ''"
+                :src="rt.image_url || rt.image || ''"
                 height="160"
                 cover
               >
