@@ -1,23 +1,7 @@
 <template>
   <div class="profile-view">
     <!-- Breadcrumbs (seulement si ce n'est pas mon profil) -->
-    <v-breadcrumbs 
-      v-if="!isMyProfile"
-      :items="breadcrumbItems" 
-      class="pa-0 mb-4"
-      divider="/"
-    >
-      <template v-slot:item="{ item }">
-        <v-breadcrumbs-item
-          :to="item.href"
-          :disabled="item.disabled"
-          class="breadcrumb-item"
-        >
-          <v-icon v-if="item.icon" :icon="item.icon" size="16" class="mr-1"></v-icon>
-          {{ item.title }}
-        </v-breadcrumbs-item>
-      </template>
-    </v-breadcrumbs>
+    
 
     <!-- Loading state -->
     <div v-if="loading" class="loading-container">

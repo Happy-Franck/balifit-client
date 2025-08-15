@@ -35,15 +35,7 @@
         <h3 class="text-h5 mb-2">Aucune séance trouvée</h3>
         <p class="text-body-1 text-medium-emphasis">
           Vous n'avez pas encore créé de séances d'entraînement.
-        </p>
-        <v-btn
-          color="primary"
-          size="large"
-          class="mt-4"
-          prepend-icon="mdi-plus"
-        >
-          Créer une séance
-        </v-btn>
+        </p>s
       </v-col>
     </v-row>
 

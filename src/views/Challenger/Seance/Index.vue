@@ -113,214 +113,442 @@
         cols="12"
         sm="8"
       >
-        <v-row>
-          <div v-if="!seanceStore.currentSeanceCoach">
-          </div>
-          <v-col cols="12">
-            <v-row>
-              <div v-if="seanceStore.currentSeance">
-                <div v-if="seanceStore.currentSeance.coach_id">
-                  <div v-if="seanceStore.currentSeance.validated == false">
-                    <v-btn color="green" @click="confirmer(seanceStore.currentSeance.id)">Valider la seance</v-btn>
-                    <v-btn color="yellow" @click="decliner(seanceStore.currentSeance.id)">Signaler une erreur</v-btn>
+        <!-- Section d'affichage des séances avec design moderne -->
+        <div v-if="seanceStore.currentSeance" class="seance-display-container">
+          <!-- En-tête de la séance -->
+          <v-card class="seance-header mb-6" elevation="3">
+            <v-card-text class="pa-6">
+              <div class="d-flex align-center justify-space-between mb-4">
+                <div class="d-flex align-center">
+                  <v-avatar size="60" class="mr-4" color="primary">
+                    <v-icon size="30" color="white">mdi-dumbbell</v-icon>
+                  </v-avatar>
+                  <div>
+                    <h2 class="text-h4 font-weight-bold text-primary mb-1">
+                      Séance d'entraînement
+                    </h2>
+                    <div class="d-flex align-center">
+                      <v-icon size="16" class="mr-2" color="grey">mdi-calendar</v-icon>
+                      <span class="text-body-1 text-grey-darken-1">
+                        {{seanceStore.dateTime(seanceStore.currentSeance.created_at)}}
+                      </span>
+                      <v-icon size="16" class="ml-4 mr-2" color="grey">mdi-clock</v-icon>
+                      <span class="text-body-1 text-grey-darken-1">
+                        {{seanceStore.hourTime(seanceStore.currentSeance.created_at)}}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div v-if="!seanceStore.currentSeanceCoach">
-                  <v-btn color="red" @click="deleteSeance(seanceStore.currentSeance?.id)">Supprimer la seance</v-btn>
-                  <v-dialog scrollable v-model="modal" persistent width="1024">
-                    <template v-slot:activator="{ props }">
-                      <v-btn color="primary" v-bind="props">Ajout exercices</v-btn>
-                    </template>
-                    <form enctype="multipart/form-data" @submit.prevent="addTraining">
-                      <v-card height="80vh">
-                        <v-card-title>
-                          <span class="text-h5">Ajout exercices</span>
-                        </v-card-title>
-                        <v-card-text>
-                          <v-container>
-                            <v-row>
-                              <v-col cols="12">
-                                <v-btn color="purple" @click="addField">Ajouter un champ</v-btn>
-                              </v-col>
-                              <v-col cols="12">
-                                <div id="all-data" >
-                                  <div v-for="(field, index) in fields" :key="index" class="list-field">
-                                    <v-row>
-                                      <v-col cols="3">
-                                        <div class="trainingslist">
-                                          <v-select
-                                            v-model="field.training"
-                                            :items="trainingStore.trainings"
-                                            item-title="name"
-                                            item-value="id"
-                                            label="Training"
-                                            required
-                                          ></v-select>
-                                        </div>
-                                      </v-col>
-                                      <v-col cols="3">
-                                        <div class="serietraining">
-                                          <v-text-field v-model="field.series" name="series[]" label="Series" type="number" dense outlined></v-text-field>
-                                        </div>
-                                      </v-col>
-                                      <v-col cols="3">
-                                        <div v-if="field.useRepetitions" class="reptraining">
-                                          <v-text-field v-model="field.repetitions" name="repetitions[]" label="Repetitions" type="number" dense outlined></v-text-field>
-                                        </div>
-                                        <div v-else class="dureetraining">
-                                          <v-text-field v-model="field.duree" name="duree[]" label="Duration" type="number" dense outlined></v-text-field>
-                                        </div>
-                                      </v-col>
-                                      <v-col cols="3" class="d-flex justify-content-center">
-                                        <v-btn v-if="index > 0" @click="deleteField(index)" icon="mdi-delete-outline"></v-btn>
-                                        <div class="toggle-container">
-                                          <v-checkbox
-                                            v-model="field.useRepetitions"
-                                            label="Use Repetitions"
-                                            dense
-                                          ></v-checkbox>
-                                        </div>
-                                      </v-col>
-                                    </v-row>
-                                  </div>
-                                </div>
-                              </v-col>
-                            </v-row>
-                          </v-container>
-                        </v-card-text>
-                        <v-card-actions>
-                          <v-spacer></v-spacer>
-                          <v-btn color="blue-darken-1" variant="text" @click="modal = false">Close</v-btn>
-                          <v-btn color="blue-darken-1" variant="text" type="submit">Save</v-btn>
-                        </v-card-actions>
-                      </v-card>
-                    </form>
-                  </v-dialog>
-                  <div v-if="seanceStore.currentSeanceTrainings?.length">
-                    <v-dialog scrollable v-model="modalEdit" persistent width="1024">
-                      <template v-slot:activator="{ props }">
-                        <v-btn color="primary" v-bind="props">Editer les trainings</v-btn>
-                      </template>
-                      <form enctype="multipart/form-data" @submit.prevent="editMyTraining">
-                        <v-card height="80vh">
-                          <v-card-title>
-                            <span class="text-h5">Edition des entrainements de l'exercice du :{{seanceStore.currentSeance?.created_at}}</span>
-                          </v-card-title>
-                          <v-card-text>
-                            <v-container>
-                              <v-row>
-                                <v-col cols="12">
-                                  <div id="all-data" >
-                                    <div v-for="(champ, index) in champs" :key="index" class="list-champ">
-                                      <v-row>
-                                        <v-col cols="3">
-                                          <div class="trainingslist">
-                                            <v-select
-                                              v-model="champ.training"
-                                              :items="trainingStore.trainings"
-                                              item-title="name"
-                                              item-value="id"
-                                              label="Training"
-                                              required
-                                            ></v-select>
-                                          </div>
-                                        </v-col>
-                                        <v-col cols="3">
-                                          <div class="serietraining">
-                                            <v-text-field v-model="champ.series" name="series[]" label="Series" type="number" dense outlined></v-text-field>
-                                          </div>
-                                        </v-col>
-                                        <v-col cols="3">
-                                          <div v-if="champ.useRepetitions" class="reptraining">
-                                            <v-text-field v-model="champ.repetitions" name="repetitions[]" label="Repetitions" type="number" dense outlined></v-text-field>
-                                          </div>
-                                          <div v-else class="dureetraining">
-                                            <v-text-field v-model="champ.duree" name="duree[]" label="Duration" type="number" dense outlined></v-text-field>
-                                          </div>
-                                        </v-col>
-                                        <v-col cols="3" class="d-flex justify-content-center"><div class="toggle-container">
-                                            <v-checkbox
-                                              v-model="champ.useRepetitions"
-                                              label="Use Repetitions"
-                                              dense
-                                            ></v-checkbox>
-                                          </div>
-                                        </v-col>
-                                      </v-row>
+                
+                <!-- Statut de validation -->
+                <div class="text-right">
+                  <v-chip
+                    v-if="seanceStore.currentSeance.validated === true"
+                    color="success"
+                    size="large"
+                    class="font-weight-bold"
+                  >
+                    <v-icon start>mdi-check-circle</v-icon>
+                    Validée
+                  </v-chip>
+                  <v-chip
+                    v-else-if="seanceStore.currentSeance.validated === false"
+                    color="error"
+                    size="large"
+                    class="font-weight-bold"
+                  >
+                    <v-icon start>mdi-alert-circle</v-icon>
+                    À valider
+                  </v-chip>
+                  <v-chip
+                    v-else
+                    color="warning"
+                    size="large"
+                    class="font-weight-bold"
+                  >
+                    <v-icon start>mdi-clock-outline</v-icon>
+                    En attente
+                  </v-chip>
+                </div>
+              </div>
+
+              <!-- Coach information -->
+              <div v-if="seanceStore.currentSeanceCoach" class="coach-info">
+                <v-divider class="mb-4"></v-divider>
+                <div class="d-flex align-center">
+                  <v-avatar size="40" class="mr-3" color="secondary">
+                    <v-icon size="20" color="white">mdi-account-tie</v-icon>
+                  </v-avatar>
+                  <div>
+                    <span class="text-body-2 text-grey-darken-1">Coaché par</span>
+                    <div class="text-h6 font-weight-medium">{{seanceStore.currentSeanceCoach?.name}}</div>
+                  </div>
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+
+          <!-- Actions pour les coachs -->
+          <div v-if="seanceStore.currentSeance.coach_id" class="mb-6">
+            <div v-if="seanceStore.currentSeance.validated == false" class="d-flex gap-3">
+              <v-btn 
+                color="success" 
+                size="large"
+                prepend-icon="mdi-check"
+                @click="confirmer(seanceStore.currentSeance.id)"
+                class="flex-grow-1"
+              >
+                Valider la séance
+              </v-btn>
+              <v-btn 
+                color="warning" 
+                size="large"
+                prepend-icon="mdi-alert"
+                @click="decliner(seanceStore.currentSeance.id)"
+                class="flex-grow-1"
+              >
+                Signaler une erreur
+              </v-btn>
+            </div>
+          </div>
+
+          <!-- Actions pour les challengers -->
+          <div v-if="!seanceStore.currentSeanceCoach" class="mb-6">
+            <div class="d-flex gap-3 flex-wrap">
+              <v-btn 
+                color="error" 
+                size="large"
+                prepend-icon="mdi-delete"
+                @click="deleteSeance(seanceStore.currentSeance?.id)"
+                variant="outlined"
+              >
+                Supprimer la séance
+              </v-btn>
+              
+              <v-dialog scrollable v-model="modal" persistent width="1024">
+                <template v-slot:activator="{ props }">
+                  <v-btn 
+                    color="primary" 
+                    size="large"
+                    prepend-icon="mdi-plus"
+                    v-bind="props"
+                  >
+                    Ajouter des exercices
+                  </v-btn>
+                </template>
+                <form enctype="multipart/form-data" @submit.prevent="addTraining">
+                  <v-card height="80vh">
+                    <v-card-title>
+                      <span class="text-h5">Ajout exercices</span>
+                    </v-card-title>
+                    <v-card-text>
+                      <v-container>
+                        <v-row>
+                          <v-col cols="12">
+                            <v-btn color="purple" @click="addField">Ajouter un champ</v-btn>
+                          </v-col>
+                          <v-col cols="12">
+                            <div id="all-data" >
+                              <div v-for="(field, index) in fields" :key="index" class="list-field">
+                                <v-row>
+                                  <v-col cols="3">
+                                    <div class="trainingslist">
+                                      <v-select
+                                        v-model="field.training"
+                                        :items="trainingStore.trainings"
+                                        item-title="name"
+                                        item-value="id"
+                                        label="Training"
+                                        required
+                                      ></v-select>
                                     </div>
-                                  </div>
-                                </v-col>
-                              </v-row>
-                            </v-container>
-                          </v-card-text>
-                          <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn color="blue-darken-1" variant="text" @click="modalEdit = false">Close</v-btn>
-                            <v-btn color="blue-darken-1" variant="text" type="submit">Save</v-btn>
-                          </v-card-actions>
-                        </v-card>
-                      </form>
-                    </v-dialog>
+                                  </v-col>
+                                  <v-col cols="3">
+                                    <div class="serietraining">
+                                      <v-text-field v-model="field.series" name="series[]" label="Series" type="number" dense outlined></v-text-field>
+                                    </div>
+                                  </v-col>
+                                  <v-col cols="3">
+                                    <div v-if="field.useRepetitions" class="reptraining">
+                                      <v-text-field v-model="field.repetitions" name="repetitions[]" label="Repetitions" type="number" dense outlined></v-text-field>
+                                    </div>
+                                    <div v-else class="dureetraining">
+                                      <v-text-field v-model="field.duree" name="duree[]" label="Duration" type="number" dense outlined></v-text-field>
+                                    </div>
+                                  </v-col>
+                                  <v-col cols="3" class="d-flex justify-content-center">
+                                    <v-btn v-if="index > 0" @click="deleteField(index)" icon="mdi-delete-outline"></v-btn>
+                                    <div class="toggle-container">
+                                      <v-checkbox
+                                        v-model="field.useRepetitions"
+                                        label="Use Repetitions"
+                                        dense
+                                      ></v-checkbox>
+                                    </div>
+                                  </v-col>
+                                </v-row>
+                              </div>
+                            </div>
+                          </v-col>
+                        </v-row>
+                      </v-container>
+                    </v-card-text>
+                    <v-card-actions>
+                      <v-spacer></v-spacer>
+                      <v-btn color="blue-darken-1" variant="text" @click="modal = false">Close</v-btn>
+                      <v-btn color="blue-darken-1" variant="text" type="submit">Save</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </form>
+              </v-dialog>
+              
+              <div v-if="seanceStore.currentSeanceTrainings?.length">
+                <v-dialog scrollable v-model="modalEdit" persistent width="1024">
+                  <template v-slot:activator="{ props }">
+                    <v-btn 
+                      color="secondary" 
+                      size="large"
+                      prepend-icon="mdi-pencil"
+                      v-bind="props"
+                    >
+                      Éditer les exercices
+                    </v-btn>
+                  </template>
+                  <form enctype="multipart/form-data" @submit.prevent="editMyTraining">
+                    <v-card height="80vh">
+                      <v-card-title>
+                        <span class="text-h5">Edition des entrainements de l'exercice du :{{seanceStore.currentSeance?.created_at}}</span>
+                      </v-card-title>
+                      <v-card-text>
+                        <v-container>
+                          <v-row>
+                            <v-col cols="12">
+                              <div id="all-data" >
+                                <div v-for="(champ, index) in champs" :key="index" class="list-champ">
+                                  <v-row>
+                                    <v-col cols="3">
+                                      <div class="trainingslist">
+                                        <v-select
+                                          v-model="champ.training"
+                                          :items="trainingStore.trainings"
+                                          item-title="name"
+                                          item-value="id"
+                                          label="Training"
+                                          required
+                                        ></v-select>
+                                      </div>
+                                    </v-col>
+                                    <v-col cols="3">
+                                      <div class="serietraining">
+                                        <v-text-field v-model="champ.series" name="series[]" label="Series" type="number" dense outlined></v-text-field>
+                                      </div>
+                                    </v-col>
+                                    <v-col cols="3">
+                                      <div v-if="champ.useRepetitions" class="reptraining">
+                                        <v-text-field v-model="champ.repetitions" name="repetitions[]" label="Repetitions" type="number" dense outlined></v-text-field>
+                                      </div>
+                                      <div v-else class="dureetraining">
+                                        <v-text-field v-model="champ.duree" name="duree[]" label="Duration" type="number" dense outlined></v-text-field>
+                                      </div>
+                                    </v-col>
+                                    <v-col cols="3" class="d-flex justify-content-center"><div class="toggle-container">
+                                        <v-checkbox
+                                          v-model="champ.useRepetitions"
+                                          label="Use Repetitions"
+                                          dense
+                                        ></v-checkbox>
+                                      </div>
+                                    </v-col>
+                                  </v-row>
+                                </div>
+                              </div>
+                            </v-col>
+                          </v-row>
+                        </v-container>
+                      </v-card-text>
+                      <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="blue-darken-1" variant="text" @click="modalEdit = false">Close</v-btn>
+                        <v-btn color="blue-darken-1" variant="text" type="submit">Save</v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </form>
+                </v-dialog>
+              </div>
+            </div>
+          </div>
+
+          <!-- Images avant/après pour les challengers -->
+          <div v-if="seanceStore.currentSeance && !seanceStore.currentSeance.coach_id" class="mb-6">
+            <v-card elevation="2">
+              <v-card-title class="text-h6 pa-4">
+                <v-icon start>mdi-camera</v-icon>
+                Photos avant/après
+              </v-card-title>
+              <v-card-text class="pa-4">
+                <v-row>
+                  <v-col cols="6">
+                    <div class="text-center">
+                      <h4 class="text-h6 mb-3 text-primary">Avant</h4>
+                      <div v-if="seanceStore.currentSeance?.img_debut" class="image-container">
+                        <v-img 
+                          :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_debut}`" 
+                          width="200px" 
+                          height="200px"
+                          class="rounded-lg"
+                          cover
+                        ></v-img>
+                        <v-btn 
+                          @click="supprChallengerDebut(seanceStore.currentSeance.id)"
+                          icon="mdi-close"
+                          color="error"
+                          size="small"
+                          class="delete-btn"
+                        ></v-btn>
+                      </div>
+                      <div v-else-if="seanceStore.currentSeance?.img_debut == null" class="upload-container">
+                        <v-form enctype="multipart/form-data" @submit.prevent="changeChallengerDebut(seanceStore.currentSeance.id)">
+                          <v-file-input 
+                            @change="uploadChallengerDebut" 
+                            show-size 
+                            prepend-icon="mdi-camera" 
+                            v-model="imageChallengerDebut" 
+                            clearable 
+                            label="Photo avant"
+                            class="mb-3"
+                          ></v-file-input>
+                          <v-btn type="submit" color="primary" variant="outlined">Mettre à jour</v-btn>
+                        </v-form>
+                      </div>
+                    </div>
+                  </v-col>
+                  <v-col cols="6">
+                    <div class="text-center">
+                      <h4 class="text-h6 mb-3 text-success">Après</h4>
+                      <div v-if="seanceStore.currentSeance?.img_fin" class="image-container">
+                        <v-img 
+                          :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_fin}`" 
+                          width="200px" 
+                          height="200px"
+                          class="rounded-lg"
+                          cover
+                        ></v-img>
+                        <v-btn 
+                          @click="supprChallengerFin(seanceStore.currentSeance.id)"
+                          icon="mdi-close"
+                          color="error"
+                          size="small"
+                          class="delete-btn"
+                        ></v-btn>
+                      </div>
+                      <div v-else-if="seanceStore.currentSeance?.img_fin == null" class="upload-container">
+                        <v-form enctype="multipart/form-data" @submit.prevent="changeChallengerFin(seanceStore.currentSeance.id)">
+                          <v-file-input 
+                            @change="uploadChallengerFin" 
+                            show-size 
+                            prepend-icon="mdi-camera" 
+                            v-model="imageChallengerFin" 
+                            clearable 
+                            label="Photo après"
+                            class="mb-3"
+                          ></v-file-input>
+                          <v-btn type="submit" color="success" variant="outlined">Mettre à jour</v-btn>
+                        </v-form>
+                      </div>
+                    </div>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+          </div>
+
+          <!-- Liste des exercices -->
+          <div v-if="seanceStore.currentSeanceTrainings?.length" class="exercises-section">
+            <v-card elevation="2">
+              <v-card-title class="text-h6 pa-4">
+                <v-icon start>mdi-dumbbell</v-icon>
+                Exercices de la séance
+                <v-chip class="ml-3" color="primary" size="small">
+                  {{seanceStore.currentSeanceTrainings.length}} exercice(s)
+                </v-chip>
+              </v-card-title>
+              <v-card-text class="pa-0">
+                <div class="exercises-list">
+                  <div 
+                    v-for="(kotrana, index) in seanceStore.currentSeanceTrainings" 
+                    :key="index" 
+                    class="exercise-item"
+                  >
+                    <div class="exercise-content">
+                      <div class="exercise-image">
+                        <div v-if="kotrana.image" class="image-wrapper">
+                          <v-img 
+                            :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${kotrana.image}`" 
+                            width="80px" 
+                            height="80px" 
+                            class="rounded-lg"
+                            cover
+                          ></v-img>
+                        </div>
+                        <div v-else class="placeholder-image">
+                          <v-icon size="40" color="grey-lighten-1">mdi-dumbbell</v-icon>
+                        </div>
+                      </div>
+                      
+                      <div class="exercise-details">
+                        <h4 class="exercise-name">{{kotrana.name}}</h4>
+                        <div class="exercise-stats">
+                          <div class="stat-item">
+                            <v-icon size="16" color="primary">mdi-repeat</v-icon>
+                            <span class="stat-value">{{kotrana.pivot.series}}</span>
+                            <span class="stat-label">Séries</span>
+                          </div>
+                          <div v-if="kotrana.pivot.repetitions" class="stat-item">
+                            <v-icon size="16" color="secondary">mdi-counter</v-icon>
+                            <span class="stat-value">{{kotrana.pivot.repetitions}}</span>
+                            <span class="stat-label">Répétitions</span>
+                          </div>
+                          <div v-if="kotrana.pivot.duree" class="stat-item">
+                            <v-icon size="16" color="success">mdi-timer</v-icon>
+                            <span class="stat-value">{{kotrana.pivot.duree}}</span>
+                            <span class="stat-label">Durée</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="exercise-actions">
+                        <div v-if="!seanceStore.currentSeanceCoach">
+                          <v-btn 
+                            variant="outlined" 
+                            icon="mdi-delete" 
+                            color="error"
+                            size="small"
+                            @click="supprTraining(kotrana.pivot.seance_id, kotrana.pivot.training_id, kotrana.pivot.id)"
+                          ></v-btn>
+                        </div>
+                        <div v-if="seanceStore.currentSeanceCoach">
+                          <v-btn 
+                            icon="mdi-lock" 
+                            disabled
+                            size="small"
+                            color="grey"
+                          ></v-btn>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </v-row>
-          </v-col>
-          <v-col cols="12" v-if="seanceStore.currentSeance">
-            <v-row v-if="!seanceStore.currentSeance.coach_id">
-              <v-col cols="6">
-                <div v-if="seanceStore.currentSeance?.img_debut">
-                  <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_debut}`" width="200px"></v-img>
-                  <v-btn @click="supprChallengerDebut(seanceStore.currentSeance.id)">x</v-btn>
-                </div>
-                <div v-else-if="seanceStore.currentSeance?.img_debut == null">
-                  <v-form enctype="multipart/form-data" @submit.prevent="changeChallengerDebut(seanceStore.currentSeance.id)">
-                    <v-file-input @change="uploadChallengerDebut" show-size prepend-icon="mdi-camera" v-model="imageChallengerDebut" clearable label="ImageDebut"></v-file-input>
-                    <v-btn type="submit">Mettre à jour</v-btn>
-                  </v-form>
-                </div>
-              </v-col>
-              <v-col cols="6">
-                <div v-if="seanceStore.currentSeance?.img_fin">
-                  <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/seance/${seanceStore.currentSeance.challenger_id}/${seanceStore.currentSeance.img_fin}`" width="200px"></v-img>
-                  <v-btn @click="supprChallengerFin(seanceStore.currentSeance.id)">x</v-btn>
-                </div>
-                <div v-else-if="seanceStore.currentSeance?.img_fin == null">
-                  <v-form enctype="multipart/form-data" @submit.prevent="changeChallengerFin(seanceStore.currentSeance.id)">
-                    <v-file-input @change="uploadChallengerFin" show-size prepend-icon="mdi-camera" v-model="imageChallengerFin" clearable label="ImageFin"></v-file-input>
-                    <v-btn type="submit">Mettre à jour</v-btn>
-                  </v-form>
-                </div>
-              </v-col>
-            </v-row>
-          </v-col>
-        </v-row>
-        <div v-if="seanceStore.currentSeance">
-          <div>
-            <p>Date : {{seanceStore.dateTime(seanceStore.currentSeance.created_at)}}</p>
-            <p>Heure: {{seanceStore.hourTime(seanceStore.currentSeance.created_at)}}</p>
+              </v-card-text>
+            </v-card>
           </div>
-          <p v-if="seanceStore.currentSeanceCoach">Coaché par: {{seanceStore.currentSeanceCoach?.name}}</p>
-          <div>Trainings:
-            <v-sheet height="100px" class="mb-3 pr-5" style="display: flex !important; justify-content: space-between; align-items: center; overflow: hidden;" rounded elevation="10" v-for="(kotrana, index) in seanceStore.currentSeanceTrainings" :key="index">
-              <div v-if="kotrana.image">
-                <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${kotrana.image}`" width="140px" height="100px" class="img-train" cover></v-img>
-              </div>
-              <p class="ml-5">{{kotrana.name}}</p>
-              <div>
-                <span class="mx-3">{{kotrana.pivot.series}} <b>Séries</b></span>
-                <span class="mx-3">{{kotrana.pivot.repetitions || 0}} <b>Répétition</b></span>
-                <span class="mx-3">{{kotrana.pivot.duree || 0}} <b>durée</b></span>
-              </div>
-              <div v-if="!seanceStore.currentSeanceCoach">
-                <v-btn variant="outlined" icon="mdi-delete" @click="supprTraining(kotrana.pivot.seance_id, kotrana.pivot.training_id, kotrana.pivot.id)">
-                </v-btn>
-              </div>
-              <div v-if="seanceStore.currentSeanceCoach">
-                <v-btn icon="mdi-lock" disabled>
-                </v-btn>
-              </div>
-            </v-sheet>
+
+          <!-- Message si aucune séance sélectionnée -->
+          <div v-else-if="!seanceStore.currentSeance" class="no-seance-selected">
+            <v-card elevation="2" class="text-center pa-8">
+              <v-icon size="80" color="grey-lighten-2" class="mb-4">mdi-dumbbell</v-icon>
+              <h3 class="text-h5 text-grey-darken-1 mb-2">Aucune séance sélectionnée</h3>
+              <p class="text-body-1 text-grey">Cliquez sur une séance dans la timeline pour voir les détails</p>
+            </v-card>
           </div>
         </div>
       </v-col>
@@ -986,5 +1214,224 @@ export default defineComponent({
     width: 80px; /* Ajustez la largeur de la boîte de couleur */
     height: 15px; /* Ajustez la hauteur de la boîte de couleur */
     margin-right: 5px;
+  }
+
+  /* Nouveaux styles pour le design moderne des séances */
+  .seance-display-container {
+    max-width: 100%;
+  }
+
+  .seance-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .seance-header .v-card-text {
+    color: white;
+  }
+
+  .seance-header h2 {
+    color: white !important;
+  }
+
+  .coach-info {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  /* Styles pour les images avant/après */
+  .image-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .delete-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    z-index: 10;
+  }
+
+  .upload-container {
+    border: 2px dashed #e0e0e0;
+    border-radius: 12px;
+    padding: 24px;
+    background: #fafafa;
+    transition: all 0.3s ease;
+  }
+
+  .upload-container:hover {
+    border-color: #1976d2;
+    background: #f5f5f5;
+  }
+
+  /* Styles pour la liste des exercices */
+  .exercises-section {
+    margin-top: 24px;
+  }
+
+  .exercises-list {
+    max-height: 600px;
+    overflow-y: auto;
+  }
+
+  .exercise-item {
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+  }
+
+  .exercise-item:last-child {
+    border-bottom: none;
+  }
+
+  .exercise-item:hover {
+    background: #f8f9fa;
+  }
+
+  .exercise-content {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .exercise-image {
+    flex-shrink: 0;
+  }
+
+  .image-wrapper {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .placeholder-image {
+    width: 80px;
+    height: 80px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #e0e0e0;
+  }
+
+  .exercise-details {
+    flex-grow: 1;
+    min-width: 0;
+  }
+
+  .exercise-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .exercise-stats {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #f8f9fa;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+  }
+
+  .stat-value {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  .stat-label {
+    color: #6c757d;
+    font-size: 0.8rem;
+  }
+
+  .exercise-actions {
+    flex-shrink: 0;
+  }
+
+  /* Message d'état vide */
+  .no-seance-selected {
+    margin-top: 48px;
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .exercise-content {
+      flex-direction: column;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .exercise-stats {
+      justify-content: center;
+    }
+
+    .exercise-actions {
+      margin-top: 8px;
+    }
+
+    .seance-header .d-flex {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .seance-header .text-right {
+      text-align: center;
+    }
+  }
+
+  /* Animations */
+  .exercise-item {
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Amélioration des boutons */
+  .v-btn {
+    transition: all 0.3s ease;
+  }
+
+  .v-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Styles pour les chips de statut */
+  .v-chip {
+    transition: all 0.3s ease;
+  }
+
+  .v-chip:hover {
+    transform: scale(1.05);
+  }
+
+  /* Amélioration des cartes */
+  .v-card {
+    transition: all 0.3s ease;
+  }
+
+  .v-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
   }
 </style>

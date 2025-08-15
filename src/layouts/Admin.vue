@@ -137,6 +137,11 @@
     <!-- Contenu principal -->
     <v-main class="bg-surface">
       <v-container>
+        <v-breadcrumbs v-if="breadcrumbItems.length" :items="breadcrumbItems" class="mb-4">
+          <template #prepend>
+            <v-icon size="small" class="mr-2">mdi-home</v-icon>
+          </template>
+        </v-breadcrumbs>
         <router-view v-slot="{ Component, route }">
           <component :is="Component" :key="route.fullPath" />
         </router-view>
@@ -159,11 +164,82 @@ import { useUserStore } from '@/store/AdminStore/UserStore'
 import { useTrainingStore } from '@/store/AdminStore/TrainingStore'
 import { useEquipmentStore } from '@/store/AdminStore/EquipmentStore'
 import { APP_CONFIG } from '@/config/constants'
+import { computed } from 'vue'
 
 const AuthStore = useAuthStore()
 const drawer = ref(null)
 const route = useRoute()
 const router = useRouter()
+
+// Stores for dynamic names on detail pages
+const trainingStore = useTrainingStore()
+const productStore = useProductStore()
+const equipmentStore = useEquipmentStore()
+const userStore = useUserStore()
+const adminSeanceStore = useSeanceStore()
+
+const breadcrumbItems = computed(() => {
+  // Hide breadcrumbs on subpages: create/edit or deep nested routes (beyond detail)
+  const segments = route.path.split('/').filter(Boolean)
+  const isAdminRoute = segments[0] === 'admin'
+  const isCreateOrEdit = route.path.includes('/create') || route.path.includes('/edit')
+  const isTooDeep = segments.length > 3 // allow /admin/:section and /admin/:section/:id only
+  if (!isAdminRoute || isCreateOrEdit || isTooDeep) {
+    return []
+  }
+
+  const items = []
+  // Root Admin
+  items.push({ title: 'Admin', to: { path: '/admin' } })
+
+  // Section from URL (e.g., /admin/training)
+  const section = segments[1]
+  if (section) {
+    // Prefer the route meta label if available and not a generic one
+    const matched = route.matched.filter(r => r.meta && r.meta.breadcrumb)
+    const sectionRecord = matched.find(r => {
+      const label = r && r.meta && r.meta.breadcrumb != null ? String(r.meta.breadcrumb) : undefined
+      // Exclude root 'Admin' and generic labels
+      return label && !['Admin', 'Détail', 'Modifier', 'Créer'].includes(label)
+    })
+    const sectionLabel = (sectionRecord && sectionRecord.meta && sectionRecord.meta.breadcrumb) || section.charAt(0).toUpperCase() + section.slice(1)
+    const sectionPath = `/admin/${section}`
+    items.push({ title: sectionLabel, to: { path: sectionPath } })
+  }
+
+  // If we are on a detail page (/admin/:section/:id), show entity name as last crumb
+  const matched = route.matched.filter(r => r.meta && r.meta.breadcrumb)
+  const isDetail = segments.length === 3 && /:\w+/.test((matched[matched.length - 1] && matched[matched.length - 1].path) || '')
+  if (isDetail) {
+    const name = (() => {
+      switch (route.name) {
+        case 'adminTrainingShow':
+          return trainingStore.currentTraining && trainingStore.currentTraining.name
+        case 'adminEquipmentShow':
+          return equipmentStore.currentEquipment && equipmentStore.currentEquipment.name
+        case 'productItem':
+          return productStore.currentProduct && productStore.currentProduct.name
+        case 'userItem':
+          return userStore.currentUser && userStore.currentUser.name
+        case 'adminSeanceShow': {
+          const idParam = route.params && route.params.id
+          const idStr = Array.isArray(idParam) ? idParam[0] : (typeof idParam === 'string' ? idParam : (idParam != null ? String(idParam) : undefined))
+          return (adminSeanceStore.currentSeance && `Séance ${adminSeanceStore.currentSeance.id}`) || idStr
+        }
+        case 'adminBlogShow': {
+          const slugParam = route.params && route.params.slug
+          return Array.isArray(slugParam) ? slugParam[0] : (typeof slugParam === 'string' ? slugParam : (slugParam != null ? String(slugParam) : undefined))
+        }
+        default:
+          return undefined
+      }
+    })()
+
+    items.push({ title: name || 'Détail', disabled: true })
+  }
+
+  return items
+})
 
 // Charger les données utilisateur au montage du composant
 onMounted(async () => {

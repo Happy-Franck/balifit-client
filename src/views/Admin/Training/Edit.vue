@@ -1,21 +1,7 @@
 <template>
   <v-container class="training-edit">
     <!-- Breadcrumbs -->
-    <v-breadcrumbs 
-      :items="breadcrumbItems" 
-      class="pa-0 mb-4"
-      divider="/"
-    >
-      <template v-slot:item="{ item }">
-        <v-breadcrumbs-item
-          :to="item.href"
-          :disabled="item.disabled"
-        >
-          <v-icon v-if="item.icon" :icon="item.icon" size="16" class="mr-1"></v-icon>
-          {{ item.title }}
-        </v-breadcrumbs-item>
-      </template>
-    </v-breadcrumbs>
+    
 
     <!-- Loading state -->
     <div v-if="trainingStore.loading" class="loading-container">

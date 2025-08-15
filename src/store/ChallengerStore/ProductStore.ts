@@ -23,14 +23,25 @@ export const useProductStore = defineStore('productChallenger', {
   getters: {
   },
   actions: {
-    async getProducts(page: number = 1, search: string = '', productTypeId: number | null = null) {
+    async getProducts(
+      page: number = 1,
+      search: string = '',
+      productTypeId: number | null = null,
+      minPrice: number | null = null,
+      maxPrice: number | null = null,
+      perPage: number | null = null,
+      showLoading: boolean = true
+    ) {
       try {
-        this.loading = true;
+        if (showLoading) this.loading = true;
         console.log('🔄 Chargement des produits...');
         
         const params: any = { page };
         if (search) params.search = search;
         if (productTypeId) params.product_type_id = productTypeId;
+        if (minPrice !== null) params.min_price = minPrice;
+        if (maxPrice !== null) params.max_price = maxPrice;
+        if (perPage !== null) params.per_page = perPage;
         
         const response = await http.get('/challenger/produit', { params });
         
@@ -64,12 +75,12 @@ export const useProductStore = defineStore('productChallenger', {
           };
           console.log('📄 Pagination:', this.pagination);
         }
-        
-        this.loading = false;
+      
       } catch (error) {
         console.error('❌ Erreur lors du chargement des produits:', error);
         this.message = 'Erreur lors du chargement des produits';
         this.alert = true;
+      } finally {
         this.loading = false;
       }
     },

@@ -78,7 +78,7 @@ const routes = [
   {
     path: '/admin',
     component: Admin,
-    meta: { requiresAuth: true, requiresRole: 'administrateur' },
+    meta: { requiresAuth: true, requiresRole: 'administrateur', breadcrumb: 'Admin' },
     children: [
       {
         path: '',
@@ -87,129 +87,151 @@ const routes = [
       {
         path: 'dashboard',
         name: 'adminDashboard',
-        component: DashboardAdmin
+        component: DashboardAdmin,
+        meta: { breadcrumb: 'Tableau de bord' }
       },
       {
         path: 'category',
         name: 'adminCategory',
-        component: CategoryAdmin
+        component: CategoryAdmin,
+        meta: { breadcrumb: 'Catégories' }
       },
       {
         path: 'training',
         name: 'adminTraining',
-        component: TrainingAdmin
+        component: TrainingAdmin,
+        meta: { breadcrumb: 'Entraînements' }
       },
       {
         path: 'training/:id',
         name: 'adminTrainingShow',
         component: TrainingShowAdmin,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Détail' }
       },
       {
         path: 'training/:id/edit',
         name: 'adminTrainingEdit',
         component: TrainingEditAdmin,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Modifier' }
       },
       {
         path: 'equipment',
         name: 'adminEquipment',
-        component: EquipmentAdmin
+        component: EquipmentAdmin,
+        meta: { breadcrumb: 'Équipements' }
       },
       {
         path: 'equipment/:id',
         name: 'adminEquipmentShow',
         component: EquipmentShowAdmin,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Détail' }
       },
       {
         path: 'equipment/:id/edit',
         name: 'adminEquipmentEdit',
         component: EquipmentEditAdmin,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Modifier' }
       },
       {
         path: 'user',
         name: 'adminUser',
         component: UserAdmin,
-        meta: { keepAlive: true }
+        meta: { keepAlive: true, breadcrumb: 'Utilisateurs' }
       },
       {
         path: 'user/:id',
         name: 'userItem',
         component: UserItemAdmin,
         props: true,
+        meta: { breadcrumb: 'Profil' },
       },
       {
         path: 'user/:id/seance/:idSeance',
         name: 'userSeance',
         component: UserSeanceAdmin,
         props: true,
+        meta: { breadcrumb: 'Séance' },
       },
       {
         path: 'seance',
         name: 'adminSeance',
-        component: SeanceAdmin
+        component: SeanceAdmin,
+        meta: { breadcrumb: 'Séances' }
       },
       {
         path: 'seance/:id',
         name: 'adminSeanceShow',
         component: SeanceShowAdmin,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Détail' }
       },
       {
         path: 'product',
         name: 'adminProduct',
-        component: ProductAdmin
+        component: ProductAdmin,
+        meta: { breadcrumb: 'Produits' }
       },
       {
         path: 'product/:id',
         name: 'productItem',
         component: ProductItemAdmin,
         props: true,
+        meta: { breadcrumb: 'Détail' },
       },
       {
         path: 'product/create',
         name: 'adminProductCreate',
-        component: ProductCreateAdmin
+        component: ProductCreateAdmin,
+        meta: { breadcrumb: 'Créer' }
       },
       {
         path: 'product/:id/edit',
         name: 'adminProductEdit',
         component: ProductEditAdmin,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Modifier' }
       },
       {
         path: 'blog',
         name: 'adminBlog',
-        component: AdminBlogIndex
+        component: AdminBlogIndex,
+        meta: { breadcrumb: 'Blogs' }
       },
       {
         path: 'blog/create',
         name: 'adminBlogCreate',
-        component: AdminBlogEdit
+        component: AdminBlogEdit,
+        meta: { breadcrumb: 'Créer' }
       },
       {
         path: 'blog/:slug',
         name: 'adminBlogShow',
         component: AdminBlogShow,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Détail' }
       },
       {
         path: 'blog/:slug/edit',
         name: 'adminBlogEdit',
         component: AdminBlogEdit,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Modifier' }
       },
       {
         path: 'profile',
         name: 'adminProfile',
-        component: ProfileView
+        component: ProfileView,
+        meta: { breadcrumb: 'Mon profil' }
       },
       {
         path: 'profile/edit',
         name: 'adminProfileEdit',
-        component: EditProfile
+        component: EditProfile,
+        meta: { breadcrumb: 'Modifier' }
       },
     ]
   },
@@ -283,60 +305,70 @@ const routes = [
   {
     path: '/challenger',
     component: Challenger,
-    meta: { requiresAuth: true, requiresRole: 'challenger' },
+    meta: { requiresAuth: true, requiresRole: 'challenger', breadcrumb: 'Challenger' },
     children: [
       {
         path: 'dashboard',
         name: 'challengerDashboard',
-        component: DashboardChallenger
+        component: DashboardChallenger,
+        meta: { breadcrumb: 'Tableau de bord' }
       },
       {
         path: 'seance',
         name: 'challengerSeance',
         component: SeanceChallenger,
+        meta: { breadcrumb: 'Séances' },
       },
       {
         path: 'produit',
         name: 'challengerProduit',
         component: ProductChallenger,
+        meta: { breadcrumb: 'Produits' },
       },
       {
         path: 'produit/:id',
         name: 'challengerProduitShow',
         component: ProductShowChallenger,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Détail' }
       },
       {
         path: 'exercice',
         name: 'exoProduit',
         component: ExoChallenger,
+        meta: { breadcrumb: 'Exercices' },
       },
       {
         path: 'exercice/:id',
         name: 'challengerExerciceShow',
         component: ExoShowChallenger,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Détail' }
       },
       {
         path: 'blog',
         name: 'challengerBlog',
-        component: ChallengerBlogIndex
+        component: ChallengerBlogIndex,
+        meta: { breadcrumb: 'Blogs' }
       },
       {
         path: 'blog/:slug',
         name: 'challengerBlogShow',
         component: ChallengerBlogShow,
-        props: true
+        props: true,
+        meta: { breadcrumb: 'Détail' }
       },
       {
         path: 'profile',
         name: 'challengerProfile',
-        component: ProfileView
+        component: ProfileView,
+        meta: { breadcrumb: 'Mon profil' }
       },
       {
         path: 'profile/edit',
         name: 'challengerProfileEdit',
-        component: EditProfile
+        component: EditProfile,
+        meta: { breadcrumb: 'Modifier' }
       },
     ]
   }

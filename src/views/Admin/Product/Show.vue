@@ -27,26 +27,7 @@
 
       <!-- Product details -->
       <div v-if="productStore.currentProduct && !productStore.loading">
-        <!-- Breadcrumb -->
-        <v-breadcrumbs class="pa-0 mb-4">
-          <v-breadcrumbs-item>
-            <router-link to="/admin" class="text-decoration-none">
-              <v-icon class="mr-2">mdi-view-dashboard</v-icon>
-              Dashboard
-            </router-link>
-          </v-breadcrumbs-item>
-          <v-breadcrumbs-divider>/</v-breadcrumbs-divider>
-          <v-breadcrumbs-item>
-            <router-link to="/admin/product" class="text-decoration-none">
-              Produits
-            </router-link>
-          </v-breadcrumbs-item>
-          <v-breadcrumbs-divider>/</v-breadcrumbs-divider>
-          <v-breadcrumbs-item disabled>
-            {{ productStore.currentProduct.name }}
-          </v-breadcrumbs-item>
-        </v-breadcrumbs>
-
+        
         <!-- Header with actions -->
         <v-row class="mb-6">
           <v-col cols="12">
@@ -63,8 +44,8 @@
                 </v-btn>
                 <v-btn
                   color="error"
-                  variant="outlined"
-                  @click="confirmDelete = true"
+                  variant="elevated"
+                  @click="deleteProduct"
                   prepend-icon="mdi-delete"
                 >
                   Supprimer

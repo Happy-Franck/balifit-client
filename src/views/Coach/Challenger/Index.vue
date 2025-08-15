@@ -2,9 +2,19 @@
   <v-container>
     <h1 class="text-h4 mb-6 text-center">Liste de Tous les Challengers</h1>
     
+    <v-text-field
+      v-model="searchQuery"
+      label="Rechercher un challenger"
+      prepend-inner-icon="mdi-magnify"
+      variant="outlined"
+      hide-details
+      clearable
+      class="mb-6"
+    />
+
     <v-row>
       <v-col 
-        v-for="(challenger, index) in challengerStore.allChallengers" 
+        v-for="(challenger, index) in filteredChallengers" 
         :key="index"
         cols="12"
         sm="6"
@@ -81,13 +91,23 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, ref, computed } from 'vue'
 import { useChallengerStore } from '../../../store/CoachStore/ChallengerStore'
 import { APP_CONFIG } from '../../../config/constants'
 export default defineComponent({
   setup(){
     const challengerStore = useChallengerStore()
     challengerStore.getChallengers()
+
+    const searchQuery = ref('')
+    const filteredChallengers = computed(() => {
+      const query = searchQuery.value.trim().toLowerCase()
+      if (!query) return challengerStore.allChallengers
+      return challengerStore.allChallengers.filter((c: any) => {
+        const name = (c?.name || '').toString().toLowerCase()
+        return name.includes(query)
+      })
+    })
     
     const calculateProductivity = (challenger: any) => {
       const sessionsCompleted = challenger.sessionsCompleted || 0
@@ -95,7 +115,7 @@ export default defineComponent({
       return Math.min(Math.round(productivity), 100)
     }
     
-    return { challengerStore, calculateProductivity, APP_CONFIG }
+    return { challengerStore, calculateProductivity, APP_CONFIG, searchQuery, filteredChallengers }
   }
 })
 </script>

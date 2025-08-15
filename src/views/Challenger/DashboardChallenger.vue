@@ -1,369 +1,367 @@
 <template>
-  <div>
+  <div class="dashboard-client">
+    <!-- Header Section -->
     <v-row>
-      <v-col cols="12" sm="12">
-        <v-parallax :src="back" height="auto">
+      <v-col cols="12">
+        <v-parallax :src="back" height="300" class="dashboard-header">
           <div class="d-flex flex-column fill-height justify-center align-center text-white">
-            <h1 class="text-h4 font-weight-thin mb-4">
-              Vuetify
+            <v-avatar size="80" class="mb-4" color="white">
+              <v-icon size="40" color="primary">mdi-account-circle</v-icon>
+            </v-avatar>
+            <h1 class="text-h3 font-weight-bold mb-2">
+              Bienvenue sur votre Dashboard
             </h1>
-            <h4 class="subheading">
-              Build your application today!
+            <h4 class="text-h6 font-weight-light opacity-75">
+              Gérez vos défis et suivez vos progrès
             </h4>
+            <v-chip class="mt-4" color="success" variant="flat">
+              <v-icon start>mdi-check-circle</v-icon>
+              Connecté
+            </v-chip>
           </div>
         </v-parallax>
       </v-col>
     </v-row>
-    <v-container>
-      <v-row class="overflow-auto mx-auto">
-        <v-col cols="12" sm="12">
-          <div>
-            <v-alert
-              v-model="alert"
-              border="start"
-              variant="tonal"
-              closable
-              close-label="Close Alert"
-              color="deep-purple-accent-4"
-              title="Closable Alert"
-            >
-              Aenean imperdiet. Quisque id odio. Cras dapibus. Pellentesque ut neque. Cras dapibus.
 
-              Vivamus consectetuer hendrerit lacus. Sed mollis, eros et ultrices tempus, mauris ipsum aliquam libero, non adipiscing dolor urna a orci. Sed mollis, eros et ultrices tempus, mauris ipsum aliquam libero, non adipiscing dolor urna a orci. Curabitur blandit mollis lacus. Curabitur ligula sapien, tincidunt non, euismod vitae, posuere imperdiet, leo.
-            </v-alert>
-
-            <div
-              v-if="!alert"
-              class="text-center"
-            >
-              <v-btn @click="alert = true">
-                Reset
-              </v-btn>
-            </div>
-          </div>
-
-
-          <div>
-            <v-banner
-              lines="one"
-              icon="mdi-lock"
-              color="deep-purple-accent-4"
-              class="my-4"
-            >
-              <v-banner-text>
-                Banner with one line of text.
-              </v-banner-text>
-
-              <template v-slot:actions>
-                <v-btn>Action</v-btn>
-              </template>
-            </v-banner>
-
-            <v-banner
-              lines="two"
-              icon="mdi-weather-hurricane"
-              color="error"
-              class="my-4"
-            >
-              <v-banner-text>
-                Banner with two lines of text. If the text is too long to fit on two lines then an ellipsis will be used to hide the remaining content. So this next line will be hidden.
-              </v-banner-text>
-
-              <template v-slot:actions>
-                <v-btn>Action</v-btn>
-              </template>
-            </v-banner>
-
-            <v-banner
-              lines="three"
-              icon="$warning"
-              color="warning"
-              class="my-4"
-            >
-              <v-banner-text>
-                Banner with three lines of text. One or two lines is preferable. Three lines should be considered the absolute maximum length on desktop in order to keep messages short and actionable.
-              </v-banner-text>
-
-              <template v-slot:actions>
-                <v-btn>Action</v-btn>
-              </template>
-            </v-banner>
-          </div>
-
+    <v-container fluid class="pa-6">
+      <!-- Stats Cards -->
+      <v-row class="mb-6">
+        <v-col cols="12" sm="6" md="3">
+          <v-card class="stats-card" elevation="4" rounded="lg">
+            <v-card-text class="text-center pa-6">
+              <v-icon size="48" color="primary" class="mb-3">mdi-trophy</v-icon>
+              <h3 class="text-h4 font-weight-bold text-primary mb-1">12</h3>
+              <p class="text-body-2 text-medium-emphasis">Défis Complétés</p>
+            </v-card-text>
+          </v-card>
         </v-col>
-        <v-col
-          cols="12"
-          sm="2"
-        >
-          <v-banner
-            sticky="true"
-            lines="one"
-          >
-            <template v-slot:text>
-              We can't save your edits while you are in offline mode.
-            </template>
-
-            <template v-slot:actions>
-              <v-btn color="deep-purple-accent-4">
-                Go Online
-              </v-btn>
-            </template>
-          </v-banner>
+        <v-col cols="12" sm="6" md="3">
+          <v-card class="stats-card" elevation="4" rounded="lg">
+            <v-card-text class="text-center pa-6">
+              <v-icon size="48" color="success" class="mb-3">mdi-fire</v-icon>
+              <h3 class="text-h4 font-weight-bold text-success mb-1">8</h3>
+              <p class="text-body-2 text-medium-emphasis">En Cours</p>
+            </v-card-text>
+          </v-card>
         </v-col>
+        <v-col cols="12" sm="6" md="3">
+          <v-card class="stats-card" elevation="4" rounded="lg">
+            <v-card-text class="text-center pa-6">
+              <v-icon size="48" color="warning" class="mb-3">mdi-target</v-icon>
+              <h3 class="text-h4 font-weight-bold text-warning mb-1">85%</h3>
+              <p class="text-body-2 text-medium-emphasis">Taux de Réussite</p>
+            </v-card-text>
+          </v-card>
+        </v-col>
+        <v-col cols="12" sm="6" md="3">
+          <v-card class="stats-card" elevation="4" rounded="lg">
+            <v-card-text class="text-center pa-6">
+              <v-icon size="48" color="info" class="mb-3">mdi-star</v-icon>
+              <h3 class="text-h4 font-weight-bold text-info mb-1">1,250</h3>
+              <p class="text-body-2 text-medium-emphasis">Points Gagnés</p>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
 
-        <v-col
-          cols="12"
-          sm="8"
-        >
-          <v-sheet
-            min-height="70vh"
-            rounded="lg"
-          >
-            <v-row>
-              <v-col cols="12" sm="6">
-                <div>
-                  <v-hover v-slot="{ isHovering, props }">
-                    <v-card
-                      class="mx-auto"
-                      color="grey-lighten-4"
-                      max-width="600"
-                      v-bind="props"
-                    >
-                      <v-img
-                        :aspect-ratio="16/9"
-                        cover
-                        :src="one"
-                      >
-                        <v-expand-transition>
-                          <div
-                            v-if="isHovering"
-                            class="d-flex transition-fast-in-fast-out bg-orange-darken-2 v-card--reveal text-h2"
-                            style="height: 100%;"
-                          >
-                            $14.99
-                          </div>
-                        </v-expand-transition>
-                      </v-img>
-
-                      <v-card-text class="pt-6">
-                        <div class="font-weight-light text-grey text-h6 mb-2">
-                          For the perfect meal
-                        </div>
-
-                        <h3 class="text-h4 font-weight-light text-orange mb-2">
-                          QW cooking utensils
-                        </h3>
-
-                        <div class="font-weight-light text-h6 mb-2">
-                          Our Vintage kitchen utensils delight any chef.<br>
-                          Made of bamboo by hand
-                        </div>
-                      </v-card-text>
-                    </v-card>
-                  </v-hover>
-                </div>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-sheet elevation="12" max-width="600" rounded="lg" width="100%" class="pa-4 text-center mx-auto">
-                  <v-icon class="mb-5" color="success" icon="mdi-check-circle" size="112"></v-icon>
-                  <h2 class="text-h5 mb-6">You reconciled this account</h2>
-                  <p class="mb-4 text-medium-emphasis text-body-2">
-                    To see a report on this reconciliation, click <a href="#" class="text-decoration-none text-info">View reconciliation report.</a>
-                    <br>
-                    Otherwise, you're done!
+      <!-- Main Content -->
+      <v-row>
+        <!-- Left Column -->
+        <v-col cols="12" lg="8">
+          <!-- Current Challenge -->
+          <v-card class="mb-6" elevation="4" rounded="lg">
+            <v-card-title class="d-flex align-center">
+              <v-icon class="mr-3" color="primary">mdi-sword-cross</v-icon>
+              Défi en Cours
+              <v-spacer></v-spacer>
+              <v-chip color="success" variant="flat">Actif</v-chip>
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <v-col cols="12" md="6">
+                  <v-img
+                    :aspect-ratio="16/9"
+                    cover
+                    :src="one"
+                    rounded="lg"
+                    class="mb-4"
+                  ></v-img>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <h3 class="text-h5 font-weight-bold mb-3">Défi Fitness 30 Jours</h3>
+                  <p class="text-body-2 text-medium-emphasis mb-4">
+                    Relevez le défi de 30 jours pour transformer votre corps et votre esprit. 
+                    Chaque jour, de nouveaux exercices vous attendent.
                   </p>
-                  <v-divider class="mb-4"></v-divider>
-                  <div class="text-end">
-                    <v-btn class="text-none" color="success" rounded variant="flat" width="90">Done</v-btn>
+                  <v-progress-linear
+                    v-model="challengeProgress"
+                    color="primary"
+                    height="8"
+                    rounded
+                    class="mb-3"
+                  ></v-progress-linear>
+                  <div class="d-flex justify-space-between text-caption text-medium-emphasis mb-4">
+                    <span>Jour 15 sur 30</span>
+                    <span>{{ challengeProgress }}%</span>
                   </div>
-                </v-sheet>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-sheet border="md" class="pa-6 text-white mx-auto" color="#141518" max-width="400">
-                  <h4 class="text-h5 font-weight-bold mb-4">Your Privacy</h4>
-                  <p class="mb-8">
-                    This business determines the use of personal data collectied on our media properties and across the internet. We may collect data that you submit to us directly or data that we collect automatically including from cookies (such as device information or IP address).
-                    <br>
-                    <br>
-                    Please read our <a href="#" class="text-red-accent-2">Privacy Policy</a> to learn about our privacy practices or click "Your Preferences" to exercise control over your data.
-                  </p>
-                  <v-btn block class="text-none text-black mb-4" color="red-accent-2" size="x-large" variant="flat">
-                    Accept
+                  <v-btn color="primary" variant="flat" block>
+                    Continuer le Défi
                   </v-btn>
-                  <v-btn block class="text-none text-black" color="red-accent-2" size="x-large" variant="outlined">
-                    Your Preferences
-                  </v-btn>
-                </v-sheet>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-expansion-panels>
-                  <v-expansion-panel
-                    title="Title"
-                    text="Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi, ratione debitis quis est labore voluptatibus! Eaque cupiditate minima"
-                  >
-                  </v-expansion-panel>
-                </v-expansion-panels>
-                <br/>
-                <div>
-                  <v-breadcrumbs :items="['okokok','muda','ora']">
-                    <template v-slot:divider>
-                      <v-icon icon="mdi-forward"></v-icon>
-                    </template>
-                  </v-breadcrumbs>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
 
-                  <v-breadcrumbs :items="['okokok','muda','ora']">
-                    <template v-slot:divider>
-                      <v-icon icon="mdi-chevron-right"></v-icon>
-                    </template>
-                  </v-breadcrumbs>
-                </div>
-                <div>
-                  <v-breadcrumbs
-                    :items="['okokok','muda','ora']"
-                    divider="-"
-                  ></v-breadcrumbs>
-
-                  <v-breadcrumbs
-                    :items="['okokok','muda','ora']"
-                    divider="."
-                  ></v-breadcrumbs>
-                </div>
-                <br/>
-                <v-slider v-model="volume" :min="0" :max="10" :step="1">
-                </v-slider>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-timeline side="end">
-                  <v-timeline-item
-                    v-for="item in time"
-                    :key="item.id"
-                    :dot-color="item.color"
-                    size="small"
-                  >
-                    <v-alert
-                      :value="true"
-                      :color="item.color"
-                      :icon="item.icon"
-                    >
-                      Lorem ipsum dolor sit amet, no nam oblique veritus. Commune scaevola imperdiet nec ut, sed euismod convenire principes at. Est et nobis iisque percipit, an vim zril disputando voluptatibus, vix an salutandi sententiae.
-                    </v-alert>
-                  </v-timeline-item>
-                </v-timeline>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-timeline side="end" align="start">
-                  <v-timeline-item
-                    dot-color="pink"
-                    size="small"
-                  >
-                  <template v-slot:icon>
-                    <v-avatar :image="three"></v-avatar>
-                  </template>
-                  <!--<template v-slot:opposite>
-                    <span>Tus eu perfecto</span>
-                  </template>-->
-                    <div class="d-flex">
-                      <strong class="me-4">5pm</strong>
-                      <div>
-                        <strong>New Icon</strong>
-                        <div class="text-caption">
-                          Mobile App
+          <!-- Recent Activities -->
+          <v-card class="mb-6" elevation="4" rounded="lg">
+            <v-card-title class="d-flex align-center">
+              <v-icon class="mr-3" color="info">mdi-clock-outline</v-icon>
+              Activités Récentes
+            </v-card-title>
+            <v-card-text>
+              <v-timeline side="end" density="compact">
+                <v-timeline-item
+                  v-for="(activity, index) in recentActivities"
+                  :key="index"
+                  :dot-color="activity.color"
+                  size="small"
+                >
+                  <v-card variant="outlined" class="mb-3">
+                    <v-card-text class="pa-4">
+                      <div class="d-flex align-center">
+                        <v-avatar size="32" :color="activity.color" class="mr-3">
+                          <v-icon size="16" color="white">{{ activity.icon }}</v-icon>
+                        </v-avatar>
+                        <div>
+                          <div class="font-weight-medium">{{ activity.title }}</div>
+                          <div class="text-caption text-medium-emphasis">{{ activity.time }}</div>
                         </div>
                       </div>
-                    </div>
-                  </v-timeline-item>
+                    </v-card-text>
+                  </v-card>
+                </v-timeline-item>
+              </v-timeline>
+            </v-card-text>
+          </v-card>
 
-                  <v-timeline-item
-                    dot-color="teal-lighten-3"
-                    size="small"
-                  >
-                    <div class="d-flex">
-                      <strong class="me-4">3-4pm</strong>
-                      <div>
-                        <strong>Design Stand Up</strong>
-                        <div class="text-caption mb-2">
-                          Hangouts
-                        </div>
-                      </div>
-                    </div>
-                  </v-timeline-item>
-
-                  <v-timeline-item
-                    dot-color="pink"
-                    size="small"
-                  >
-                    <div class="d-flex">
-                      <strong class="me-4">12pm</strong>
-                      <div>
-                        <strong>Lunch break</strong>
-                      </div>
-                    </div>
-                  </v-timeline-item>
-
-                  <v-timeline-item
-                    dot-color="teal-lighten-3"
-                    size="small"
-                  >
-                    <div class="d-flex">
-                      <strong class="me-4">9-11am</strong>
-                      <div>
-                        <strong>Finish Home Screen</strong>
-                        <div class="text-caption">
-                          Web App
-                        </div>
-                      </div>
-                    </div>
-                  </v-timeline-item>
-                </v-timeline>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-sheet class="d-flex align-center justify-center flex-wrap text-center mx-auto px-4" elevation="4" height="250" rounded max-width="800" width="100%">
-                  <div>
-                    <h2 class="text-h4 font-weight-black text-orange">Congratulations!</h2>
-                    <div class="text-h5 font-weight-medium mb-2">
-                      You are officially a part of the Vuetify Community!
-                    </div>
-                    <p class="text-body-2 mb-4">
-                      Please head over to your inbox/spam or others folder to find our verificaiton email.
-                    </p>
-                    <v-btn variant="text" color="orange">Go to Login</v-btn>
-                  </div>
-                </v-sheet>
-              </v-col>
-            </v-row>
-          </v-sheet>
+          <!-- Achievement Section -->
+          <v-card elevation="4" rounded="lg">
+            <v-card-title class="d-flex align-center">
+              <v-icon class="mr-3" color="warning">mdi-medal</v-icon>
+              Réalisations
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <v-col cols="12" sm="6" v-for="achievement in achievements" :key="achievement.id">
+                  <v-card variant="outlined" class="achievement-card">
+                    <v-card-text class="text-center pa-4">
+                      <v-icon size="48" :color="achievement.color" class="mb-3">
+                        {{ achievement.icon }}
+                      </v-icon>
+                      <h4 class="text-h6 font-weight-bold mb-2">{{ achievement.title }}</h4>
+                      <p class="text-body-2 text-medium-emphasis">{{ achievement.description }}</p>
+                      <v-chip :color="achievement.color" variant="flat" size="small" class="mt-3">
+                        {{ achievement.points }} pts
+                      </v-chip>
+                    </v-card-text>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
         </v-col>
 
-        <v-col
-          cols="12"
-          sm="2"
-        >
-          <v-sheet
-            rounded="lg"
-            min-height="268"
-          >
-            <v-carousel show-arrows="hover" cycle progress="primary" hide-delimiters>
-              <v-carousel-item
-                v-for="(item,i) in items"
-                :key="i"
-                :src="item"
-                cover
-              ></v-carousel-item>
-            </v-carousel>
-          </v-sheet>
+        <!-- Right Column -->
+        <v-col cols="12" lg="4">
+          <!-- Quick Actions -->
+          <v-card class="mb-6" elevation="4" rounded="lg">
+            <v-card-title class="d-flex align-center">
+              <v-icon class="mr-3" color="success">mdi-lightning-bolt</v-icon>
+              Actions Rapides
+            </v-card-title>
+            <v-card-text>
+              <v-btn
+                v-for="action in quickActions"
+                :key="action.id"
+                :color="action.color"
+                variant="flat"
+                block
+                class="mb-3"
+                :prepend-icon="action.icon"
+              >
+                {{ action.title }}
+              </v-btn>
+            </v-card-text>
+          </v-card>
+
+          <!-- Leaderboard -->
+          <v-card class="mb-6" elevation="4" rounded="lg">
+            <v-card-title class="d-flex align-center">
+              <v-icon class="mr-3" color="primary">mdi-podium</v-icon>
+              Classement
+            </v-card-title>
+            <v-card-text>
+              <div v-for="(player, index) in leaderboard" :key="player.id" class="d-flex align-center mb-4">
+                <v-avatar size="40" :color="getRankColor(index)" class="mr-3">
+                  <span class="text-white font-weight-bold">{{ index + 1 }}</span>
+                </v-avatar>
+                <div class="flex-grow-1">
+                  <div class="font-weight-medium">{{ player.name }}</div>
+                  <div class="text-caption text-medium-emphasis">{{ player.points }} points</div>
+                </div>
+                <v-icon v-if="index < 3" :color="getRankColor(index)" size="20">
+                  mdi-crown
+                </v-icon>
+              </div>
+            </v-card-text>
+          </v-card>
+
+          <!-- Notifications -->
+          <v-card elevation="4" rounded="lg">
+            <v-card-title class="d-flex align-center">
+              <v-icon class="mr-3" color="info">mdi-bell</v-icon>
+              Notifications
+              <v-spacer></v-spacer>
+              <v-badge :content="notifications.length" color="error"></v-badge>
+            </v-card-title>
+            <v-card-text>
+              <div v-for="notification in notifications" :key="notification.id" class="mb-3">
+                <v-alert
+                  :color="notification.color"
+                  variant="tonal"
+                  density="compact"
+                  class="mb-2"
+                >
+                  <div class="d-flex align-center">
+                    <v-icon size="16" class="mr-2">{{ notification.icon }}</v-icon>
+                    <div>
+                      <div class="font-weight-medium text-caption">{{ notification.title }}</div>
+                      <div class="text-caption">{{ notification.message }}</div>
+                    </div>
+                  </div>
+                </v-alert>
+              </div>
+            </v-card-text>
+          </v-card>
         </v-col>
       </v-row>
     </v-container>
   </div>
 </template>
+
 <script>
   export default {
     data: () => ({
       volume: 2,
       alert: true,
+      challengeProgress: 50,
+      recentActivities: [
+        {
+          title: "Défi complété",
+          time: "Il y a 2 heures",
+          color: "success",
+          icon: "mdi-check-circle"
+        },
+        {
+          title: "Nouveau niveau atteint",
+          time: "Il y a 4 heures",
+          color: "primary",
+          icon: "mdi-star"
+        },
+        {
+          title: "Exercice terminé",
+          time: "Il y a 6 heures",
+          color: "info",
+          icon: "mdi-dumbbell"
+        }
+      ],
+      achievements: [
+        {
+          id: 1,
+          title: "Premier Pas",
+          description: "Complétez votre premier défi",
+          icon: "mdi-trophy",
+          color: "warning",
+          points: 100
+        },
+        {
+          id: 2,
+          title: "Sérieux",
+          description: "7 jours consécutifs",
+          icon: "mdi-fire",
+          color: "error",
+          points: 250
+        },
+        {
+          id: 3,
+          title: "Déterminé",
+          description: "30 jours d'activité",
+          icon: "mdi-medal",
+          color: "primary",
+          points: 500
+        },
+        {
+          id: 4,
+          title: "Expert",
+          description: "100 défis complétés",
+          icon: "mdi-crown",
+          color: "success",
+          points: 1000
+        }
+      ],
+      quickActions: [
+        {
+          id: 1,
+          title: "Nouveau Défi",
+          icon: "mdi-plus",
+          color: "primary"
+        },
+        {
+          id: 2,
+          title: "Voir Progrès",
+          icon: "mdi-chart-line",
+          color: "success"
+        },
+        {
+          id: 3,
+          title: "Paramètres",
+          icon: "mdi-cog",
+          color: "info"
+        }
+      ],
+      leaderboard: [
+        { id: 1, name: "Alex Martin", points: 2450 },
+        { id: 2, name: "Sarah Johnson", points: 2200 },
+        { id: 3, name: "Mike Wilson", points: 1950 },
+        { id: 4, name: "Emma Davis", points: 1800 },
+        { id: 5, name: "John Smith", points: 1650 }
+      ],
+      notifications: [
+        {
+          id: 1,
+          title: "Nouveau défi disponible",
+          message: "Le défi 'Fitness Avancé' est maintenant disponible",
+          color: "info",
+          icon: "mdi-bell"
+        },
+        {
+          id: 2,
+          title: "Félicitations !",
+          message: "Vous avez atteint un nouveau niveau",
+          color: "success",
+          icon: "mdi-star"
+        }
+      ]
     }),
+    methods: {
+      getRankColor(index) {
+        const colors = ['warning', 'grey', 'brown'];
+        return colors[index] || 'grey';
+      }
+    }
   }
 </script>
+
 <script setup>
   import one from "../../assets/1.jpg"
   import two from "../../assets/2.jpg"
@@ -394,7 +392,52 @@
     },
   ]
 </script>
-<style>
+
+<style scoped>
+  .dashboard-client {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+  }
+
+  .dashboard-header {
+    position: relative;
+  }
+
+  .dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+  }
+
+  .dashboard-header > div {
+    position: relative;
+    z-index: 2;
+  }
+
+  .stats-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .achievement-card {
+    transition: transform 0.3s ease;
+    cursor: pointer;
+  }
+
+  .achievement-card:hover {
+    transform: scale(1.02);
+  }
+
   .v-card--reveal {
     align-items: center;
     bottom: 0;
@@ -402,5 +445,24 @@
     opacity: .9;
     position: absolute;
     width: 100%;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
   }
 </style>

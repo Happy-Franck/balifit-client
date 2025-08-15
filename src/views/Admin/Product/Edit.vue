@@ -2,24 +2,7 @@
   <div class="edit-product">
     <v-container>
       <!-- Breadcrumb -->
-      <v-breadcrumbs class="pa-0 mb-4">
-        <v-breadcrumbs-item>
-          <router-link to="/admin" class="text-decoration-none">
-            <v-icon class="mr-2">mdi-view-dashboard</v-icon>
-            Dashboard
-          </router-link>
-        </v-breadcrumbs-item>
-        <v-breadcrumbs-divider>/</v-breadcrumbs-divider>
-        <v-breadcrumbs-item>
-          <router-link to="/admin/product" class="text-decoration-none">
-            Produits
-          </router-link>
-        </v-breadcrumbs-item>
-        <v-breadcrumbs-divider>/</v-breadcrumbs-divider>
-        <v-breadcrumbs-item disabled>
-          Modifier {{ productStore.currentProduct?.name || 'Produit' }}
-        </v-breadcrumbs-item>
-      </v-breadcrumbs>
+      
 
       <!-- Header avec progression -->
       <div class="header-section mb-6">

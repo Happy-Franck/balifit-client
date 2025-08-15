@@ -38,7 +38,16 @@
     </v-app-bar>
 
     <v-main class="bg-background">
-      <router-view/>
+      <v-container>
+        <v-breadcrumbs v-if="breadcrumbItems.length" :items="breadcrumbItems" class="mb-4">
+          <template #prepend>
+            <v-icon size="small" class="mr-2">mdi-home</v-icon>
+          </template>
+        </v-breadcrumbs>
+        <router-view v-slot="{ Component, route }">
+          <component :is="Component" :key="route.fullPath" />
+        </router-view>
+      </v-container>
     </v-main>
 
     <!-- <v-footer class="bg-grey-lighten-1">
@@ -109,7 +118,7 @@
 
 <script setup>
 import { APP_CONFIG } from '@/config/constants'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '@/store/AuthStore'
 import { useRouter, useRoute } from 'vue-router'
 import ThemeToggle from '@/components/ThemeToggle.vue'
@@ -149,6 +158,61 @@ const redirectTo = (path) => {
 const isActive = (path) => {
   return route.path.startsWith(path)
 }
+
+// Stores used for dynamic breadcrumb labels
+const trainingStore = useTrainingStore()
+const productStore = useProductStore()
+
+const breadcrumbItems = computed(() => {
+  const segments = route.path.split('/').filter(Boolean)
+  const isChallengerRoute = segments[0] === 'challenger'
+  const isCreateOrEdit = route.path.includes('/create') || route.path.includes('/edit')
+  const isTooDeep = segments.length > 3
+  if (!isChallengerRoute || isCreateOrEdit || isTooDeep) {
+    return []
+  }
+
+  const items = []
+  // Root Challenger
+  items.push({ title: 'Challenger', to: { path: '/challenger/dashboard' } })
+
+  // Section from URL (e.g., /challenger/produit)
+  const section = segments[1]
+  if (section) {
+    const matched = route.matched.filter(r => r.meta && r.meta.breadcrumb)
+    const sectionRecord = matched.find(r => {
+      const label = r && r.meta && r.meta.breadcrumb != null ? String(r.meta.breadcrumb) : undefined
+      return label && !['Challenger', 'Détail', 'Modifier', 'Créer'].includes(label)
+    })
+    const sectionLabel = (sectionRecord && sectionRecord.meta && sectionRecord.meta.breadcrumb) || section.charAt(0).toUpperCase() + section.slice(1)
+    const sectionPath = `/challenger/${section}`
+    items.push({ title: sectionLabel, to: { path: sectionPath } })
+  }
+
+  // Detail page last crumb
+  const matched = route.matched.filter(r => r.meta && r.meta.breadcrumb)
+  const isDetail = segments.length === 3 && /:\w+/.test((matched[matched.length - 1] && matched[matched.length - 1].path) || '')
+  if (isDetail) {
+    const name = (() => {
+      switch (route.name) {
+        case 'challengerProduitShow':
+          return productStore.currentProduct && productStore.currentProduct.name
+        case 'challengerExerciceShow':
+          return trainingStore.currentTraining && trainingStore.currentTraining.name
+        case 'challengerBlogShow': {
+          const slugParam = route.params && route.params.slug
+          return Array.isArray(slugParam) ? slugParam[0] : (typeof slugParam === 'string' ? slugParam : (slugParam != null ? String(slugParam) : undefined))
+        }
+        default:
+          return undefined
+      }
+    })()
+
+    items.push({ title: name || 'Détail', disabled: true })
+  }
+
+  return items
+})
 
 // Méthode de déconnexion corrigée
 const deconnexion = async () => {

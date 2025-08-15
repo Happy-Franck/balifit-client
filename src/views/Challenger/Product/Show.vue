@@ -27,20 +27,7 @@
 
       <!-- Product details -->
       <div v-if="productStore.currentProduct && !productStore.loadingProduct">
-        <!-- Breadcrumb -->
-        <v-breadcrumbs class="pa-0 mb-4">
-          <v-breadcrumbs-item>
-            <router-link to="/challenger/produit" class="text-decoration-none">
-              <v-icon class="mr-2">mdi-package-variant</v-icon>
-              Produits
-            </router-link>
-          </v-breadcrumbs-item>
-          <v-breadcrumbs-divider>/</v-breadcrumbs-divider>
-          <v-breadcrumbs-item disabled>
-            {{ productStore.currentProduct.name }}
-          </v-breadcrumbs-item>
-        </v-breadcrumbs>
-
+        
         <!-- Header with back button -->
         <v-row class="mb-6">
           <v-col cols="12">

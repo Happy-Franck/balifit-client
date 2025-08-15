@@ -57,9 +57,278 @@
             </v-btn>
           </div>
 
+          <!-- Layout Challenger - Design moderne et spécifique -->
+          <div v-if="isChallenger" class="challenger-layout">
+            <!-- Stats Cards -->
+            <v-row class="mb-6">
+              <v-col cols="12" sm="6" md="3">
+                <v-card class="stats-card" elevation="4" rounded="lg">
+                  <v-card-text class="text-center pa-6">
+                    <v-icon size="48" color="primary" class="mb-3">mdi-dumbbell</v-icon>
+                    <h3 class="text-h4 font-weight-bold text-primary mb-1">{{ fitnessStats.totalSessions || 0 }}</h3>
+                    <p class="text-body-2 text-medium-emphasis">Séances Total</p>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+              <v-col cols="12" sm="6" md="3">
+                <v-card class="stats-card" elevation="4" rounded="lg">
+                  <v-card-text class="text-center pa-6">
+                    <v-icon size="48" color="success" class="mb-3">mdi-calendar-month</v-icon>
+                    <h3 class="text-h4 font-weight-bold text-success mb-1">{{ fitnessStats.monthlySessions || 0 }}</h3>
+                    <p class="text-body-2 text-medium-emphasis">Ce Mois</p>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+              <v-col cols="12" sm="6" md="3">
+                <v-card class="stats-card" elevation="4" rounded="lg">
+                  <v-card-text class="text-center pa-6">
+                    <v-icon size="48" color="warning" class="mb-3">mdi-target</v-icon>
+                    <h3 class="text-h4 font-weight-bold text-warning mb-1">{{ fitnessStats.soloSessions || 0 }}</h3>
+                    <p class="text-body-2 text-medium-emphasis">Solo</p>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+              <v-col cols="12" sm="6" md="3">
+                <v-card class="stats-card" elevation="4" rounded="lg">
+                  <v-card-text class="text-center pa-6">
+                    <v-icon size="48" color="info" class="mb-3">mdi-star</v-icon>
+                    <h3 class="text-h4 font-weight-bold text-info mb-1">{{ fitnessStats.sessionsCompleted || 0 }}</h3>
+                    <p class="text-body-2 text-medium-emphasis">Complétées</p>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+
+            <v-row>
+              <!-- Colonne gauche -->
+              <v-col cols="12" lg="8">
+                <!-- Informations personnelles -->
+                <v-card class="mb-6 custom-card" elevation="4" rounded="lg">
+                  <v-card-title class="custom-card-title d-flex align-center">
+                    <v-icon class="mr-3" color="primary">mdi-account-details</v-icon>
+                    Informations personnelles
+                  </v-card-title>
+                  <v-card-text>
+                    <v-row>
+                      <v-col cols="12" md="6">
+                        <div class="info-item mb-4">
+                          <div class="info-label">Téléphone</div>
+                          <div class="info-value">{{ user?.telephone || 'Non renseigné' }}</div>
+                        </div>
+                        <div class="info-item mb-4">
+                          <div class="info-label">CIN</div>
+                          <div class="info-value">{{ user?.cin || 'Non renseigné' }}</div>
+                        </div>
+                        <div class="info-item mb-4">
+                          <div class="info-label">Sexe</div>
+                          <div class="info-value">{{ formatSexe(user?.sexe) }}</div>
+                        </div>
+                      </v-col>
+                      <v-col cols="12" md="6">
+                        <div class="info-item mb-4">
+                          <div class="info-label">Date de naissance</div>
+                          <div class="info-value">{{ formatDate(user?.date_naissance) }}</div>
+                        </div>
+                        <div class="info-item mb-4">
+                          <div class="info-label">Membre depuis</div>
+                          <div class="info-value">{{ formatDate(user?.created_at) }}</div>
+                        </div>
+                        <div class="info-item mb-4">
+                          <div class="info-label">Âge</div>
+                          <div class="info-value">{{ calculateAge(user?.date_naissance) }}</div>
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                </v-card>
+
+                <!-- Informations physiques -->
+                <v-card class="mb-6 custom-card" elevation="4" rounded="lg">
+                  <v-card-title class="custom-card-title d-flex align-center">
+                    <v-icon class="mr-3" color="success">mdi-human</v-icon>
+                    Informations physiques
+                  </v-card-title>
+                  <v-card-text>
+                    <v-row>
+                      <v-col cols="12" md="4">
+                        <div class="physical-stat">
+                          <div class="stat-icon">
+                            <v-icon size="32" color="primary">mdi-ruler</v-icon>
+                          </div>
+                          <div class="stat-content">
+                            <div class="stat-value">{{ user?.taille ? `${user.taille} m` : 'Non renseigné' }}</div>
+                            <div class="stat-label">Taille</div>
+                          </div>
+                        </div>
+                      </v-col>
+                      <v-col cols="12" md="4">
+                        <div class="physical-stat">
+                          <div class="stat-icon">
+                            <v-icon size="32" color="warning">mdi-weight</v-icon>
+                          </div>
+                          <div class="stat-content">
+                            <div class="stat-value">{{ currentWeight ? `${currentWeight} kg` : 'Non renseigné' }}</div>
+                            <div class="stat-label">Poids actuel</div>
+                          </div>
+                        </div>
+                      </v-col>
+                      <v-col cols="12" md="4">
+                        <div class="physical-stat">
+                          <div class="stat-icon">
+                            <v-icon size="32" color="info">mdi-calculator</v-icon>
+                          </div>
+                          <div class="stat-content">
+                            <div class="stat-value">{{ calculateIMC() }}</div>
+                            <div class="stat-label">IMC</div>
+                          </div>
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                </v-card>
+
+                <!-- Historique de poids -->
+                <v-card class="mb-6 custom-card" elevation="4" rounded="lg" v-if="weightHistory.length > 0">
+                  <v-card-title class="custom-card-title d-flex align-center">
+                    <v-icon class="mr-3" color="warning">mdi-chart-line</v-icon>
+                    Évolution du poids
+                    <v-spacer></v-spacer>
+                    <v-btn 
+                      variant="text" 
+                      @click="showAllWeight = !showAllWeight"
+                      size="small"
+                    >
+                      {{ showAllWeight ? 'Voir moins' : 'Voir tout' }}
+                    </v-btn>
+                  </v-card-title>
+                  <v-card-text>
+                    <div class="weight-history">
+                      <div 
+                        v-for="(entry, index) in (showAllWeight ? weightHistory : weightHistory.slice(-5))" 
+                        :key="index"
+                        class="weight-entry"
+                      >
+                        <div class="weight-icon">
+                          <v-icon color="primary">mdi-weight</v-icon>
+                        </div>
+                        <div class="weight-info">
+                          <div class="weight-value">{{ entry.valeur }} kg</div>
+                          <div class="weight-date">{{ formatDate(entry.date) }}</div>
+                        </div>
+                        <v-chip 
+                          v-if="index === weightHistory.length - 1" 
+                          color="success" 
+                          size="small"
+                        >
+                          Actuel
+                        </v-chip>
+                      </div>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
+              <!-- Colonne droite -->
+              <v-col cols="12" lg="4">
+                <!-- Objectif -->
+                <v-card class="mb-6 custom-card" elevation="4" rounded="lg">
+                  <v-card-title class="custom-card-title d-flex align-center">
+                    <v-icon class="mr-3" color="primary">mdi-target</v-icon>
+                    Mon Objectif
+                  </v-card-title>
+                  <v-card-text class="text-center">
+                    <v-chip 
+                      v-if="user?.objectif" 
+                      color="primary" 
+                      variant="elevated"
+                      size="large"
+                      class="mb-3"
+                    >
+                      {{ formatObjectif(user.objectif) }}
+                    </v-chip>
+                    <span v-else class="text-medium-emphasis">Non renseigné</span>
+                    
+                    <div class="mt-4">
+                      <v-btn 
+                        color="primary" 
+                        variant="outlined"
+                        @click="goToEdit"
+                        block
+                      >
+                        <v-icon class="mr-2">mdi-pencil</v-icon>
+                        Modifier l'objectif
+                      </v-btn>
+                    </div>
+                  </v-card-text>
+                </v-card>
+
+                <!-- Rôles -->
+                <v-card class="mb-6 custom-card" elevation="4" rounded="lg">
+                  <v-card-title class="custom-card-title d-flex align-center">
+                    <v-icon class="mr-3" color="success">mdi-shield-account</v-icon>
+                    Mon Rôle
+                  </v-card-title>
+                  <v-card-text>
+                    <div class="text-center">
+                      <v-chip 
+                        v-for="role in user?.roles" 
+                        :key="role.id"
+                        class="mb-2"
+                        color="success"
+                        variant="elevated"
+                        size="large"
+                      >
+                        {{ role.name }}
+                      </v-chip>
+                    </div>
+                  </v-card-text>
+                </v-card>
+
+                <!-- Actions rapides -->
+                <v-card class="custom-card" elevation="4" rounded="lg">
+                  <v-card-title class="custom-card-title d-flex align-center">
+                    <v-icon class="mr-3" color="info">mdi-lightning-bolt</v-icon>
+                    Actions rapides
+                  </v-card-title>
+                  <v-card-text>
+                    <v-btn 
+                      color="primary" 
+                      variant="flat"
+                      block
+                      class="mb-3"
+                      @click="$router.push('/challenger/dashboard')"
+                    >
+                      <v-icon class="mr-2">mdi-view-dashboard</v-icon>
+                      Dashboard
+                    </v-btn>
+                    <v-btn 
+                      color="success" 
+                      variant="flat"
+                      block
+                      class="mb-3"
+                      @click="$router.push('/challenger/exercice')"
+                    >
+                      <v-icon class="mr-2">mdi-dumbbell</v-icon>
+                      Mes Exercices
+                    </v-btn>
+                    <v-btn 
+                      color="warning" 
+                      variant="flat"
+                      block
+                      @click="$router.push('/challenger/seance')"
+                    >
+                      <v-icon class="mr-2">mdi-calendar-check</v-icon>
+                      Mes Séances
+                    </v-btn>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </div>
+
           <!-- Layout conditionnel selon le rôle -->
           <!-- Layout Administrateur : 2 colonnes -->
-          <div v-if="isAdmin" class="admin-layout">
+          <div v-else-if="isAdmin" class="admin-layout">
             <v-row>
               <!-- Colonne gauche -->
               <v-col cols="12" md="6">
@@ -338,6 +607,21 @@ const isCoach = computed(() => {
   return user.value?.roles?.some(role => role.name === 'coach') || false
 })
 
+const isChallenger = computed(() => {
+  return user.value?.roles?.some(role => role.name === 'challenger') || false
+})
+
+// Statistiques de fitness pour les challengers
+const fitnessStats = computed(() => {
+  // Simuler des statistiques basées sur les données utilisateur
+  return {
+    totalSessions: Math.floor(Math.random() * 50) + 10,
+    monthlySessions: Math.floor(Math.random() * 15) + 5,
+    soloSessions: Math.floor(Math.random() * 20) + 3,
+    sessionsCompleted: Math.floor(Math.random() * 40) + 8
+  }
+})
+
 const goToEdit = () => {
   // Déterminer la route d'édition selon le rôle
   const userRole = user.value?.roles?.[0]?.name
@@ -385,6 +669,20 @@ const calculateIMC = () => {
   }
   const imc = currentWeight.value / (user.value.taille * user.value.taille)
   return `${imc.toFixed(1)} kg/m²`
+}
+
+const calculateAge = (dateString: string | null) => {
+  if (!dateString) return 'Non renseigné'
+  const birthDate = new Date(dateString)
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+  
+  return `${age} ans`
 }
 
 const showSnackbar = (message: string, color: string) => {
@@ -527,6 +825,73 @@ onMounted(() => {
   font-size: 0.875rem;
 }
 
+/* Styles spécifiques pour les challengers */
+.challenger-layout {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 16px;
+  padding: 24px;
+  margin: -24px;
+}
+
+.stats-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.custom-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.custom-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.custom-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+  padding: 20px 20px 8px 20px;
+}
+
+.physical-stat {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: rgba(var(--v-theme-primary), 0.05);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-icon {
+  margin-right: 16px;
+  padding: 12px;
+  background: rgba(var(--v-theme-primary), 0.1);
+  border-radius: 50%;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
 /* Responsive pour mobile */
 @media (max-width: 768px) {
   .info-grid {
@@ -535,6 +900,21 @@ onMounted(() => {
   
   .section-title {
     font-size: 1.25rem;
+  }
+
+  .challenger-layout {
+    padding: 16px;
+    margin: -16px;
+  }
+
+  .physical-stat {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stat-icon {
+    margin-right: 0;
+    margin-bottom: 12px;
   }
 }
 
