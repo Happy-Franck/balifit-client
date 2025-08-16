@@ -24,8 +24,13 @@
                     </v-row>
                   </v-col>
                   <v-col cols="8">
-                    <h4>Trainings</h4>
-                    <v-btn color="purple" @click="addInput">Ajouter un champ</v-btn>
+                    <div class="d-flex align-center justify-space-between">
+                      <h4>Trainings</h4>
+                      <div class="d-flex" style="gap:8px">
+                        <v-btn color="purple" @click="addInput">Ajouter un champ</v-btn>
+                        <v-btn color="secondary" @click="generateWithAI">Générer une séance avec IA</v-btn>
+                      </div>
+                    </div>
                     <div id="all-data" >
                       <div v-for="(input, index) in inputs" :key="index" class="list-input">
                         <v-row>
@@ -35,10 +40,10 @@
                                 v-model="input.training"
                                 :items="trainingStore.trainings"
                                 item-title="name"
-                                item-value="id"
+                                return-object
                                 label="Training"
                                 required
-                                @update:model-value="onTrainingChange(input.training)"
+                                @update:model-value="onTrainingChange(input.training.id)"
                               ></v-select>
                             </div>
                           </v-col>
@@ -118,6 +123,28 @@
           </div>
           <v-col cols="12">
             <v-row>
+              <div class="mb-4">
+                <v-btn color="primary" @click="requestCoaching">Demander un coaching</v-btn>
+                <v-dialog
+                  v-model="coachingDialog"
+                  width="auto"
+                >
+                  <v-card
+                    max-width="420"
+                    prepend-icon="mdi-account-tie"
+                    title="Demande envoyée"
+                    :text="seanceStore.message || 'Votre demande de coaching a été créée. Un coach vous sera assigné.'"
+                  >
+                    <template v-slot:actions>
+                      <v-btn
+                        class="ms-auto"
+                        text="Ok"
+                        @click="coachingDialog = false"
+                      ></v-btn>
+                    </template>
+                  </v-card>
+                </v-dialog>
+              </div>
               <div v-if="seanceStore.currentSeance">
                 <div v-if="seanceStore.currentSeance.coach_id">
                   <div v-if="seanceStore.currentSeance.validated == false">
@@ -171,9 +198,7 @@
                                           <v-text-field v-model="field.duree" name="duree[]" label="Duration" type="number" dense outlined></v-text-field>
                                         </div>
                                       </v-col>
-                                      <v-col cols="3" class="d-flex justify-content-center">
-                                        <v-btn v-if="index > 0" @click="deleteField(index)" icon="mdi-delete-outline"></v-btn>
-                                        <div class="toggle-container">
+                                      <v-col cols="3" class="d-flex justify-content-center"><div class="toggle-container">
                                           <v-checkbox
                                             v-model="field.useRepetitions"
                                             label="Use Repetitions"
@@ -302,15 +327,15 @@
           </div>
           <p v-if="seanceStore.currentSeanceCoach">Coaché par: {{seanceStore.currentSeanceCoach?.name}}</p>
           <div>Trainings:
-            <v-sheet height="100px" class="mb-3 pr-5" style="display: flex !important; justify-content: space-between; align-items: center; overflow: hidden;" rounded elevation="10" v-for="(kotrana, index) in seanceStore.currentSeanceTrainings" :key="index">
+            <v-sheet height="100px" class="mb-3 pr-5" style="display: flex !important; justify-content: space-between; align-items: center; overflow: hidden;" rounded elevation="10" v-for="(kotrana, index) in seanceStore.currentSeanceTrainings || []" :key="index">
               <div v-if="kotrana.image">
                 <v-img :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${kotrana.image}`" width="140px" height="100px" class="img-train" cover></v-img>
               </div>
               <p class="ml-5">{{kotrana.name}}</p>
               <div>
-                <span class="mx-3">{{kotrana.pivot.series}} <b>Séries</b></span>
-                <span class="mx-3">{{kotrana.pivot.repetitions || 0}} <b>Répétition</b></span>
-                <span class="mx-3">{{kotrana.pivot.duree || 0}} <b>durée</b></span>
+                <span class="mx-3">{{kotrana.pivot?.series || 0}} <b>Séries</b></span>
+                <span class="mx-3">{{kotrana.pivot?.repetitions || 0}} <b>Répétition</b></span>
+                <span class="mx-3">{{kotrana.pivot?.duree || 0}} <b>durée</b></span>
               </div>
               <div v-if="!seanceStore.currentSeanceCoach">
                 <v-btn variant="outlined" icon="mdi-delete" @click="supprTraining(kotrana.pivot.seance_id, kotrana.pivot.training_id, kotrana.pivot.id)">
@@ -321,6 +346,14 @@
                 </v-btn>
               </div>
             </v-sheet>
+          </div>
+          <div class="mt-4">
+            <h4>Muscles entraînés</h4>
+            <div>
+              <v-chip v-for="(pct, muscle) in seanceStore.counts" :key="muscle" class="ma-1" color="teal">
+                {{ muscle }}
+              </v-chip>
+            </div>
           </div>
         </div>
       </v-col>
@@ -367,9 +400,10 @@ export default defineComponent({
     const dialog = ref(false)
     const modalEdit = ref(false)
     const modal = ref(false)
+    const coachingDialog = ref(false)
     const seanceStore = useSeanceStore()
     const trainingStore = useTrainingStore()
-    trainingStore.getTrainings()
+    trainingStore.loadAllTrainings()
     seanceStore.seances = null
     seanceStore.currentSeance = null
     seanceStore.currentSeanceTrainings = null
@@ -420,6 +454,27 @@ export default defineComponent({
     createControls.dampingFactor = 0.25;
     createControls.screenSpacePanning = false;
     createControls.maxPolarAngle = Math.PI;
+
+    const generateWithAI = async () => {
+      const plan = await seanceStore.generateAiPlan(60)
+      if (!plan || plan.length === 0) return
+      // Ensure full training objects exist for each plan item
+      await Promise.all(plan.map(async (item) => {
+        await trainingStore.fetchAndAddTraining(item.training_id)
+      }))
+      inputs.value = plan.map(item => {
+        const full = trainingStore.trainings.find(t => t.id === item.training_id)
+        return {
+          training: full || { id: item.training_id, name: item.name, categories: [] },
+          series: String(item.series),
+          repetitions: String(item.repetitions),
+          duree: String(item.duree),
+          useRepetitions: item.repetitions > 0,
+        }
+      })
+      dialog.value = true
+      setTimeout(() => { updateCreateSceneMuscles() }, 200)
+    }
 
     const init = () => {
       //camera.position.z = 3;
@@ -655,7 +710,7 @@ export default defineComponent({
       
       inputs.value.forEach(input => {
         if (input.training) {
-          const selectedTraining = trainingStore.trainings.find((training: any) => training.id === input.training);
+          const selectedTraining = trainingStore.trainings.find((training: any) => training.id === input.training.id);
           if (selectedTraining && selectedTraining.categories) {
             selectedTraining.categories.forEach((category: any) => {
               if (category.name) {
@@ -774,16 +829,6 @@ export default defineComponent({
       seanceStore.updateChallengerFin(id, state.saryChallengerFin)
     }
 
-    const supprChallengerFin = (id : number) => {
-      seanceStore.supprChallengerFin(id, {
-        suppr: null
-      })
-    }
-
-    const uploadDebut = (e: any) => {
-      state.saryDebut = e.target.files[0]
-    }
-
     watch(
       [() => seanceStore.message, () => modal.value,],
       ([newMessage, modalValue]) => {
@@ -809,8 +854,18 @@ export default defineComponent({
       }
     );
 
-    const uploadFin = (e: any) => {
+    const uploadDebut = (e: any) => {
       state.saryDebut = e.target.files[0]
+    }
+
+    const supprChallengerFin = (id : number) => {
+      seanceStore.supprChallengerFin(id, {
+        suppr: null
+      })
+    }
+ 
+    const uploadFin = (e: any) => {
+      state.saryFin = e.target.files[0]
     }
 
     function supprTraining(seanceId :number, trainingId :number, pivotId :number) {
@@ -820,7 +875,7 @@ export default defineComponent({
     const createSeance = () => {
       dialog.value = false
       const data = {
-        traininglist: inputs.value.map((input) => Number(input.training)),
+        traininglist: inputs.value.map((input) => Number(input.training.id)),
         series: inputs.value.map((input) => Number(input.series) || null),
         repetitions: inputs.value.map((input) => (input.useRepetitions ? Number(input.repetitions) : 0)),
         duree: inputs.value.map((input) => (!input.useRepetitions ? Number(input.duree) : 0)),
@@ -903,11 +958,18 @@ export default defineComponent({
       seanceStore.decliner(id)
     }
 
+    const requestCoaching = async () => {
+      await seanceStore.requestCoaching()
+      coachingDialog.value = true
+    }
+ 
     return {
       chartData,
       doughnutChart,
       confirmer,
       decliner,
+      requestCoaching,
+      coachingDialog,
       AuthStore,
       seanceStore,
       trainingStore,
@@ -941,6 +1003,7 @@ export default defineComponent({
       container,
       createContainer,
       onTrainingChange,
+      generateWithAI,
       ...toRefs(state)
     }
   }

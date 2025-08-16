@@ -169,5 +169,15 @@ export const useSeanceStore = defineStore('seanceChallenger', {
       this.message = response.data.message;
       this.alert = true;
     },
+    async requestCoaching() {
+      const response = await http.post('/challenger/seance/request-coaching')
+      this.message = response.data.message
+      this.alert = true
+      await this.getSeances()
+    },
+    async generateAiPlan(availableTime: number = 60) {
+      const response = await http.get('/challenger/seance/generate-plan', { params: { available_time: availableTime } })
+      return response.data.plan as Array<{ training_id: number; name: string; series: number; repetitions: number; duree: number; categories: string[] }>
+    },
   },
 });

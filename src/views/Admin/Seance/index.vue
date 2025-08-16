@@ -39,6 +39,30 @@
       </div>
     </div>
 
+    <!-- Tabs de filtrage -->
+    <v-tabs
+      v-model="activeTab"
+      class="mb-4"
+      density="comfortable"
+    >
+      <v-tab value="all">
+        <v-icon start size="16">mdi-format-list-bulleted</v-icon>
+        Toutes
+      </v-tab>
+      <v-tab value="requests">
+        <v-icon start size="16">mdi-account-plus</v-icon>
+        Demandes
+      </v-tab>
+      <v-tab value="assigned">
+        <v-icon start size="16">mdi-account-group</v-icon>
+        Assignées
+      </v-tab>
+      <v-tab value="solo">
+        <v-icon start size="16">mdi-account-solo</v-icon>
+        Solo
+      </v-tab>
+    </v-tabs>
+
     <!-- Loading bar -->
     <!-- <v-progress-linear
       v-if="seanceStore.loading"
@@ -146,7 +170,7 @@
         </div>
 
         <div 
-          v-for="item in seanceStore.seances" 
+          v-for="item in filteredSeances" 
           :key="item.id"
           class="table-row"
           :class="{ 'row-locked': item.validated !== null }"
@@ -185,6 +209,10 @@
                 <div class="user-name">{{ item.coach.name }}</div>
               </div>
             </div>
+            <v-chip v-else-if="item.validated === null" color="primary" variant="flat" size="small" class="solo-chip">
+              <v-icon start size="14">mdi-account-plus</v-icon>
+              Demande
+            </v-chip>
             <v-chip v-else color="primary" variant="flat" size="small" class="solo-chip">
               <v-icon start size="14">mdi-account-solo</v-icon>
               Solo
@@ -212,13 +240,13 @@
           
           <div class="col-status">
             <v-chip 
-              :color="getStatusColor(item.validated)" 
+              :color="getStatusColor(item)" 
               size="small" 
               variant="flat"
               class="status-chip"
             >
-              <v-icon start size="14">{{ getStatusIcon(item.validated) }}</v-icon>
-              {{ formatValidatedStatus(item.validated) }}
+              <v-icon start size="14">{{ getStatusIcon(item) }}</v-icon>
+              {{ formatValidatedStatus(item) }}
             </v-chip>
           </div>
           
@@ -229,6 +257,14 @@
               color="info"
               variant="text"
               @click="viewSeance(item.id)"
+            ></v-btn>
+            <v-btn
+              v-if="item.validated === null && !item.coach_id"
+              icon="mdi-account-plus"
+              size="small"
+              color="primary"
+              variant="text"
+              @click="assignCoach(item)"
             ></v-btn>
             <v-btn
               v-if="item.validated === null"
@@ -385,6 +421,7 @@ const searchQuery = ref('')
 const sortBy = ref('id')
 const sortOrder = ref('desc')
 let searchTimeout: number | null = null
+const activeTab = ref<'all' | 'requests' | 'assigned' | 'solo'>('all')
 
 const editedSeance = reactive({
   id: null,
@@ -417,6 +454,20 @@ const challengerOptions = computed(() => {
   return userStore.users?.filter(user => 
     user.roles?.some(role => role.name === 'challenger')
   ) || []
+})
+
+const filteredSeances = computed(() => {
+  const list = seanceStore.seances || []
+  switch (activeTab.value) {
+    case 'requests':
+      return list.filter((s: any) => s.validated === null && !s.coach_id && !s.admin_id)
+    case 'assigned':
+      return list.filter((s: any) => s.validated === null && !!s.coach_id)
+    case 'solo':
+      return list.filter((s: any) => s.validated === true && !s.coach_id)
+    default:
+      return list
+  }
 })
 
 // Methods
@@ -529,25 +580,39 @@ const formatTime = (dateString: string) => {
   })
 }
 
-const formatValidatedStatus = (validated: boolean | null) => {
-  if (validated == true) return 'Validée'
-  if (validated == false) return 'À corriger'
-  if (validated == null) return 'Assignée'
+const formatValidatedStatus = (item: any) => {
+  if (item?.validated === true) return 'Validée'
+  if (item?.validated === false) return 'Refusée'
+  if (item?.validated === null && !item?.coach_id) return 'Demande'
+  if (item?.validated === null && item?.coach_id) return 'Assignée'
   return 'Non défini'
 }
 
-const getStatusColor = (validated: boolean | null) => {
-  if (validated == true) return 'success'
-  if (validated == false) return 'error'
-  if (validated == null) return 'info'
+const getStatusColor = (item: any) => {
+  if (item?.validated === true) return 'success'
+  if (item?.validated === false) return 'error'
+  if (item?.validated === null && !item?.coach_id) return 'primary'
+  if (item?.validated === null && item?.coach_id) return 'info'
   return 'grey'
 }
 
-const getStatusIcon = (validated: boolean | null) => {
-  if (validated == true) return 'mdi-check-circle'
-  if (validated == false) return 'mdi-alert-circle'
-  if (validated == null) return 'mdi-account-group'
+const getStatusIcon = (item: any) => {
+  if (item?.validated === true) return 'mdi-check-circle'
+  if (item?.validated === false) return 'mdi-alert-circle'
+  if (item?.validated === null && !item?.coach_id) return 'mdi-account-plus'
+  if (item?.validated === null && item?.coach_id) return 'mdi-account-group'
   return 'mdi-help-circle'
+}
+
+const assignCoach = (seance: any) => {
+  isEditing.value = true
+  Object.assign(editedSeance, {
+    id: seance.id,
+    coach_id: null,
+    challenger_id: seance.challenger_id,
+    validated: seance.validated
+  })
+  dialog.value = true
 }
 
 // Lifecycle

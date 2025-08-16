@@ -15,6 +15,7 @@ export const useTrainingStore = defineStore('trainingChallenger', {
     last_page: 1,
     has_more: true,
     selectedCategoryIds: [] as number[],
+    allLoaded: false,
   }),
   getters: {
   },
@@ -59,5 +60,21 @@ export const useTrainingStore = defineStore('trainingChallenger', {
       this.currentTraining = response.data.training
       this.loading = false
     },
+    async fetchAndAddTraining(id: number) {
+      const exists = this.trainings.some(t => t.id === id)
+      if (exists) return
+      const resp = await http.get('/challenger/training/'+id)
+      const t = resp.data.training as Training
+      this.trainings = [...this.trainings, t]
+    },
+    async loadAllTrainings(params: { search?: string; categories?: number[] } = {}) {
+      this.loading = true
+      const search = params.search ?? ''
+      const categories = params.categories ?? this.selectedCategoryIds
+      const resp = await http.get('/challenger/training/all', { params: { search, categories: categories && categories.length ? categories.join(',') : undefined } })
+      this.trainings = resp.data.trainings
+      this.allLoaded = true
+      this.loading = false
+    }
   }
 });

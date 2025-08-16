@@ -213,6 +213,23 @@
                     
                     <div class="input-group">
                       <v-text-field
+                        v-model="formData.poids"
+                        label="Poids actuel (kg)"
+                        type="number"
+                        step="0.1"
+                        min="10"
+                        max="500"
+                        variant="outlined"
+                        class="form-input"
+                        prepend-inner-icon="mdi-weight-kilogram"
+                        :rules="[rules.weight]"
+                        hint="Ex: 72.5"
+                        persistent-hint
+                      ></v-text-field>
+                    </div>
+
+                    <div class="input-group">
+                      <v-text-field
                         v-model="formData.taille"
                         label="Taille (en mètres)"
                         type="number"
@@ -355,6 +372,7 @@ export default defineComponent({
       telephone: '',
       cin: '',
       taille: '',
+      poids: '',
       objectif: '',
       sexe: '',
       date_naissance: '',
@@ -425,7 +443,8 @@ export default defineComponent({
       cin: (value: string) => !value || value.length >= 6 || 'Le CIN doit contenir au moins 6 caractères',
       height: (value: string) => !value || (parseFloat(value) >= 0.5 && parseFloat(value) <= 3.0) || 'La taille doit être entre 0.5 et 3.0 mètres',
       birthDate: (value: string) => !value || new Date(value) < new Date() || 'La date de naissance doit être antérieure à aujourd\'hui',
-      image: (value: File[]) => !value || value.length === 0 || value[0].type.startsWith('image/') || 'Le fichier doit être une image'
+      image: (value: File[]) => !value || value.length === 0 || value[0].type.startsWith('image/') || 'Le fichier doit être une image',
+      weight: (value: string) => !value || (parseFloat(value) >= 10 && parseFloat(value) <= 500) || 'Le poids doit être entre 10 et 500 kg'
     };
 
     // Computed properties
@@ -482,6 +501,7 @@ export default defineComponent({
       if (formData.value.telephone) formDataToSend.append('telephone', formData.value.telephone);
       if (formData.value.cin) formDataToSend.append('cin', formData.value.cin);
       if (formData.value.taille) formDataToSend.append('taille', formData.value.taille);
+      if (formData.value.poids) formDataToSend.append('poids', formData.value.poids);
       if (formData.value.objectif) formDataToSend.append('objectif', formData.value.objectif);
       if (formData.value.sexe) formDataToSend.append('sexe', formData.value.sexe);
       if (formData.value.date_naissance) formDataToSend.append('date_naissance', formData.value.date_naissance);
