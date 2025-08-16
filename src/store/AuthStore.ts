@@ -10,7 +10,8 @@ export const useAuthStore = defineStore('auth', {
     useravatar: '',
     role: '',
     token: '',
-    userAuth: null as User | null
+    userAuth: null as User | null,
+    planTier: 'free' as 'free' | 'casual' | 'pro',
   }),
   getters: {
     getUserName() : String{
@@ -36,6 +37,12 @@ export const useAuthStore = defineStore('auth', {
     },
     isChallenger(): boolean {
       return this.role === 'challenger'
+    },
+    canUseAI(): boolean {
+      return this.planTier === 'pro'
+    },
+    canRequestCoaching(): boolean {
+      return this.planTier === 'pro' || this.planTier === 'casual'
     }
   },
   actions: {
@@ -73,6 +80,7 @@ export const useAuthStore = defineStore('auth', {
       this.role = '';
       this.token = '';
       this.userAuth = null;
+      this.planTier = 'free'
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       localStorage.removeItem('username');
@@ -152,6 +160,16 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.error('Erreur lors de la récupération de l\'historique de poids:', error)
         throw error
+      }
+    },
+    async loadPlanTier() {
+      try {
+        const { data } = await http.get('/me/subscription')
+        this.planTier = data.tier || 'free'
+        return this.planTier
+      } catch (e) {
+        this.planTier = 'free'
+        return 'free'
       }
     }
   }

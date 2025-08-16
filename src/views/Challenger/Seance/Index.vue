@@ -28,7 +28,14 @@
                       <h4>Trainings</h4>
                       <div class="d-flex" style="gap:8px">
                         <v-btn color="purple" @click="addInput">Ajouter un champ</v-btn>
-                        <v-btn color="secondary" @click="generateWithAI">Générer une séance avec IA</v-btn>
+                        <v-tooltip location="bottom">
+                          <template #activator="{ props }">
+                            <div>
+                              <v-btn v-bind="props" color="secondary" :disabled="!AuthStore.canUseAI" @click="generateWithAI">Générer une séance avec IA</v-btn>
+                            </div>
+                          </template>
+                          <span v-if="!AuthStore.canUseAI">Disponible uniquement avec le plan Pro</span>
+                        </v-tooltip>
                       </div>
                     </div>
                     <div id="all-data" >
@@ -124,23 +131,18 @@
           <v-col cols="12">
             <v-row>
               <div class="mb-4">
-                <v-btn color="primary" @click="requestCoaching">Demander un coaching</v-btn>
-                <v-dialog
-                  v-model="coachingDialog"
-                  width="auto"
-                >
-                  <v-card
-                    max-width="420"
-                    prepend-icon="mdi-account-tie"
-                    title="Demande envoyée"
-                    :text="seanceStore.message || 'Votre demande de coaching a été créée. Un coach vous sera assigné.'"
-                  >
+                <v-tooltip location="bottom">
+                  <template #activator="{ props }">
+                    <div>
+                      <v-btn v-bind="props" color="primary" :disabled="!AuthStore.canRequestCoaching" @click="requestCoaching">Demander un coaching</v-btn>
+                    </div>
+                  </template>
+                  <span v-if="!AuthStore.canRequestCoaching">Disponible à partir du plan Casual</span>
+                </v-tooltip>
+                <v-dialog v-model="coachingDialog" width="auto">
+                  <v-card max-width="420" prepend-icon="mdi-account-tie" title="Demande envoyée" :text="seanceStore.message || 'Votre demande de coaching a été créée. Un coach vous sera assigné.'">
                     <template v-slot:actions>
-                      <v-btn
-                        class="ms-auto"
-                        text="Ok"
-                        @click="coachingDialog = false"
-                      ></v-btn>
+                      <v-btn class="ms-auto" text="Ok" @click="coachingDialog = false"></v-btn>
                     </template>
                   </v-card>
                 </v-dialog>
@@ -396,7 +398,9 @@ export default defineComponent({
     const GLTF_MODEL_PATH = `${ASSETS_BASE_URL}/src/assets/Muscle.gltf`
     
     const AuthStore = useAuthStore()
-    AuthStore.getUserAuth()
+    AuthStore.initFromStorage()
+    // Charger tier abonnement pour adapter l'UI
+    AuthStore.loadPlanTier()
     const dialog = ref(false)
     const modalEdit = ref(false)
     const modal = ref(false)

@@ -119,7 +119,7 @@
                   </v-form>
                 </div>
               </v-window-item>
-
+ 
               <!-- Étape 2: Informations de contact -->
               <v-window-item :value="2">
                 <div class="step-card">
@@ -170,7 +170,7 @@
                   </v-form>
                 </div>
               </v-window-item>
-
+ 
               <!-- Étape 3: Informations physiques -->
               <v-window-item :value="3">
                 <div class="step-card">
@@ -247,7 +247,7 @@
                   </v-form>
                 </div>
               </v-window-item>
-
+ 
               <!-- Étape 4: Objectifs fitness -->
               <v-window-item :value="4">
                 <div class="step-card">
@@ -284,6 +284,65 @@
                   </v-form>
                 </div>
               </v-window-item>
+ 
+              <!-- Étape 5: Choisir un plan (avec onglets) -->
+              <v-window-item :value="5">
+                <div class="step-card">
+                  <div class="step-header">
+                    <v-icon class="step-icon" size="48">mdi-credit-card-outline</v-icon>
+                    <h2 class="step-title-form">Choisissez votre plan</h2>
+                    <p class="step-subtitle">Sélectionnez une formule d'abonnement</p>
+                  </div>
+
+                  <div class="d-flex flex-column align-center">
+                    <v-progress-circular v-if="plansLoading" indeterminate color="primary" class="mb-4" />
+                    <div v-else class="d-flex flex-column" style="gap: 12px; width: 100%">
+                      <v-alert v-if="plansError" type="error" class="mb-2">{{ plansError }}</v-alert>
+                      <div class="d-flex align-center mb-3" style="gap: 8px;">
+                        <v-btn-toggle v-model="planTab" mandatory>
+                          <v-btn value="monthly">Mensuel</v-btn>
+                          <v-btn value="yearly">Annuel</v-btn>
+                        </v-btn-toggle>
+                      </div>
+                      <!-- Option GRATUIT -->
+                      <v-card class="pa-4 mb-2" color="grey-lighten-4" variant="tonal" @click="onFreeClick">
+                        <div class="d-flex align-center justify-space-between">
+                          <div>
+                            <div class="text-subtitle-1 font-weight-medium">Gratuit</div>
+                            <div class="text-body-2 text-medium-emphasis">Créer un compte sans abonnement</div>
+                          </div>
+                          <div class="text-h6">0 €</div>
+                        </div>
+                      </v-card>
+                      <v-item-group v-model="selectedPriceId">
+                        <v-item
+                          v-for="plan in displayedPlans"
+                          :key="plan.price_id"
+                          :value="plan.price_id"
+                        >
+                          <template #default="{ toggle, selected }">
+                            <v-card
+                              class="pa-4"
+                              :elevation="selected ? 6 : 2"
+                              @click="onPlanClick(plan.price_id, toggle)"
+                            >
+                              <div class="d-flex align-center justify-space-between">
+                                <div>
+                                  <div class="text-subtitle-1 font-weight-medium">{{ plan.product.name }}</div>
+                                  <div class="text-body-2 text-medium-emphasis">{{ plan.product.description }}</div>
+                                </div>
+                                <div class="text-h6">
+                                  {{ (plan.unit_amount/100).toFixed(2) }} {{ plan.currency }} / {{ plan.interval }}
+                                </div>
+                              </div>
+                            </v-card>
+                          </template>
+                        </v-item>
+                      </v-item-group>
+                    </div>
+                  </div>
+                </div>
+              </v-window-item>
             </v-window>
             
             <!-- Actions du formulaire -->
@@ -314,18 +373,7 @@
                 <v-icon right>mdi-arrow-right</v-icon>
               </v-btn>
               
-              <v-btn
-                v-if="currentStep === totalSteps"
-                color="primary"
-                @click="submitForm"
-                :loading="loading"
-                :disabled="!isFormValid"
-                size="large"
-                elevation="0"
-              >
-                <v-icon left>mdi-check</v-icon>
-                Créer mon compte
-              </v-btn>
+              <!-- Le bouton 'Créer mon compte' n'est pas affiché sur l'étape des plans. L'option 'Gratuit' gère la création sans plan. -->
             </div>
             
             <div class="form-footer">
@@ -341,7 +389,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from "vue";
+import { defineComponent, ref, computed, onMounted } from "vue";
 import http from '../../axios'
 import { useRouter } from "vue-router";
 
@@ -354,13 +402,14 @@ export default defineComponent({
     const alert = ref(false);
     const loading = ref(false);
     const currentStep = ref(1);
-    const totalSteps = ref(4);
+    const totalSteps = ref(5);
     
     // Validité des étapes
-    const step1Valid = ref(false);
+    const step1Valid = ref(false); // Infos de base requises
     const step2Valid = ref(true); // Optionnel
     const step3Valid = ref(true); // Optionnel
     const step4Valid = ref(true); // Optionnel
+    const step5Valid = ref(true);
 
     const router = useRouter();
 
@@ -381,12 +430,13 @@ export default defineComponent({
 
     const confirmPassword = ref('');
 
-    // Images pour chaque étape
+    // Images pour chaque étape (ordre: compte, contact, profil, objectifs, plan)
     const stepImageNames = {
       1: '/images/pexels-ketut-subiyanto-4853334.jpg', // Étape compte
       2: '/images/pexels-alesiakozik-7289233.jpg', // Étape contact
       3: '/images/pexels-mikhail-nilov-8455609.jpg', // Étape profil
-      4: '/images/pexels-ketut-subiyanto-4853660.jpg'  // Étape objectifs
+      4: '/images/pexels-ketut-subiyanto-4853660.jpg',  // Étape objectifs
+      5: '/images/pexels-anna-shvets-5069596.jpg'  // Étape plan
     };
 
     // Titres et descriptions pour chaque étape
@@ -406,8 +456,43 @@ export default defineComponent({
       4: {
         title: 'Vos objectifs',
         description: 'Définissez votre transformation'
+      },
+      5: {
+        title: 'Choisissez votre plan',
+        description: 'Sélectionnez l’abonnement qui vous convient'
       }
     };
+
+    // Plans state
+    const plans = ref<any[]>([])
+    const plansLoading = ref(false)
+    const plansError = ref('')
+    const selectedPriceId = ref<string | null>(null)
+    const planTab = ref<'monthly' | 'yearly'>('monthly')
+    const monthlyPlans = computed(() => {
+      return plans.value.filter(p => p.interval === 'month').sort((a,b)=>a.unit_amount-b.unit_amount)
+    })
+    const yearlyPlans = computed(() => {
+      return plans.value.filter(p => p.interval === 'year').sort((a,b)=>a.unit_amount-b.unit_amount)
+    })
+    const displayedPlans = computed(() => planTab.value === 'monthly' ? monthlyPlans.value : yearlyPlans.value)
+
+    const loadPlans = async () => {
+      plansLoading.value = true
+      plansError.value = ''
+      try {
+        const { data } = await http.get('/billing/plans')
+        plans.value = data.plans || []
+      } catch (e: any) {
+        plansError.value = 'Impossible de charger les plans pour le moment.'
+      } finally {
+        plansLoading.value = false
+      }
+    }
+
+    onMounted(() => {
+      loadPlans()
+    })
 
     // Options pour les selects
     const sexeOptions = [
@@ -466,12 +551,13 @@ export default defineComponent({
         case 2: return step2Valid.value;
         case 3: return step3Valid.value;
         case 4: return step4Valid.value;
+        case 5: return step5Valid.value;
         default: return false;
       }
     });
 
     const isFormValid = computed(() => {
-      return step1Valid.value && step2Valid.value && step3Valid.value && step4Valid.value;
+      return step1Valid.value && step2Valid.value && step3Valid.value && step4Valid.value && step5Valid.value;
     });
 
     // Méthodes de navigation
@@ -486,6 +572,60 @@ export default defineComponent({
         currentStep.value--;
       }
     };
+
+    // Paiement immédiat (après infos de base uniquement)
+    const checkoutNow = () => {
+      if (!selectedPriceId.value) {
+        message.value = 'Veuillez sélectionner un plan pour continuer.'
+        alert.value = true
+        return
+      }
+      if (!formData.value.name || !formData.value.email || !formData.value.password || formData.value.password.length < 8 || confirmPassword.value !== formData.value.password) {
+        currentStep.value = 2
+        message.value = 'Veuillez saisir vos informations de base (nom, email, mot de passe) avant de procéder au paiement.'
+        alert.value = true
+        return
+      }
+      submitForm()
+    }
+
+    // Redirection sur clic plan
+    const basicInfoIsValid = () => {
+      const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const f = formData.value
+      return !!f.name && pattern.test(f.email) && !!f.password && f.password.length >= 8 && confirmPassword.value === f.password
+    }
+    const onPlanClick = (priceId: string, toggleFn: Function) => {
+      selectedPriceId.value = priceId
+      if (typeof toggleFn === 'function') toggleFn()
+      const token = localStorage.getItem('token')
+      if (token) {
+        return router.push({ name: 'billingCheckout', params: { priceId }})
+      }
+      if (basicInfoIsValid()) {
+        return submitForm()
+      }
+      currentStep.value = 1
+      message.value = 'Veuillez saisir votre nom, email et mot de passe pour continuer au paiement.'
+      alert.value = true
+    }
+
+    const onFreeClick = () => {
+      selectedPriceId.value = null
+      const token = localStorage.getItem('token')
+      if (token) {
+        // Déjà connecté: rediriger vers le dashboard
+        if(localStorage.getItem('role') == 'administrateur') return router.push('/admin/dashboard')
+        if(localStorage.getItem('role') == 'coach') return router.push('/coach/dashboard')
+        return router.push('/challenger/dashboard')
+      }
+      if (basicInfoIsValid()) {
+        return submitForm()
+      }
+      currentStep.value = 1
+      message.value = 'Veuillez saisir votre nom, email et mot de passe pour créer un compte gratuit.'
+      alert.value = true
+    }
 
     // Soumission du formulaire
     const submitForm = () => {
@@ -522,6 +662,11 @@ export default defineComponent({
           localStorage.setItem('useravatar', response.data.user.avatar)
           localStorage.setItem('role', response.data.role)
           localStorage.setItem('token', response.data.token)
+
+          // If a plan was selected, go to Checkout
+          if (selectedPriceId.value) {
+            return router.push({ name: 'billingCheckout', params: { priceId: selectedPriceId.value }})
+          }
           
           if(localStorage.getItem('role') == 'administrateur'){
             router.push('/admin/dashboard')
@@ -536,7 +681,7 @@ export default defineComponent({
         loading.value = false;
       }).catch((err) => {
         console.log(err.response.data)
-        message.value = err.response.data.message || 'Une erreur est survenue'
+        message.value = err.response?.data?.message || 'Une erreur est survenue'
         alert.value = true
         loading.value = false;
       })
@@ -559,6 +704,7 @@ export default defineComponent({
       step2Valid,
       step3Valid,
       step4Valid,
+      step5Valid,
       formData,
       confirmPassword,
       sexeOptions,
@@ -572,7 +718,18 @@ export default defineComponent({
       nextStep,
       previousStep,
       submitForm,
-      closeAlert
+      closeAlert,
+      plans,
+      plansLoading,
+      plansError,
+      selectedPriceId,
+      checkoutNow,
+      onPlanClick,
+      planTab,
+      monthlyPlans,
+      yearlyPlans,
+      displayedPlans,
+      onFreeClick
     };
   }
 })

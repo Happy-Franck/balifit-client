@@ -51,6 +51,9 @@ import ExoShowChallenger from '../views/Challenger/Exercice/Show.vue'
 //profile
 import EditProfile from '../views/Profile/EditProfile.vue'
 import ProfileView from '../views/Profile/ProfileView.vue'
+import BillingSuccess from '../views/Billing/Success.vue'
+import BillingPortal from '../views/Billing/Portal.vue'
+import BillingCheckout from '../views/Billing/Checkout.vue'
 
 const routes = [
   {
@@ -72,6 +75,17 @@ const routes = [
         name: 'register',
         component: Register,
         meta: { requiresGuest: true }
+      },
+      {
+        path: 'billing/success',
+        name: 'billingSuccess',
+        component: BillingSuccess,
+      },
+      {
+        path: 'billing/checkout/:priceId',
+        name: 'billingCheckout',
+        component: BillingCheckout,
+        props: true,
       },
     ]
   },
@@ -339,6 +353,12 @@ const routes = [
         component: EditProfile
       },
     ]
+  },
+  {
+    path: '/billing/portal',
+    name: 'billingPortal',
+    component: BillingPortal,
+    meta: { requiresAuth: true },
   }
 ]
 
