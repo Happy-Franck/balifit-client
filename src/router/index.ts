@@ -5,6 +5,13 @@ import { useAuthStore } from '@/store/AuthStore'
 import NotConnected from '../layouts/NotConnected.vue'
 import Login from '../views/Auth/Login.vue'
 import Register from '../views/Auth/Register.vue'
+import PublicHome from '../views/Public/Home.vue'
+import PublicAbout from '../views/Public/About.vue'
+import PublicPricing from '../views/Public/Pricing.vue'
+import PublicProducts from '../views/Public/Product/Index.vue'
+import PublicProductShow from '../views/Public/Product/Show.vue'
+import PublicBlogIndex from '../views/Public/Blog/Index.vue'
+import PublicBlogShow from '../views/Public/Blog/Show.vue'
 //admin
 import Admin from '../layouts/Admin.vue'
 import DashboardAdmin from '../views/Admin/DashboardAdmin.vue'
@@ -58,12 +65,53 @@ import BillingCheckout from '../views/Billing/Checkout.vue'
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/home'
   },
   {
     path: '/',
     component: NotConnected,
     children: [
+      {
+        path: '',
+        redirect: 'home'
+      },
+      {
+        path: 'home',
+        name: 'home',
+        component: PublicHome,
+      },
+      {
+        path: 'about',
+        name: 'about',
+        component: PublicAbout,
+      },
+      {
+        path: 'pricing',
+        name: 'pricing',
+        component: PublicPricing,
+      },
+      {
+        path: 'produits',
+        name: 'publicProduit',
+        component: PublicProducts,
+      },
+      {
+        path: 'produits/:id',
+        name: 'publicProduitShow',
+        component: PublicProductShow,
+        props: true
+      },
+      {
+        path: 'blog',
+        name: 'publicBlogIndex',
+        component: PublicBlogIndex,
+      },
+      {
+        path: 'blog/:slug',
+        name: 'publicBlogShow',
+        component: PublicBlogShow,
+        props: true,
+      },
       {
         path: 'login',
         name: 'login',
@@ -405,7 +453,7 @@ router.beforeEach((to, from, next) => {
     if (authStore.isAuthenticated) {
       return next(authStore.getDashboardRoute())
     } else {
-      return next('/login')
+      return next('/home')
     }
   }
   

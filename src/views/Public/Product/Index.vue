@@ -1,5 +1,5 @@
 <template>
-  <ProductList source="challenger" />
+  <ProductList source="public" />
 </template>
 
 <script setup lang="ts">
@@ -23,4 +23,4 @@ import ProductList from '../../../components/product/ProductList.vue'
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-</style>
+</style> 

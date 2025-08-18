@@ -1,10 +1,7 @@
 <template>
-  <div class="pa-4">
-    <BlogList endpoint-prefix="/challenger" />
-  </div>
+  <BlogList />
 </template>
 
 <script setup lang="ts">
 import BlogList from '../../../components/blog/BlogList.vue'
-</script>
-
+</script> 

@@ -1,11 +1,8 @@
 <template>
-  <div class="pa-4">
-    <BlogDetail endpoint-prefix="/challenger" />
-  </div>
+  <BlogDetail />
 </template>
 
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 const BlogDetail = defineAsyncComponent(() => import('../../../components/blog/BlogDetail.vue'))
-</script>
-
+</script> 
