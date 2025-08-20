@@ -1,5 +1,22 @@
 <template>
   <v-container class="pa-6">
+    <!-- Breadcrumbs -->
+    <v-breadcrumbs 
+      :items="breadcrumbItems" 
+      class="pa-0 mb-4"
+      divider="/"
+    >
+      <template v-slot:item="{ item }">
+        <v-breadcrumbs-item
+          :to="item.href"
+          :disabled="item.disabled"
+        >
+          <v-icon v-if="item.icon" :icon="item.icon" size="16" class="mr-1"></v-icon>
+          {{ item.title }}
+        </v-breadcrumbs-item>
+      </template>
+    </v-breadcrumbs>
+
     <!-- Header Section -->
     <div class="mb-8">
       <div class="d-flex align-center mb-4">
@@ -347,6 +364,25 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     
+    // Breadcrumbs
+    const breadcrumbItems = computed(() => [
+      {
+        title: 'Accueil',
+        href: '/coach/dashboard',
+        icon: 'mdi-home'
+      },
+      {
+        title: 'Séances',
+        href: '/coach/seance',
+        icon: 'mdi-calendar-check'
+      },
+      {
+        title: `Séance #${route.params.id}`,
+        disabled: true,
+        icon: 'mdi-eye'
+      }
+    ])
+    
     const state = reactive({
       imageDebut: null as null | any,
       saryDebut: null as null | any,
@@ -467,6 +503,7 @@ export default defineComponent({
       changeFin,
       supprImgFin,
       APP_CONFIG,
+      breadcrumbItems,
       ...toRefs(state)
     }
   }

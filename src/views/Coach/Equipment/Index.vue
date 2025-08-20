@@ -1,5 +1,22 @@
 <template>
   <v-container>
+    <!-- Breadcrumbs -->
+    <v-breadcrumbs 
+      :items="breadcrumbItems" 
+      class="pa-0 mb-4"
+      divider="/"
+    >
+      <template v-slot:item="{ item }">
+        <v-breadcrumbs-item
+          :to="item.href"
+          :disabled="item.disabled"
+        >
+          <v-icon v-if="item.icon" :icon="item.icon" size="16" class="mr-1"></v-icon>
+          {{ item.title }}
+        </v-breadcrumbs-item>
+      </template>
+    </v-breadcrumbs>
+
     <h1>Liste des équipements</h1>
     <v-card
       class="mx-auto mt-6"
@@ -106,7 +123,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, computed } from 'vue'
 import { useEquipmentStore } from '../../../store/CoachStore/EquipmentStore'
 import { APP_CONFIG } from '../../../config/constants'
 
@@ -114,6 +131,19 @@ export default defineComponent({
   setup() {
     const equipmentStore = useEquipmentStore()
     const trainingDialog = ref(false)
+
+    const breadcrumbItems = computed(() => [
+      {
+        title: 'Accueil',
+        href: '/coach/dashboard',
+        icon: 'mdi-home'
+      },
+      {
+        title: 'Équipements',
+        disabled: true,
+        icon: 'mdi-weight-lifter'
+      }
+    ])
 
     equipmentStore.getEquipments()
 
@@ -126,7 +156,8 @@ export default defineComponent({
     return {
       equipmentStore,
       trainingDialog,
-      viewEquipmentTrainings
+      viewEquipmentTrainings,
+      breadcrumbItems
     }
   }
 })

@@ -1,64 +1,117 @@
 <template>
-  <v-app id="inspire">
-    <v-app-bar flat>
-      <v-container class="fill-height d-flex align-center">
+  <v-app>
+    <!-- Navigation Drawer -->
+    <v-navigation-drawer v-model="drawer" permanent>
+      <!-- Section Avatar et Profil -->
+      <v-list>
+        <v-list-item class="text-center pa-6">
+          <div class="d-flex flex-column align-center">
         <v-avatar
-          class="me-10 ms-4"
-          color="grey-darken-1"
-          size="32"
+              size="80"
+              class="mb-4"
           :image="AuthStore.userAuth?.avatar ? `${APP_CONFIG.STORAGE_BASE_URL}/avatars/${AuthStore.userAuth.avatar}` : ''"
-        ></v-avatar>
+            >
+              <v-icon v-if="!AuthStore.userAuth?.avatar" size="40">mdi-account-tie</v-icon>
+            </v-avatar>
+            <div class="text-h6 font-weight-medium mb-1">
+              {{ AuthStore.userAuth?.name || 'Coach' }}
+            </div>
+            <div class="text-caption text-grey">
+              {{ AuthStore.userAuth?.email || 'email@example.com' }}
+            </div>
+          </div>
+        </v-list-item>
+      </v-list>
 
-        <v-btn
-          v-for="link in links"
-          :key="link"
-          variant="text"
-          @click="redirectTo(link.path)"
-          :color="isActive(link.path) ? 'primary' : 'default'"
-          :class="{ 'v-btn--active': isActive(link.path) }"
-        >
-          {{ link.text }}
-        </v-btn>
+      <v-divider></v-divider>
+
+      <!-- Menu de navigation -->
+      <v-list density="compact" nav>
+        <v-list-item 
+          prepend-icon="mdi-view-dashboard" 
+          title="Dashboard" 
+          value="dashboard"
+          color="primary"
+          :active="isActive('/coach/dashboard')"
+          @click="navigateTo('/coach/dashboard')"
+        ></v-list-item>
         
+        <v-list-item 
+          prepend-icon="mdi-dumbbell" 
+          title="Trainings" 
+          value="training"
+          color="primary"
+          :active="isActive('/coach/training')"
+          @click="navigateTo('/coach/training')"
+        ></v-list-item>
+
+        <v-list-item 
+          prepend-icon="mdi-account-group" 
+          title="Challengers" 
+          value="challenger"
+          color="primary"
+          :active="isActive('/coach/challenger')"
+          @click="navigateTo('/coach/challenger')"
+        ></v-list-item>
+
+        <v-list-item 
+          prepend-icon="mdi-calendar-check" 
+          title="Séances" 
+          value="seance"
+          color="primary"
+          :active="isActive('/coach/seance')"
+          @click="navigateTo('/coach/seance')"
+        ></v-list-item>
+        
+        <v-list-item 
+          prepend-icon="mdi-account-edit" 
+          title="Mon Profil" 
+          value="profile"
+          color="primary"
+          :active="isActive('/coach/profile')"
+          @click="navigateTo('/coach/profile')"
+        ></v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
+    <!-- App Bar -->
+    <v-app-bar>
+      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-toolbar-title>Coach</v-toolbar-title>
+      <v-spacer></v-spacer>
         <ThemeToggle />
         <v-btn icon @click="deconnexion">
           <v-icon>mdi-export</v-icon>
         </v-btn>
-
-        <v-spacer></v-spacer>
-
-        <v-responsive max-width="260">
-          <v-text-field
-            density="compact"
-            hide-details
-            variant="solo"
-          ></v-text-field>
-        </v-responsive>
-      </v-container>
     </v-app-bar>
 
-    <v-main class="bg-background">
-      <router-view/>
+    <!-- Contenu principal -->
+    <v-main class="bg-surface">
+      <v-container>
+        <router-view v-slot="{ Component, route }">
+          <component :is="Component" :key="route.fullPath" />
+        </router-view>
+      </v-container>
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-import { APP_CONFIG } from '@/config/constants'
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/store/AuthStore'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import http from '@/axios'
 import { useCategoryStore } from '@/store/CoachStore/CategoryStore'
 import { useChallengerStore } from '@/store/CoachStore/ChallengerStore'
 import { useSeanceStore } from '@/store/CoachStore/SeanceStore'
 import { useTrainingStore } from '@/store/CoachStore/TrainingStore'
+import { APP_CONFIG } from '@/config/constants'
 
 const AuthStore = useAuthStore()
 const drawer = ref(true)
-const router = useRouter()
 const route = useRoute()
+const router = useRouter()
 
 // Charger les données utilisateur au montage du composant
 onMounted(async () => {
@@ -69,21 +122,14 @@ onMounted(async () => {
   }
 })
 
-const links = [
-  {icon:'mdi-folder',text:'Dashboard', path:'/coach/dashboard'},
-  {icon:'mdi-folder',text:'Trainings', path:'/coach/training'},
-  {icon:'mdi-folder',text:'Challengers', path:'/coach/challenger'},
-  {icon:'mdi-folder',text:'Seances', path:'/coach/seance'},
-  {icon:'mdi-account-edit',text:'Mon Profil', path:'/coach/profile'},
-]
-
-const redirectTo = (path) => {
-  router.push(path)
-}
-
 // Fonction pour déterminer si un lien est actif
 const isActive = (path) => {
   return route.path.startsWith(path)
+}
+
+// Fonction pour naviguer vers une route
+const navigateTo = (path) => {
+  router.push(path)
 }
 
 // Méthode de déconnexion corrigée

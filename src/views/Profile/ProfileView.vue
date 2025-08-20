@@ -299,7 +299,7 @@
       </template>
     </v-snackbar>
 
-    <div class="mt-6">
+    <div class="mt-6" v-if="!isAdmin && !isCoach">
       <v-btn color="primary" @click="$router.push({ name: 'billingPortal' })">
         Gérer mon abonnement
       </v-btn>

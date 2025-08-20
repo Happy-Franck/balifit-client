@@ -1,5 +1,22 @@
 <template>
   <v-container class="pa-6">
+    <!-- Breadcrumbs -->
+    <v-breadcrumbs 
+      :items="breadcrumbItems" 
+      class="pa-0 mb-4"
+      divider="/"
+    >
+      <template v-slot:item="{ item }">
+        <v-breadcrumbs-item
+          :to="item.href"
+          :disabled="item.disabled"
+        >
+          <v-icon v-if="item.icon" :icon="item.icon" size="16" class="mr-1"></v-icon>
+          {{ item.title }}
+        </v-breadcrumbs-item>
+      </template>
+    </v-breadcrumbs>
+
     <!-- Header Section -->
     <div class="mb-8">
       <h1 class="text-h3 font-weight-bold text-primary mb-2">
@@ -36,14 +53,6 @@
         <p class="text-body-1 text-medium-emphasis">
           Vous n'avez pas encore créé de séances d'entraînement.
         </p>
-        <v-btn
-          color="primary"
-          size="large"
-          class="mt-4"
-          prepend-icon="mdi-plus"
-        >
-          Créer une séance
-        </v-btn>
       </v-col>
     </v-row>
 
@@ -368,6 +377,20 @@ export default defineComponent({
     const loading = ref(true)
     const activeTab = ref('a-remplir')
 
+    // Breadcrumbs
+    const breadcrumbItems = computed(() => [
+      {
+        title: 'Accueil',
+        href: '/coach/dashboard',
+        icon: 'mdi-home'
+      },
+      {
+        title: 'Séances',
+        disabled: true,
+        icon: 'mdi-calendar-check'
+      }
+    ])
+
     // Computed properties pour filtrer les séances
     const seancesARemplir = computed(() => {
       return seanceStore.seances.filter(seance => seance.validated === null)
@@ -477,7 +500,8 @@ export default defineComponent({
       validerSeance,
       getStatusColor,
       getStatusIcon,
-      getStatusText
+      getStatusText,
+      breadcrumbItems
     }
   }
 })

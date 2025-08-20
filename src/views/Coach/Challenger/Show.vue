@@ -1,5 +1,22 @@
 <template>
   <v-container>
+    <!-- Breadcrumbs -->
+    <v-breadcrumbs 
+      :items="breadcrumbItems" 
+      class="pa-0 mb-4"
+      divider="/"
+    >
+      <template v-slot:item="{ item }">
+        <v-breadcrumbs-item
+          :to="item.href"
+          :disabled="item.disabled"
+        >
+          <v-icon v-if="item.icon" :icon="item.icon" size="16" class="mr-1"></v-icon>
+          {{ item.title }}
+        </v-breadcrumbs-item>
+      </template>
+    </v-breadcrumbs>
+
     <div v-if="challengerStore.currentChallenger">
       <!-- Header Section - User Profile -->
       <v-card class="mb-6" elevation="2">
@@ -160,29 +177,78 @@
               </v-expansion-panel-title>
               
               <v-expansion-panel-text>
-                <!-- Training Details -->
+                <!-- Training Details en 3 colonnes -->
                 <div v-if="seance.trainings && seance.trainings.length > 0" class="mt-3">
                   <div class="text-caption font-weight-bold mb-3">Exercises:</div>
-                  <v-list>
-                    <v-list-item
+                  
+                  <v-row>
+                    <v-col 
                       v-for="(training, idx) in seance.trainings" 
                       :key="idx"
-                      class="px-0"
+                      cols="12"
+                      md="4"
                     >
-                      <template v-slot:prepend>
-                        <v-icon color="primary" size="small">mdi-dumbbell</v-icon>
-                      </template>
-                      
-                      <v-list-item-title class="font-weight-medium">
-                        {{ training.name }}
-                      </v-list-item-title>
-                      
-                      <v-list-item-subtitle class="text-caption">
-                        {{ training.pivot.series }} x {{ training.pivot.repetitions }}
-                        <span v-if="training.pivot.duree">|| {{ training.pivot.duree }}s</span>
-                      </v-list-item-subtitle>
-                    </v-list-item>
-                  </v-list>
+                      <v-card class="training-item-card" variant="outlined" elevation="1">
+                        <v-card-text class="pa-3">
+                          <!-- Nom et icône du training -->
+                          <div class="d-flex align-center mb-2">
+                            <v-icon color="primary" size="small" class="mr-2">mdi-dumbbell</v-icon>
+                            <span class="font-weight-medium text-body-2">{{ training.name }}</span>
+                          </div>
+                          
+                          <!-- Détails des séries/répétitions -->
+                          <div class="text-caption text-grey-darken-1 mb-3">
+                            <span v-if="training.pivot.series && training.pivot.repetitions">
+                              {{ training.pivot.series }} x {{ training.pivot.repetitions }}
+                            </span>
+                            <span v-else-if="training.pivot.series && training.pivot.duree">
+                              {{ training.pivot.series }} x {{ training.pivot.duree }}s
+                            </span>
+                            <span v-else-if="training.pivot.repetitions">
+                              {{ training.pivot.repetitions }} répétitions
+                            </span>
+                            <span v-else-if="training.pivot.duree">
+                              {{ training.pivot.duree }} secondes
+                            </span>
+                          </div>
+                          
+                          <!-- Muscles entraînés -->
+                          <div v-if="training.categories && training.categories.length > 0">
+                            <div class="text-caption text-grey-darken-1 mb-1">Muscles ciblés:</div>
+                            <div class="d-flex flex-wrap gap-1">
+                              <v-chip
+                                v-for="category in training.categories"
+                                :key="category.id"
+                                size="x-small"
+                                variant="outlined"
+                                color="primary"
+                                class="text-caption"
+                              >
+                                {{ category.name }}
+                              </v-chip>
+                            </div>
+                          </div>
+                          
+                          <!-- Équipements utilisés -->
+                          <div v-if="training.equipments && training.equipments.length > 0" class="mt-2">
+                            <div class="text-caption text-grey-darken-1 mb-1">Équipements:</div>
+                            <div class="d-flex flex-wrap gap-1">
+                              <v-chip
+                                v-for="equipment in training.equipments"
+                                :key="equipment.id"
+                                size="x-small"
+                                variant="outlined"
+                                color="success"
+                                class="text-caption"
+                              >
+                                {{ equipment.name }}
+                              </v-chip>
+                            </div>
+                          </div>
+                        </v-card-text>
+                      </v-card>
+                    </v-col>
+                  </v-row>
                 </div>
                 
                 <div v-else class="text-center py-4">
@@ -228,6 +294,25 @@ export default defineComponent({
     const route = useRoute()
     const AuthStore = useAuthStore()
     
+    // Breadcrumbs
+    const breadcrumbItems = computed(() => [
+      {
+        title: 'Accueil',
+        href: '/coach/dashboard',
+        icon: 'mdi-home'
+      },
+      {
+        title: 'Challengers',
+        href: '/coach/challenger',
+        icon: 'mdi-account-group'
+      },
+      {
+        title: challengerStore.currentChallenger?.name || 'Profil',
+        disabled: true,
+        icon: 'mdi-account'
+      }
+    ])
+    
     AuthStore.getUserAuth()
     
     if(challengerStore.currentChallenger){
@@ -264,16 +349,15 @@ export default defineComponent({
 
     const calculateProductivity = () => {
       if (!challengerStore.currentChallenger?.challenger_seances) return 0
-      const monthlySessions = challengerStore.currentChallenger.challenger_seances.filter(
-        (seance: any) => {
-          const seanceDate = new Date(seance.created_at)
-          const currentDate = new Date()
-          return seanceDate.getMonth() === currentDate.getMonth() && 
-                 seanceDate.getFullYear() === currentDate.getFullYear()
-        }
+      
+      const totalSeances = challengerStore.currentChallenger.challenger_seances.length
+      if (totalSeances === 0) return 0
+      
+      const completedSeances = challengerStore.currentChallenger.challenger_seances.filter(
+        (seance: any) => seance.validated === true || seance.validated === 1
       ).length
-      const productivity = (monthlySessions / 15) * 100
-      return Math.min(Math.round(productivity), 100)
+      
+      return Math.round((completedSeances / totalSeances) * 100)
     }
 
     const calculateTotalHours = () => {
@@ -416,7 +500,8 @@ export default defineComponent({
       gaugeOptions,
       gaugeSeries,
       getAvatarUrl,
-      APP_CONFIG
+      APP_CONFIG,
+      breadcrumbItems
     }
   }
 })
@@ -466,5 +551,22 @@ export default defineComponent({
 
 .exercise-item:last-child {
   border-bottom: none;
+}
+
+.training-item-card {
+  transition: all 0.2s ease;
+  height: 100%;
+}
+
+.training-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .training-item-card {
+    margin-bottom: 16px;
+  }
 }
 </style>

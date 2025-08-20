@@ -1,5 +1,22 @@
 <template>
   <v-container>
+    <!-- Breadcrumbs -->
+    <v-breadcrumbs 
+      :items="breadcrumbItems" 
+      class="pa-0 mb-4"
+      divider="/"
+    >
+      <template v-slot:item="{ item }">
+        <v-breadcrumbs-item
+          :to="item.href"
+          :disabled="item.disabled"
+        >
+          <v-icon v-if="item.icon" :icon="item.icon" size="16" class="mr-1"></v-icon>
+          {{ item.title }}
+        </v-breadcrumbs-item>
+      </template>
+    </v-breadcrumbs>
+
     <v-card class="mx-auto" max-width="1200" elevation="3">
       <v-card-title class="text-h4 font-weight-bold text-center py-6 bg-primary text-white">
         <v-icon size="large" class="mr-3">mdi-dumbbell</v-icon>
@@ -133,7 +150,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, toRefs, watch } from 'vue'
+import { defineComponent, reactive, toRefs, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSeanceStore } from '../../../store/CoachStore/SeanceStore'
 import { useTrainingStore } from '../../../store/CoachStore/TrainingStore'
@@ -151,6 +168,26 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     const trainingStore = useTrainingStore()
+    
+    // Breadcrumbs
+    const breadcrumbItems = computed(() => [
+      {
+        title: 'Accueil',
+        href: '/coach/dashboard',
+        icon: 'mdi-home'
+      },
+      {
+        title: 'Séances',
+        href: '/coach/seance',
+        icon: 'mdi-calendar-check'
+      },
+      {
+        title: 'Éditer la séance',
+        disabled: true,
+        icon: 'mdi-pencil'
+      }
+    ])
+    
     trainingStore.getTrainings()
     watch(
       () => seanceStore.currentSeanceTrainings,
