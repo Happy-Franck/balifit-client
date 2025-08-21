@@ -120,10 +120,10 @@
                 height="160"
                 cover
               >
-                <v-card-title class="text-truncate">{{ rt.name }}</v-card-title>
               </v-img>
               <v-card-text class="text-truncate">
-                {{ rt.description }}
+                <h3 class="text-truncate">{{ rt.name }}</h3>
+                <p class="text-truncate">{{ rt.description }}</p>
               </v-card-text>
               <v-card-actions>
                 <v-btn variant="text" color="primary" @click.stop="viewTraining(rt.id)">

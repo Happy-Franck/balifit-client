@@ -125,15 +125,15 @@
               <div class="stats-row">
                 <div class="stat-item">
                   <div class="stat-value">{{ challenger.totalSessions || 0 }}</div>
-                  <div class="stat-label">Séances</div>
+                  <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">{{ challenger.completedSessions || 0 }}</div>
+                  <div class="stat-label">Validées</div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-value">{{ challenger.monthlySessions || 0 }}</div>
                   <div class="stat-label">Ce mois</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-value">{{ challenger.soloSessions || 0 }}</div>
-                  <div class="stat-label">Solo</div>
                 </div>
               </div>
             </div>
@@ -214,13 +214,18 @@ const calculateProductivity = (challenger: any) => {
   return Math.round((completedSeances / totalSeances) * 100)
 }
 
-// Challengers avec productivité calculée
+// Challengers avec productivité et statistiques (utilise les données calculées par l'API)
 const challengersWithProductivity = computed(() => {
   if (!challengerStore.allChallengers) return []
   
   return challengerStore.allChallengers.map(challenger => ({
     ...challenger,
-    productivity: calculateProductivity(challenger)
+    // Utiliser les données déjà calculées par l'API
+    productivity: challenger.productivity || 0,
+    totalSessions: challenger.totalSessions || 0,
+    completedSessions: challenger.completedSessions || 0,
+    monthlySessions: challenger.monthlySessions || 0,
+    soloSessions: challenger.soloSessions || 0
   }))
 })
 

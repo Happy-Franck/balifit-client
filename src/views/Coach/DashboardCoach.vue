@@ -261,17 +261,35 @@ const chartOptions = computed(() => ({
 }))
 
 const chartSeries = computed(() => {
-  // Calculer le nombre de séances par jour de la semaine (Lundi à Vendredi)
+  // Calculer le nombre de séances par jour de la semaine courante (Lundi à Vendredi)
   const seancesByDay = [0, 0, 0, 0, 0] // Lundi à Vendredi
   
+  // Obtenir le début et la fin de la semaine courante
+  const now = new Date()
+  const currentDay = now.getDay() // 0 = Dimanche, 1 = Lundi, etc.
+  const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay // Ajuster pour que lundi soit le début
+  
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() + mondayOffset)
+  startOfWeek.setHours(0, 0, 0, 0)
+  
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 6)
+  endOfWeek.setHours(23, 59, 59, 999)
+  
+  // Filtrer les séances de la semaine courante uniquement
   seanceStore.seances.forEach(seance => {
     const date = new Date(seance.created_at)
-    const dayOfWeek = date.getDay() // 0 = Dimanche, 1 = Lundi, etc.
     
-    // Convertir en index 0-4 (Lundi à Vendredi)
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-      const index = dayOfWeek - 1
-      seancesByDay[index]++
+    // Vérifier si la séance est dans la semaine courante
+    if (date >= startOfWeek && date <= endOfWeek) {
+      const dayOfWeek = date.getDay() // 0 = Dimanche, 1 = Lundi, etc.
+      
+      // Convertir en index 0-4 (Lundi à Vendredi)
+      if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+        const index = dayOfWeek - 1
+        seancesByDay[index]++
+      }
     }
   })
   
