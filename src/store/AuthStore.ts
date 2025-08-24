@@ -109,7 +109,7 @@ export const useAuthStore = defineStore('auth', {
         case 'coach':
           return '/coach/dashboard';
         case 'challenger':
-          return '/challenger/dashboard';
+          return '/home';
         default:
           return '/login';
       }

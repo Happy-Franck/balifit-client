@@ -34,14 +34,7 @@ onMounted(async () => {
   }
 })
 
-const links = [
-  {name:'Dashboard', url:'/challenger/dashboard'},
-  {name:'Produits', url:'/challenger/produit'},
-  {name:'Seances', url:'/challenger/seance'},
-  {name:'Exercices', url:'/challenger/exercice'},
-  {name:'Blog', url:'/challenger/blog'},
-  {name:'Mon Profil', url:'/challenger/profile'},
-]
+// Navigation is now handled by AppTopBar - no local links needed
 
 const redirectTo = (path) => {
   router.push(path)

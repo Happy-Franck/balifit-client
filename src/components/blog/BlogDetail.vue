@@ -1,32 +1,125 @@
 <template>
-  <div class="pa-4">
-    <v-btn variant="text" @click="goBack">Retour</v-btn>
+  <div class="blog-article">
+    <!-- Navigation -->
+    <div class="article-nav">
+      <v-container>
+        <v-btn 
+          variant="text" 
+          @click="goBack"
+          prepend-icon="mdi-arrow-left"
+          class="back-btn"
+        >
+          Retour aux articles
+        </v-btn>
+      </v-container>
+    </div>
 
-    <v-card class="mt-2">
-      <v-card-title class="d-flex align-center justify-space-between">
-        <div class="d-flex align-center" style="gap: 12px;">
-          <div class="text-h6">{{ blog?.title || blog?.slug || 'Article' }}</div>
-          <v-chip v-if="blog" :color="blog.published ? 'success' : 'warning'" size="small">
+    <!-- Article Hero Section -->
+    <div class="article-hero" v-if="blog">
+      <div class="hero-background">
+        <v-img 
+          v-if="blog.image" 
+          :src="blog.image" 
+          alt="Image de couverture"
+          class="hero-image"
+          cover
+        />
+        <div class="hero-overlay"></div>
+      </div>
+      
+      <v-container class="hero-content">
+        <div class="article-meta">
+          <v-chip 
+            :color="blog.published ? 'success' : 'warning'" 
+            size="small"
+            class="status-chip"
+          >
             {{ blog.published ? 'Publié' : 'Brouillon' }}
           </v-chip>
+          <span class="meta-separator">•</span>
+          <span class="meta-text">{{ formatDate(blog.created_at) }}</span>
+          <span class="meta-separator">•</span>
+          <span class="meta-text">Par {{ blog.user?.name || 'HPFit' }}</span>
         </div>
-      </v-card-title>
+        
+        <h1 class="article-title">{{ blog.title || blog.slug || 'Article' }}</h1>
+      </v-container>
+    </div>
 
-      <v-divider />
+    <!-- Article Content -->
+    <div class="article-content">
+      <v-container>
+        <v-row>
+          <!-- Main Content - 8 columns -->
+          <v-col cols="12" md="8">
+            <!-- Table of Contents -->
+            <div class="table-of-contents" v-if="tableOfContents.length > 0">
+              <h3 class="toc-title">Table des matières</h3>
+              <ul class="toc-list">
+                <li 
+                  v-for="(item, index) in tableOfContents" 
+                      :key="index"
+                      :class="`toc-level-${item.level}`"
+                    >
+                      <a 
+                        @click="scrollToHeading(item.id)"
+                        class="toc-link"
+                      >
+                        {{ item.number }}. {{ item.text }}
+                      </a>
+                </li>
+              </ul>
+            </div>
+            <div class="content-wrapper">
+              <v-skeleton-loader v-if="loading" type="article" class="skeleton-article" />
+              <div v-else class="article-body">
+                <MdxContent 
+                  v-if="blog" 
+                  :markdown="blog.content || ''" 
+                  @headings-extracted="onHeadingsExtracted"
+                />
+              </div>
+            </div>
+          </v-col>
 
-      <v-card-text>
-        <v-skeleton-loader v-if="loading" type="article" />
-        <template v-else>
-          <div class="text-caption mb-4" v-if="blog">
-            Créé le {{ formatDate(blog.created_at) }} • Par {{ blog.user?.name || '—' }} • Type: {{ blog.type || '—' }}
-          </div>
-
-          <v-img v-if="blog?.image" :src="blog.image" alt="Image de couverture" class="mb-4" max-height="320" cover />
-
-          <MdxContent v-if="blog" :markdown="blog.content || ''" />
-        </template>
-      </v-card-text>
-    </v-card>
+          <!-- Related Articles Sidebar - 4 columns -->
+          <v-col cols="12" md="4">
+            <div class="sidebar">
+              <div class="related-articles">
+                <h3 class="sidebar-title">Articles associés</h3>
+                <v-skeleton-loader v-if="loadingRelated" type="list-item-three-line@3" />
+                <div v-else-if="relatedArticles.length > 0" class="related-list">
+                  <v-card 
+                    v-for="article in relatedArticles" 
+                    :key="article.id"
+                    class="related-card mb-4"
+                    @click="goToArticle(article.slug)"
+                  >
+                    <v-img 
+                      v-if="article.image" 
+                      :src="article.image" 
+                      height="120"
+                      cover
+                      class="related-image"
+                    />
+                    <v-card-text class="pa-3">
+                      <h4 class="related-title">{{ article.title }}</h4>
+                      <p class="related-excerpt">{{ article.excerpt || 'Découvrez cet article...' }}</p>
+                      <div class="related-meta">
+                        <small>{{ formatDate(article.created_at) }}</small>
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </div>
+                <div v-else class="no-related">
+                  <p>Aucun article associé pour le moment.</p>
+                </div>
+              </div>
+            </div>
+          </v-col>
+        </v-row>
+      </v-container>
+    </div>
   </div>
 </template>
 
@@ -41,7 +134,10 @@ const props = defineProps<{ endpointPrefix?: string }>()
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
+const loadingRelated = ref(false)
 const blog = ref<any | null>(null)
+const relatedArticles = ref<any[]>([])
+const tableOfContents = ref<any[]>([])
 
 const formatDate = (value?: string) => {
   if (!value) return '-'
@@ -56,9 +152,45 @@ const load = async () => {
     const prefix = props.endpointPrefix || ''
     const { data } = await http.get(`${prefix}/blogs/${slug}`)
     blog.value = data
+    loadRelatedArticles()
   } finally {
     loading.value = false
   }
+}
+
+const loadRelatedArticles = async () => {
+  try {
+    loadingRelated.value = true
+    const prefix = props.endpointPrefix || ''
+    const { data } = await http.get(`${prefix}/blogs?limit=4`)
+    relatedArticles.value = data.data?.filter((article: any) => article.slug !== blog.value?.slug) || []
+  } catch (error) {
+    console.error('Error loading related articles:', error)
+  } finally {
+    loadingRelated.value = false
+  }
+}
+
+const onHeadingsExtracted = (headings: any[]) => {
+  tableOfContents.value = headings
+}
+
+const scrollToHeading = (id: string) => {
+  const element = document.getElementById(id)
+  if (element) {
+    element.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start',
+      inline: 'nearest'
+    })
+  }
+}
+
+const goToArticle = (slug: string) => {
+  router.push({ 
+    name: (props.endpointPrefix || '') === '/challenger' ? 'challengerBlogShow' : 'publicBlogShow',
+    params: { slug }
+  })
 }
 
 const goBack = () => {
@@ -67,4 +199,296 @@ const goBack = () => {
 }
 
 onMounted(load)
-</script> 
+</script>
+
+<style scoped>
+.blog-article {
+  min-height: 100vh;
+  background: rgb(var(--v-theme-background));
+}
+
+.article-nav {
+  padding: 1rem 0;
+  background: rgba(var(--v-theme-surface), 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(var(--v-theme-outline), 0.12);
+}
+
+.back-btn {
+  color: rgb(var(--v-theme-primary));
+  font-weight: 500;
+}
+
+.article-hero {
+  position: relative;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  z-index: 2;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  color: white;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.article-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.status-chip {
+  font-weight: 600;
+}
+
+.meta-separator {
+  opacity: 0.6;
+}
+
+.meta-text {
+  font-weight: 500;
+}
+
+.article-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.article-excerpt {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.article-content {
+  padding: 4rem 0;
+  background: rgb(var(--v-theme-background));
+}
+
+.content-wrapper {
+  margin: 0 auto;
+}
+
+.article-body {
+  background: rgb(var(--v-theme-surface));
+  border-radius: 16px;
+  padding: 3rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(var(--v-theme-outline), 0.12);
+}
+
+.skeleton-article {
+  background: rgb(var(--v-theme-surface));
+  border-radius: 16px;
+  padding: 3rem;
+}
+
+
+.toc-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.toc-list li {
+  margin-bottom: 0.5rem;
+}
+
+.toc-link {
+  text-decoration: none;
+  cursor: pointer;
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.toc-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toc-level-1 .toc-link {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.toc-level-2 .toc-link {
+  font-size: 0.9rem;
+  padding-left: 1.5rem;
+}
+
+.toc-level-3 .toc-link {
+  font-size: 0.85rem;
+  padding-left: 2.25rem;
+  opacity: 0.8;
+}
+
+/* Sidebar */
+.sidebar {
+  position: sticky;
+  top: 7rem;
+}
+
+.related-articles {
+  background: rgb(var(--v-theme-surface));
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(var(--v-theme-outline), 0.12);
+}
+
+.sidebar-title {
+  color: rgb(var(--v-theme-primary));
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+  position: relative;
+}
+
+.sidebar-title::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 2px;
+  background: rgb(var(--v-theme-primary));
+  border-radius: 1px;
+}
+
+.related-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(var(--v-theme-outline), 0.12);
+}
+
+.related-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  border-color: rgba(var(--v-theme-primary), 0.3);
+}
+
+.related-image {
+  border-radius: 8px 8px 0 0;
+}
+
+.related-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  color: rgb(var(--v-theme-on-surface));
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.related-excerpt {
+  font-size: 0.85rem;
+  color: rgba(var(--v-theme-on-surface), 0.7);
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.related-meta {
+  color: rgba(var(--v-theme-on-surface), 0.6);
+  font-size: 0.75rem;
+}
+
+.no-related {
+  text-align: center;
+  color: rgba(var(--v-theme-on-surface), 0.6);
+  font-style: italic;
+  padding: 2rem 0;
+}
+
+@media (max-width: 768px) {
+  .article-hero {
+    min-height: 50vh;
+  }
+  
+  .article-body {
+    padding: 2rem 1.5rem;
+  }
+  
+  .article-meta {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .meta-separator {
+    display: none;
+  }
+
+  .table-of-contents {
+    padding: 1rem;
+  }
+
+  .sidebar {
+    position: static;
+    margin-top: 2rem;
+  }
+
+  .related-articles {
+    padding: 1rem;
+  }
+}
+</style> 

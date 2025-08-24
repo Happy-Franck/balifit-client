@@ -4,35 +4,33 @@
       <v-toolbar-title>HPFit</v-toolbar-title>
       <v-spacer></v-spacer>
 
-      <!-- Public links always visible -->
-      <router-link to="/home"><v-btn color="white" variant="text">Home</v-btn></router-link>
-      <router-link to="/about"><v-btn color="white" variant="text">About</v-btn></router-link>
-      <router-link to="/pricing"><v-btn color="white" variant="text">Pricing</v-btn></router-link>
-      <router-link v-if="!auth.isAuthenticated" to="/produits"><v-btn color="white" variant="text">Products</v-btn></router-link>
-      <router-link v-if="!auth.isAuthenticated" to="/blog"><v-btn color="white" variant="text">Blog</v-btn></router-link>
+      <!-- Common navigation links - always visible -->
+      <router-link to="/home"><v-btn color="white" variant="text">Accueil</v-btn></router-link>
+      <router-link to="/about"><v-btn color="white" variant="text">À propos</v-btn></router-link>
+      <router-link to="/pricing"><v-btn color="white" variant="text">Tarifs</v-btn></router-link>
+      <router-link to="/produits"><v-btn color="white" variant="text">Produits</v-btn></router-link>
+      <router-link to="/blog"><v-btn color="white" variant="text">Blog</v-btn></router-link>
 
       <!-- If not authenticated show login/register -->
       <template v-if="!auth.isAuthenticated">
-        <router-link to="/login"><v-btn color="white" variant="text">Login</v-btn></router-link>
-        <router-link to="/register"><v-btn color="white" variant="text">Register</v-btn></router-link>
+        <v-divider vertical class="mx-2" inset></v-divider>
+        <router-link to="/login"><v-btn color="white" variant="text">Connexion</v-btn></router-link>
+        <router-link to="/register"><v-btn color="white" variant="text">Inscription</v-btn></router-link>
       </template>
 
-      <!-- If authenticated show role-based quick links and actions -->
+      <!-- If authenticated show role-based links and actions -->
       <template v-else>
         <v-divider vertical class="mx-2" inset></v-divider>
         <template v-if="auth.isChallenger">
-          <v-btn variant="text" color="white" @click="go('/challenger/dashboard')">Dashboard</v-btn>
-          <v-btn variant="text" color="white" @click="go('/challenger/produit')">Mes produits</v-btn>
           <v-btn variant="text" color="white" @click="go('/challenger/seance')">Séances</v-btn>
           <v-btn variant="text" color="white" @click="go('/challenger/exercice')">Exercices</v-btn>
-          <v-btn variant="text" color="white" @click="go('/challenger/blog')">Blog</v-btn>
           <v-btn variant="text" color="white" @click="go('/challenger/profile')">Profil</v-btn>
         </template>
         <template v-else-if="auth.isCoach">
-          <v-btn variant="text" color="white" @click="go('/coach/dashboard')">Dashboard</v-btn>
+          <v-btn variant="text" color="white" @click="go('/coach/dashboard')">Tableau de bord</v-btn>
         </template>
         <template v-else-if="auth.isAdmin">
-          <v-btn variant="text" color="white" @click="go('/admin/dashboard')">Dashboard</v-btn>
+          <v-btn variant="text" color="white" @click="go('/admin/dashboard')">Tableau de bord</v-btn>
         </template>
         <ThemeToggle class="ml-2" />
         <v-avatar class="ms-4" color="grey-darken-1" size="32" :image="auth.userAuth?.avatar ? `${config.STORAGE_BASE_URL}/avatars/${auth.userAuth.avatar}` : ''"></v-avatar>

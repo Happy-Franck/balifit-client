@@ -47,13 +47,8 @@ import SeanceItemAddCoach from '../views/Coach/Seance/Add.vue'
 import SeanceItemEditCoach from '../views/Coach/Seance/Edit.vue'
 //challenger
 import Challenger from '../layouts/Challenger.vue'
-import DashboardChallenger from '../views/Challenger/DashboardChallenger.vue'
 import SeanceChallenger from '../views/Challenger/Seance/Index.vue'
-import ProductChallenger from '../views/Challenger/Product/Index.vue'
-import ProductShowChallenger from '../views/Challenger/Product/Show.vue'
 import ExoChallenger from '../views/Challenger/Exercice/Index.vue'
-import ChallengerBlogIndex from '../views/Challenger/Blog/index.vue'
-import ChallengerBlogShow from '../views/Challenger/Blog/show.vue'
 import ExoShowChallenger from '../views/Challenger/Exercice/Show.vue'
 //profile
 import EditProfile from '../views/Profile/EditProfile.vue'
@@ -348,25 +343,13 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: 'challenger' },
     children: [
       {
-        path: 'dashboard',
-        name: 'challengerDashboard',
-        component: DashboardChallenger
+        path: '',
+        redirect: '/home'
       },
       {
         path: 'seance',
         name: 'challengerSeance',
         component: SeanceChallenger,
-      },
-      {
-        path: 'produit',
-        name: 'challengerProduit',
-        component: ProductChallenger,
-      },
-      {
-        path: 'produit/:id',
-        name: 'challengerProduitShow',
-        component: ProductShowChallenger,
-        props: true
       },
       {
         path: 'exercice',
@@ -377,17 +360,6 @@ const routes = [
         path: 'exercice/:id',
         name: 'challengerExerciceShow',
         component: ExoShowChallenger,
-        props: true
-      },
-      {
-        path: 'blog',
-        name: 'challengerBlog',
-        component: ChallengerBlogIndex
-      },
-      {
-        path: 'blog/:slug',
-        name: 'challengerBlogShow',
-        component: ChallengerBlogShow,
         props: true
       },
       {
