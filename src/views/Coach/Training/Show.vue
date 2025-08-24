@@ -36,26 +36,33 @@
 
     <!-- Training Content -->
     <div v-if="training && !trainingStore.loading" class="training-content">
-      <!-- Debug info -->
-      <v-img v-if="training.image" :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`" width="100%" height="100%"></v-img>
-      
       <!-- Header avec image/vidéo et infos principales -->
       <v-card class="training-header-card" elevation="2">
         <div class="media-section">
           
           <!-- Vidéo -->
-          <div v-if="training.video" class="video-container">
+          <div v-if="training.video_url || training.video" class="video-container">
             <video
-              :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
+              :src="training.video_url || training.video"
               controls
               class="main-video"
             >
               Votre navigateur ne supporte pas la lecture vidéo.
             </video>
           </div>
+
+          <!-- Image -->
+          <div v-else-if="training.image_url || training.image" class="image-container">
+            <v-img
+              :src="training.image_url || training.image"
+              :alt="training.name"
+              class="main-image"
+              cover
+            ></v-img>
+          </div>
           
           <!-- Placeholder si pas de média -->
-          <div v-if="!training.image && !training.video" class="no-media">
+          <div v-else class="no-media">
             <v-icon size="80" color="grey-lighten-2">mdi-play-circle-outline</v-icon>
             <p class="no-media-text">Aucun média disponible</p>
           </div>
@@ -267,14 +274,14 @@
               </v-col>
 
               <!-- Image actuelle -->
-              <v-col cols="12" md="6" v-if="training?.image">
+              <v-col cols="12" md="6" v-if="training?.image_url || training?.image">
                 <v-card variant="outlined" class="pa-4">
                   <v-card-subtitle class="pa-0 mb-2">
                     <v-icon start size="16">mdi-image</v-icon>
                     Image actuelle
                   </v-card-subtitle>
                   <v-img
-                    :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
+                    :src="training.image_url || training.image"
                     :alt="training.name"
                     max-height="200"
                     class="rounded"
@@ -283,7 +290,7 @@
               </v-col>
 
               <!-- Upload nouvelle image -->
-              <v-col cols="12" :md="training?.image ? 6 : 12">
+              <v-col cols="12" :md="(training?.image_url || training?.image) ? 6 : 12">
                 <v-file-input
                   v-model="imageFile"
                   label="Nouvelle image (optionnel)"
@@ -309,14 +316,14 @@
               </v-col>
 
               <!-- Vidéo actuelle -->
-              <v-col cols="12" md="6" v-if="training?.video">
+              <v-col cols="12" md="6" v-if="training?.video_url || training?.video">
                 <v-card variant="outlined" class="pa-4">
                   <v-card-subtitle class="pa-0 mb-2">
                     <v-icon start size="16">mdi-video</v-icon>
                     Vidéo actuelle
                   </v-card-subtitle>
                   <video
-                    :src="`${APP_CONFIG.STORAGE_BASE_URL}/training_videos/${training.video}`"
+                    :src="training.video_url || training.video"
                     controls
                     style="width: 100%; max-height: 200px;"
                     class="rounded"
@@ -327,7 +334,7 @@
               </v-col>
 
               <!-- Upload nouvelle vidéo -->
-              <v-col cols="12" :md="training?.video ? 6 : 12">
+              <v-col cols="12" :md="(training?.video_url || training?.video) ? 6 : 12">
                 <v-file-input
                   v-model="videoFile"
                   label="Nouvelle vidéo (optionnel)"

@@ -98,8 +98,8 @@
           <!-- Image du training -->
           <div class="training-image-container">
             <v-img
-              v-if="training.image"
-              :src="`${APP_CONFIG.STORAGE_BASE_URL}/trainings/${training.image}`"
+              v-if="training.image_url || training.image"
+              :src="training.image_url || training.image || ''"
               :alt="training.name"
               class="training-image"
               cover
@@ -117,7 +117,7 @@
             
             <!-- Badge vidéo si disponible -->
             <v-chip
-              v-if="training.video"
+              v-if="training.video_url || training.video"
               color="primary"
               size="small"
               class="video-badge"
