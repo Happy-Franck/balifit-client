@@ -56,6 +56,7 @@ import ProfileView from '../views/Profile/ProfileView.vue'
 import BillingSuccess from '../views/Billing/Success.vue'
 import BillingPortal from '../views/Billing/Portal.vue'
 import BillingCheckout from '../views/Billing/Checkout.vue'
+import NotFound from '../views/Public/NotFound.vue'
 
 const routes = [
   {
@@ -379,6 +380,11 @@ const routes = [
     name: 'billingPortal',
     component: BillingPortal,
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound
   }
 ]
 

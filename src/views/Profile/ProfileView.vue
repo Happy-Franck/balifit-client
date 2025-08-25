@@ -44,17 +44,33 @@
             <p v-if="user?.bio" class="text-body-1 mb-4">{{ user.bio }}</p>
             <p v-else class="text-body-1 text-medium-emphasis mb-4 font-italic">Aucune biographie renseignée</p>
             
-            <!-- Bouton éditer -->
-            <v-btn 
-              color="primary" 
-              @click="goToEdit"
-              variant="elevated"
-              size="large"
-              class="mb-6"
-            >
-              <v-icon class="mr-2">mdi-account-edit</v-icon>
-              Éditer mon profil
-            </v-btn>
+            <!-- Boutons d'action -->
+            <div class="profile-actions-container">
+              <v-btn 
+                color="primary" 
+                @click="goToEdit"
+                variant="elevated"
+                size="large"
+                class="profile-action-btn"
+                min-width="200"
+              >
+                <v-icon start size="20">mdi-account-edit</v-icon>
+                Éditer mon profil
+              </v-btn>
+              
+              <v-btn 
+                v-if="!isAdmin && !isCoach"
+                color="secondary" 
+                @click="$router.push({ name: 'billingPortal' })"
+                variant="elevated"
+                size="large"
+                class="profile-action-btn"
+                min-width="200"
+              >
+                <v-icon start size="20">mdi-credit-card</v-icon>
+                Gérer mon abonnement
+              </v-btn>
+            </div>
           </div>
 
           <!-- Layout conditionnel selon le rôle -->
@@ -258,6 +274,210 @@
             </v-row>
           </div>
 
+          <!-- Layout Challenger -->
+          <div v-else-if="isChallenger" class="challenger-layout">
+            <!-- Première rangée : Informations principales -->
+            <v-row class="mb-6">
+              <v-col cols="12" md="6">
+                <!-- Informations personnelles -->
+                <v-card class="challenger-card h-100">
+                  <v-card-title class="challenger-card-title">
+                    <div class="d-flex align-center">
+                      <v-icon class="me-3" size="24">mdi-account-circle</v-icon>
+                      <span>Mes informations</span>
+                    </div>
+                  </v-card-title>
+                  <v-card-text class="challenger-card-content">
+                    <div class="info-grid-challenger">
+                      <div class="info-item-challenger">
+                        <div class="info-label-challenger">
+                          <v-icon size="18" class="me-2">mdi-phone</v-icon>
+                          Téléphone
+                        </div>
+                        <div class="info-value-challenger">{{ user?.telephone || 'Non renseigné' }}</div>
+                      </div>
+                      <div class="info-item-challenger">
+                        <div class="info-label-challenger">
+                          <v-icon size="18" class="me-2">mdi-gender-male-female</v-icon>
+                          Sexe
+                        </div>
+                        <div class="info-value-challenger">{{ formatSexe(user?.sexe) }}</div>
+                      </div>
+                      <div class="info-item-challenger">
+                        <div class="info-label-challenger">
+                          <v-icon size="18" class="me-2">mdi-cake-variant</v-icon>
+                          Date de naissance
+                        </div>
+                        <div class="info-value-challenger">{{ formatDate(user?.date_naissance) }}</div>
+                      </div>
+                      <div class="info-item-challenger">
+                        <div class="info-label-challenger">
+                          <v-icon size="18" class="me-2">mdi-calendar-check</v-icon>
+                          Membre depuis
+                        </div>
+                        <div class="info-value-challenger">{{ formatDate(user?.created_at) }}</div>
+                      </div>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <!-- Données physiques -->
+                <v-card class="challenger-card h-100">
+                  <v-card-title class="challenger-card-title">
+                    <div class="d-flex align-center">
+                      <v-icon class="me-3" size="24">mdi-human</v-icon>
+                      <span>Mes données physiques</span>
+                    </div>
+                  </v-card-title>
+                  <v-card-text class="challenger-card-content">
+                    <div class="info-grid-challenger">
+                      <div class="info-item-challenger">
+                        <div class="info-label-challenger">
+                          <v-icon size="18" class="me-2">mdi-human-male-height</v-icon>
+                          Taille
+                        </div>
+                        <div class="info-value-challenger">{{ user?.taille ? `${user.taille} m` : 'Non renseigné' }}</div>
+                      </div>
+                      <div class="info-item-challenger">
+                        <div class="info-label-challenger">
+                          <v-icon size="18" class="me-2">mdi-scale-bathroom</v-icon>
+                          Poids actuel
+                        </div>
+                        <div class="info-value-challenger">{{ currentWeight ? `${currentWeight} kg` : 'Non renseigné' }}</div>
+                      </div>
+                      <div class="info-item-challenger">
+                        <div class="info-label-challenger">
+                          <v-icon size="18" class="me-2">mdi-calculator</v-icon>
+                          IMC
+                        </div>
+                        <div class="info-value-challenger">
+                          <v-chip 
+                            v-if="calculateIMC() !== 'Non calculable'"
+                            :color="getIMCColor()"
+                            variant="tonal"
+                            size="small"
+                            class="font-weight-medium"
+                          >
+                            {{ calculateIMC() }}
+                          </v-chip>
+                          <span v-else class="text-medium-emphasis">{{ calculateIMC() }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+
+            <!-- Deuxième rangée : Objectif et Évolution -->
+            <v-row>
+              <v-col cols="12" md="6">
+                <!-- Objectif -->
+                <v-card class="challenger-card h-100">
+                  <v-card-title class="challenger-card-title">
+                    <div class="d-flex align-center">
+                      <v-icon class="me-3" size="24">mdi-target</v-icon>
+                      <span>Mon objectif</span>
+                    </div>
+                  </v-card-title>
+                  <v-card-text class="challenger-card-content text-center">
+                    <div class="objective-container">
+                      <v-chip 
+                        v-if="user?.objectif" 
+                        color="primary" 
+                        variant="elevated"
+                        size="x-large"
+                        class="objective-chip"
+                      >
+                        <v-icon start size="20">mdi-flag</v-icon>
+                        {{ formatObjectif(user.objectif) }}
+                      </v-chip>
+                      <div v-else class="no-objective">
+                        <v-icon size="48" color="grey-lighten-1" class="mb-3">mdi-target-variant</v-icon>
+                        <p class="text-medium-emphasis">Aucun objectif défini</p>
+                      </div>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <!-- Évolution récente -->
+                <v-card class="challenger-card h-100" v-if="weightHistory.length > 0">
+                  <v-card-title class="challenger-card-title">
+                    <div class="d-flex align-center justify-space-between">
+                      <div class="d-flex align-center">
+                        <v-icon class="me-3" size="24">mdi-chart-line</v-icon>
+                        <span>Évolution récente</span>
+                      </div>
+                      <v-chip color="success" variant="tonal" size="small">
+                        {{ weightHistory.length }} pesées
+                      </v-chip>
+                    </div>
+                  </v-card-title>
+                  <v-card-text class="challenger-card-content">
+                    <div class="weight-evolution">
+                      <div 
+                        v-for="(weight, index) in weightHistory.slice(-3)" 
+                        :key="index"
+                        class="weight-entry-modern"
+                      >
+                        <div class="weight-date-modern">
+                          <v-icon size="16" class="me-2">mdi-calendar</v-icon>
+                          {{ formatDate(weight.date) }}
+                        </div>
+                        <div class="weight-value-modern">
+                          <v-chip 
+                            :color="index === weightHistory.slice(-3).length - 1 ? 'primary' : 'success'" 
+                            variant="tonal" 
+                            size="small"
+                            class="font-weight-bold"
+                          >
+                            {{ weight.valeur }} kg
+                          </v-chip>
+                        </div>
+                      </div>
+                    </div>
+                    <v-divider class="my-3" v-if="weightHistory.length > 3"></v-divider>
+                    <div class="text-center" v-if="weightHistory.length > 3">
+                      <v-btn 
+                        variant="text" 
+                        size="small" 
+                        color="primary"
+                        @click="showAllWeight = !showAllWeight"
+                        prepend-icon="mdi-history"
+                      >
+                        {{ showAllWeight ? 'Voir moins' : 'Historique complet' }}
+                      </v-btn>
+                    </div>
+                  </v-card-text>
+                </v-card>
+
+                <!-- Message si pas d'historique -->
+                <v-card class="challenger-card h-100" v-else>
+                  <v-card-title class="challenger-card-title">
+                    <div class="d-flex align-center">
+                      <v-icon class="me-3" size="24">mdi-chart-line</v-icon>
+                      <span>Évolution</span>
+                    </div>
+                  </v-card-title>
+                  <v-card-text class="challenger-card-content text-center">
+                    <div class="no-data-container">
+                      <v-icon size="48" color="grey-lighten-1" class="mb-3">mdi-chart-line-variant</v-icon>
+                      <p class="text-medium-emphasis mb-3">Aucune donnée de poids enregistrée</p>
+                      <v-btn color="primary" variant="tonal" size="small">
+                        <v-icon start>mdi-plus</v-icon>
+                        Ajouter une pesée
+                      </v-btn>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </div>
+
         </v-col>
       </v-row>
     </v-container>
@@ -299,11 +519,6 @@
       </template>
     </v-snackbar>
 
-    <div class="mt-6" v-if="!isAdmin && !isCoach">
-      <v-btn color="primary" @click="$router.push({ name: 'billingPortal' })">
-        Gérer mon abonnement
-      </v-btn>
-    </div>
   </div>
 </template>
 
@@ -342,6 +557,10 @@ const isAdmin = computed(() => {
 
 const isCoach = computed(() => {
   return user.value?.roles?.some(role => role.name === 'coach') || false
+})
+
+const isChallenger = computed(() => {
+  return user.value?.roles?.some(role => role.name === 'challenger') || false
 })
 
 const goToEdit = () => {
@@ -391,6 +610,18 @@ const calculateIMC = () => {
   }
   const imc = currentWeight.value / (user.value.taille * user.value.taille)
   return `${imc.toFixed(1)} kg/m²`
+}
+
+const getIMCColor = () => {
+  if (!user.value?.taille || !currentWeight.value) {
+    return 'grey'
+  }
+  const imc = currentWeight.value / (user.value.taille * user.value.taille)
+  
+  if (imc < 18.5) return 'blue'      // Insuffisance pondérale
+  if (imc < 25) return 'success'     // Normal
+  if (imc < 30) return 'warning'     // Surpoids
+  return 'error'                     // Obésité
 }
 
 const showSnackbar = (message: string, color: string) => {
@@ -592,5 +823,230 @@ onMounted(() => {
 
 .profile-sections {
   margin-bottom: 24px;
+}
+
+/* Styles spécifiques pour les challengers */
+.challenger-layout {
+  padding: 0;
+}
+
+.challenger-card {
+  border-radius: 16px;
+  border: 1px solid rgba(var(--v-theme-outline-variant-rgb), 0.2);
+  background: rgb(var(--v-theme-surface));
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: var(--hpfit-shadow-soft);
+  overflow: hidden;
+}
+
+.challenger-card:hover {
+  box-shadow: var(--hpfit-shadow-secondary);
+  transform: translateY(-4px);
+  border-color: rgba(var(--v-theme-primary-rgb), 0.3);
+}
+
+.challenger-card-title {
+  background: var(--hpfit-gradient-light);
+  color: rgb(var(--v-theme-primary));
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid rgba(var(--v-theme-outline-variant-rgb), 0.2);
+}
+
+.challenger-card-content {
+  padding: 32px;
+}
+
+.info-grid-challenger {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.info-item-challenger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(var(--v-theme-surface-variant-rgb), 0.3);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.info-item-challenger:hover {
+  background: rgba(var(--v-theme-primary-rgb), 0.08);
+  transform: translateX(4px);
+}
+
+.info-label-challenger {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  color: rgba(var(--v-theme-on-surface-rgb), 0.8);
+  font-size: 1rem;
+}
+
+.info-value-challenger {
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface));
+  text-align: right;
+  font-size: 1rem;
+}
+
+.objective-container {
+  padding: 32px 0;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.objective-chip {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 12px 24px;
+  height: auto;
+  box-shadow: var(--hpfit-shadow-secondary);
+}
+
+.no-objective {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.weight-evolution {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.weight-entry-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(var(--v-theme-surface-variant-rgb), 0.3);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.weight-entry-modern:hover {
+  background: rgba(var(--v-theme-success-rgb), 0.08);
+  transform: translateX(4px);
+}
+
+.weight-date-modern {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  color: rgba(var(--v-theme-on-surface-rgb), 0.7);
+  font-weight: 500;
+}
+
+.weight-value-modern {
+  font-weight: 600;
+}
+
+.no-data-container {
+  padding: 32px 0;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+}
+
+/* Mode sombre pour challenger */
+.v-theme--customDark .challenger-card {
+  background: rgba(18, 18, 18, 0.95);
+  border-color: rgba(42, 45, 58, 0.3);
+}
+
+.v-theme--customDark .challenger-card-title {
+  background: linear-gradient(135deg, rgba(42, 45, 58, 0.8) 0%, rgba(18, 18, 18, 0.9) 100%);
+  border-bottom-color: rgba(42, 45, 58, 0.3);
+}
+
+.v-theme--customDark .info-item-challenger {
+  background: rgba(42, 45, 58, 0.4);
+}
+
+.v-theme--customDark .weight-entry-modern {
+  background: rgba(42, 45, 58, 0.4);
+}
+
+/* Styles pour les boutons d'action du profil */
+.profile-actions-container {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.profile-action-btn {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: var(--hpfit-shadow-secondary);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-radius: 12px;
+  height: 48px;
+}
+
+.profile-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--hpfit-shadow-primary);
+}
+
+.profile-action-btn .v-icon {
+  margin-right: 8px;
+}
+
+/* Responsive pour challenger */
+@media (max-width: 768px) {
+  .challenger-card-title {
+    padding: 16px 20px 12px 20px;
+    font-size: 1rem;
+  }
+  
+  .challenger-card-content {
+    padding: 20px;
+  }
+  
+  .info-item-challenger {
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .info-value-challenger {
+    text-align: left;
+    align-self: flex-end;
+  }
+  
+  .objective-container {
+    padding: 16px 0;
+    min-height: 100px;
+  }
+  
+  .weight-entry-modern {
+    padding: 10px 12px;
+  }
+  
+  .profile-actions-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .profile-action-btn {
+    width: 100%;
+    max-width: 280px;
+  }
 }
 </style> 
