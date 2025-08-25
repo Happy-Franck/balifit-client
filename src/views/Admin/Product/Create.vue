@@ -1459,20 +1459,20 @@ const createProduct = async () => {
     
     // Ajouter l'image principale seulement si elle est valide
     if (sary.value && sary.value instanceof File) {
-      // Vérifier la taille du fichier (max 2MB)
-      if (sary.value.size > 2 * 1024 * 1024) {
+      // Vérifier la taille du fichier (max 25MB)
+      if (sary.value.size > 25 * 1024 * 1024) {
         console.error('Image trop volumineuse:', sary.value.size);
         productStore.alert = true;
-        productStore.message = 'L\'image principale est trop volumineuse. Taille maximale: 2MB';
+        productStore.message = 'L\'image principale est trop volumineuse. Taille maximale: 25MB';
         return;
       }
       
       // Vérifier le type MIME
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(sary.value.type)) {
         console.error('Type de fichier non autorisé:', sary.value.type);
         productStore.alert = true;
-        productStore.message = 'Type de fichier non autorisé pour l\'image principale. Formats acceptés: JPEG, PNG, JPG, GIF';
+        productStore.message = 'Type de fichier non autorisé pour l\'image principale. Formats acceptés: JPEG, PNG, JPG, GIF, WebP';
         return;
       }
       
@@ -1534,20 +1534,20 @@ const createProduct = async () => {
         if (variantImages.value[index] && variantImages.value[index] instanceof File) {
           const variantImage = variantImages.value[index];
           
-          // Vérifier la taille du fichier (max 2MB)
-          if (variantImage.size > 2 * 1024 * 1024) {
+          // Vérifier la taille du fichier (max 25MB)
+          if (variantImage.size > 25 * 1024 * 1024) {
             console.error(`Image de la variante ${index} trop volumineuse:`, variantImage.size);
             productStore.alert = true;
-            productStore.message = `L'image de la variante ${index + 1} est trop volumineuse. Taille maximale: 2MB`;
+            productStore.message = `L'image de la variante ${index + 1} est trop volumineuse. Taille maximale: 25MB`;
             return;
           }
           
           // Vérifier le type MIME
-          const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+          const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
           if (!allowedTypes.includes(variantImage.type)) {
             console.error(`Type de fichier non autorisé pour la variante ${index}:`, variantImage.type);
             productStore.alert = true;
-            productStore.message = `Type de fichier non autorisé pour la variante ${index + 1}. Formats acceptés: JPEG, PNG, JPG, GIF`;
+            productStore.message = `Type de fichier non autorisé pour la variante ${index + 1}. Formats acceptés: JPEG, PNG, JPG, GIF, WebP`;
             return;
           }
           

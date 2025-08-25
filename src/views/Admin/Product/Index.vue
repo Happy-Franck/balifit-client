@@ -95,6 +95,7 @@
             </v-btn>
           </div>
           <div class="col-description">Description</div>
+          <div class="col-attributes">Attributs</div>
           <div class="col-stock">
             <v-btn 
               variant="text" 
@@ -193,6 +194,34 @@
             <div class="description-text">
               {{ product.description.length > 100 ? product.description.substring(0, 100) + '...' : product.description }}
             </div>
+          </div>
+          
+          <div class="col-attributes">
+            <div v-if="product.available_attributes && product.available_attributes.length > 0" class="attributes-display">
+              <div class="d-flex flex-wrap gap-1">
+                <v-chip
+                  v-for="attribute in product.available_attributes.slice(0, 3)"
+                  :key="attribute.id"
+                  color="info"
+                  variant="outlined"
+                  size="x-small"
+                  class="attribute-chip"
+                >
+                  <v-icon start size="10">mdi-tag</v-icon>
+                  {{ attribute.name }}
+                </v-chip>
+                <v-chip
+                  v-if="product.available_attributes.length > 3"
+                  color="grey"
+                  variant="outlined"
+                  size="x-small"
+                  class="attribute-chip"
+                >
+                  +{{ product.available_attributes.length - 3 }}
+                </v-chip>
+              </div>
+            </div>
+            <span v-else class="text-medium-emphasis text-caption">Aucun attribut</span>
           </div>
           
           <div class="col-stock">
@@ -477,7 +506,7 @@ onMounted(() => {
 
 .table-header {
   display: grid;
-  grid-template-columns: 60px 80px 200px 200px 250px 100px 80px 120px;
+  grid-template-columns: 60px 80px 200px 200px 150px 150px 100px 80px 120px;
   gap: 16px;
   padding: 12px 16px;
   background: rgb(var(--v-theme-surface-variant));
@@ -489,7 +518,7 @@ onMounted(() => {
 
 .table-row {
   display: grid;
-  grid-template-columns: 60px 80px 200px 200px 250px 100px 80px 120px;
+  grid-template-columns: 60px 80px 200px 200px 150px 150px 100px 80px 120px;
   gap: 16px;
   padding: 12px 16px;
   border-bottom: 1px solid rgb(var(--v-theme-outline-variant));
@@ -511,6 +540,7 @@ onMounted(() => {
 .col-name,
 .col-type,
 .col-description,
+.col-attributes,
 .col-stock,
 .col-status,
 .col-actions {
@@ -605,6 +635,21 @@ onMounted(() => {
   border-top: 1px solid rgb(var(--v-theme-outline-variant));
 }
 
+/* Attributes Column Styles */
+.attributes-display {
+  min-width: 0;
+}
+
+.attribute-chip {
+  font-size: 0.7rem;
+  height: 20px;
+  font-weight: 500;
+}
+
+.attribute-chip .v-icon {
+  margin-right: 2px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .product-admin {
@@ -622,6 +667,7 @@ onMounted(() => {
   .col-name,
   .col-type,
   .col-description,
+  .col-attributes,
   .col-stock,
   .col-status,
   .col-actions {

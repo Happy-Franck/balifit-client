@@ -136,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import http from '../../axios'
 import MdxContent from '../../components/Blog/MdxContent.vue'
@@ -228,6 +228,15 @@ const goBack = () => {
 }
 
 onMounted(load)
+
+// Watch for route parameter changes to reload content
+watch(() => route.params.slug, (newSlug, oldSlug) => {
+  if (newSlug && newSlug !== oldSlug) {
+    load()
+    // Scroll to top when navigating to a new article
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}, { immediate: false })
 </script>
 
 <style scoped>
