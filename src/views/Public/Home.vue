@@ -1,20 +1,5 @@
 <template>
-  <!-- Public Home for non-authenticated users -->
-  <v-container v-if="!authStore.isAuthenticated" class="py-10">
-    <v-row>
-      <v-col cols="12" class="text-center">
-        <h1 class="text-h3 mb-4">Bienvenue sur HPFit</h1>
-        <p class="text-body-1 mb-6">Programmes, produits et coaching pour atteindre vos objectifs.</p>
-        <div class="d-flex justify-center" style="gap: 12px;">
-          <router-link to="/register"><v-btn color="primary">Créer un compte</v-btn></router-link>
-          <router-link to="/produits"><v-btn variant="tonal">Voir les produits</v-btn></router-link>
-        </div>
-      </v-col>
-    </v-row>
-  </v-container>
-
-  <!-- Challenger Dashboard Content -->
-  <div v-else-if="authStore.isChallenger">
+  <div>
     <v-row>
       <v-col cols="12" sm="12">
         <v-parallax :src="back" height="auto">
@@ -371,15 +356,6 @@
     </v-container>
   </div>
 
-  <!-- Fallback for other authenticated users -->
-  <v-container v-else class="py-10">
-    <v-row>
-      <v-col cols="12" class="text-center">
-        <h1 class="text-h3 mb-4">Bienvenue sur HPFit</h1>
-        <p class="text-body-1 mb-6">Vous êtes connecté avec le rôle {{ authStore.role }}.</p>
-      </v-col>
-    </v-row>
-  </v-container>
 </template>
 
 <script>
