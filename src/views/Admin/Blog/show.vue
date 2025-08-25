@@ -20,11 +20,16 @@
       <v-card-text>
         <v-skeleton-loader v-if="loading" type="article" />
         <template v-else>
-          <div class="text-caption mb-4" v-if="blog">
-            Créé le {{ formatDate(blog.created_at) }} • Par {{ blog.user?.name || '—' }} • Type: {{ blog.type || '—' }}
+          <div class="d-flex align-center justify-space-between mb-4" v-if="blog">
+            <div class="text-caption">
+              Créé le {{ formatDate(blog.created_at) }} • Par {{ blog.user?.name || '—' }}
+            </div>
+            <v-chip v-if="blog.type" :color="getTypeColor(blog.type)" size="small" variant="outlined">
+              {{ blog.type.toUpperCase() }}
+            </v-chip>
           </div>
 
-          <v-img v-if="blog?.image" :src="blog.image" alt="Image de couverture" class="mb-4" max-height="320" cover />
+          <v-img v-if="blog?.image" :src="getImageUrl(blog.image)" alt="Image de couverture" class="mb-4" max-height="320" cover />
 
           <MdxContent v-if="blog" :markdown="blog.content || ''" />
         </template>
@@ -65,6 +70,19 @@ export default defineComponent({
       }
     }
 
+    const getTypeColor = (type: string) => {
+      switch (type) {
+        case 'tofu': return 'blue'
+        case 'mofu': return 'orange'
+        case 'bofu': return 'green'
+        default: return 'grey'
+      }
+    }
+
+    const getImageUrl = (imageName: string) => {
+      return `http://localhost:8000/storage/blogs/${imageName}`
+    }
+
     const goBack = () => router.push({ name: 'adminBlog' })
     const goEdit = () => {
       if (blog.value?.slug) {
@@ -74,7 +92,7 @@ export default defineComponent({
 
     onMounted(load)
 
-    return { blog, loading, formatDate, goBack, goEdit }
+    return { blog, loading, formatDate, goBack, goEdit, getTypeColor, getImageUrl }
   }
 })
 </script>

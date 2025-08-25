@@ -42,6 +42,7 @@
             <div class="table-header">
               <div class="col-title">Titre</div>
               <div class="col-author">Auteur</div>
+              <div class="col-type">Type</div>
               <div class="col-published">Publié</div>
               <div class="col-date">Créé le</div>
               <div class="col-actions">Actions</div>
@@ -58,6 +59,12 @@
               </div>
               <div class="col-author">
                 <div class="author-name">{{ item.user?.name || '—' }}</div>
+              </div>
+              <div class="col-type">
+                <v-chip v-if="item.type" :color="getTypeColor(item.type)" size="small" variant="outlined">
+                  {{ item.type.toUpperCase() }}
+                </v-chip>
+                <span v-else class="text-grey">—</span>
               </div>
               <div class="col-published">
                 <v-chip :color="item.published ? 'success' : 'warning'" size="small" variant="flat">
@@ -117,14 +124,21 @@
                 :error-messages="createErrors.excerpt"
                 auto-grow
               />
-              <v-text-field
-                v-model="createForm.image"
-                label="Image (URL)"
+              <v-file-input
+                v-model="createForm.imageFile"
+                label="Image du blog"
+                accept="image/*"
+                prepend-icon="mdi-camera"
+                clearable
+                show-size
                 :error-messages="createErrors.image"
+                @change="handleImageUpload"
               />
-              <v-text-field
+              <v-select
                 v-model="createForm.type"
-                label="Type"
+                :items="typeOptions"
+                label="Type de contenu"
+                clearable
                 :error-messages="createErrors.type"
               />
               <v-switch
@@ -190,15 +204,22 @@ export default defineComponent({
     // Create dialog state
     const createDialog = ref(false)
     const creating = ref(false)
-    const createForm = ref<{ title: string; slug: string; excerpt: string; image: string; type: string; content: string; published: boolean }>({
+    const createForm = ref<{ title: string; slug: string; excerpt: string; image: string; imageFile: File | null; type: string; content: string; published: boolean }>({
       title: '',
       slug: '',
       excerpt: '',
       image: '',
+      imageFile: null,
       type: '',
       content: '',
       published: false,
     })
+
+    const typeOptions = [
+      { title: 'TOFU - Top of Funnel', value: 'tofu' },
+      { title: 'MOFU - Middle of Funnel', value: 'mofu' },
+      { title: 'BOFU - Bottom of Funnel', value: 'bofu' }
+    ]
     const createErrors = ref<Record<string, string[]>>({})
     const slugTouched = ref(false)
 
@@ -246,7 +267,7 @@ export default defineComponent({
     }
 
     const resetCreateForm = () => {
-      createForm.value = { title: '', slug: '', excerpt: '', image: '', type: '', content: '', published: false }
+      createForm.value = { title: '', slug: '', excerpt: '', image: '', imageFile: null, type: '', content: '', published: false }
       createErrors.value = {}
       slugTouched.value = false
     }
@@ -268,18 +289,20 @@ export default defineComponent({
       creating.value = true
       createErrors.value = {}
       try {
-        const payload: any = {
-          title: createForm.value.title,
-          excerpt: createForm.value.excerpt || undefined,
-          image: createForm.value.image || undefined,
-          type: createForm.value.type || undefined,
-          content: createForm.value.content,
-          published: createForm.value.published,
-        }
+        const formData = new FormData()
+        formData.append('title', createForm.value.title)
+        formData.append('content', createForm.value.content)
+        formData.append('published', createForm.value.published ? '1' : '0')
+        
         const trimmedSlug = (createForm.value.slug || '').trim()
-        if (trimmedSlug) payload.slug = trimmedSlug
+        if (trimmedSlug) formData.append('slug', trimmedSlug)
+        if (createForm.value.excerpt) formData.append('excerpt', createForm.value.excerpt)
+        if (createForm.value.type) formData.append('type', createForm.value.type)
+        if (createForm.value.imageFile) formData.append('image', createForm.value.imageFile)
 
-        await http.post('/admin/blogs', payload)
+        await http.post('/admin/blogs', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         createDialog.value = false
         await load()
       } catch (e: any) {
@@ -309,12 +332,26 @@ export default defineComponent({
 
     load()
 
+    const handleImageUpload = (e: any) => {
+      createForm.value.imageFile = e.target.files[0]
+    }
+
+    const getTypeColor = (type: string) => {
+      switch (type) {
+        case 'tofu': return 'blue'
+        case 'mofu': return 'orange'
+        case 'bofu': return 'green'
+        default: return 'grey'
+      }
+    }
+
     return {
       blogs, loading, page, perPage, total, lastPage, search, debouncedSearch, formatDate,
       // create
-      createDialog, creating, createForm, createErrors, onSlugTouch, submitCreate,
+      createDialog, creating, createForm, createErrors, onSlugTouch, submitCreate, typeOptions, handleImageUpload,
       // navigation + actions
-      goCreate, goEdit, goShow, deleteDialog, toDelete, confirmDelete, doDelete, load
+      goCreate, goEdit, goShow, deleteDialog, toDelete, confirmDelete, doDelete, load,
+      getTypeColor
     }
   }
 })
@@ -331,7 +368,7 @@ export default defineComponent({
 
 .table-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 120px 160px 160px;
+  grid-template-columns: 2fr 1fr 100px 120px 160px 160px;
   gap: 16px;
   padding: 12px 16px;
   background: rgb(var(--v-theme-surface-variant));
@@ -343,7 +380,7 @@ export default defineComponent({
 
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 120px 160px 160px;
+  grid-template-columns: 2fr 1fr 100px 120px 160px 160px;
   gap: 16px;
   padding: 12px 16px;
   border-bottom: 1px solid rgb(var(--v-theme-outline-variant));

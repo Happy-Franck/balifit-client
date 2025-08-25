@@ -34,13 +34,18 @@
     <v-row v-else>
       <v-col v-for="item in blogs" :key="item.id" cols="12" sm="6" md="4" lg="3">
         <v-card elevation="0" rounded="lg" class="h-100 d-flex flex-column" @click="goShow(item.slug)" style="cursor:pointer;">
-          <v-img v-if="item.image" :src="item.image" height="160" cover class="rounded-t-lg" />
+          <v-img v-if="item.image" :src="getImageUrl(item.image)" height="160" cover class="rounded-t-lg" />
           <v-sheet v-else height="160" class="rounded-t-lg" />
           <v-card-text class="flex-grow-1">
             <div class="d-flex align-center justify-space-between mb-2">
-              <v-chip :color="item.published ? 'success' : 'warning'" size="x-small" variant="tonal">
-                {{ item.published ? 'Publié' : 'Brouillon' }}
-              </v-chip>
+              <div class="d-flex align-center gap-1">
+                <v-chip :color="item.published ? 'success' : 'warning'" size="x-small" variant="tonal">
+                  {{ item.published ? 'Publié' : 'Brouillon' }}
+                </v-chip>
+                <v-chip v-if="item.type" :color="getTypeColor(item.type)" size="x-small" variant="outlined">
+                  {{ item.type.toUpperCase() }}
+                </v-chip>
+              </div>
               <span class="text-caption">{{ formatDate(item.created_at) }}</span>
             </div>
             <div class="text-subtitle-1 font-weight-medium mb-1">{{ item.title }}</div>
@@ -84,6 +89,19 @@ let searchTimeout: any = null
 const formatDate = (value?: string) => {
   if (!value) return '-'
   return new Date(value).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+const getTypeColor = (type: string) => {
+  switch (type) {
+    case 'tofu': return 'blue'
+    case 'mofu': return 'orange'
+    case 'bofu': return 'green'
+    default: return 'grey'
+  }
+}
+
+const getImageUrl = (imageName: string) => {
+  return `http://localhost:8000/storage/blogs/${imageName}`
 }
 
 const load = async () => {

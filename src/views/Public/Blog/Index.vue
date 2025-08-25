@@ -100,7 +100,7 @@
                   <div class="image-overlay"></div>
                   <v-img
                     v-if="blog.image"
-                    :src="blog.image"
+                    :src="getImageUrl(blog.image)"
                     height="250"
                     cover
                     class="rounded-t-lg"
@@ -148,7 +148,7 @@
                   <div class="image-overlay"></div>
                   <v-img
                     v-if="blog.image"
-                    :src="blog.image"
+                    :src="getImageUrl(blog.image)"
                     height="180"
                     cover
                     class="rounded-t-lg"
@@ -305,6 +305,10 @@ const setFilter = (filterKey: string) => {
 }
 
 watch([page, perPage], load)
+
+const getImageUrl = (imageName: string) => {
+  return `http://localhost:8000/storage/blogs/${imageName}`
+}
 
 const goShow = (slug: string) => {
   router.push({ name: 'publicBlogShow', params: { slug } })

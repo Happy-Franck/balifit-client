@@ -13,9 +13,32 @@
           <v-col cols="12" md="8">
             <v-text-field v-model="form.title" label="Titre" :rules="[rules.requiredIfUpdating]" />
             <v-textarea v-model="form.excerpt" label="Extrait" rows="3" />
-            <v-text-field v-model="form.image" label="URL image" />
+            <v-file-input
+              v-model="form.imageFile"
+              label="Image du blog"
+              accept="image/*"
+              prepend-icon="mdi-camera"
+              variant="outlined"
+              clearable
+              show-size
+              @change="handleImageUpload"
+            />
+            <div v-if="form.image" class="mt-2">
+              <v-img
+                :src="getImageUrl(form.image)"
+                max-height="200"
+                max-width="300"
+                class="rounded"
+              />
+            </div>
             <v-text-field v-model="form.slug" label="Slug (optionnel)" />
-            <v-text-field v-model="form.type" label="Type (tag)" />
+            <v-select
+              v-model="form.type"
+              :items="typeOptions"
+              label="Type de contenu"
+              variant="outlined"
+              clearable
+            />
             <v-switch v-model="form.published" label="Publié" />
             <v-textarea v-model="form.content" label="Contenu (Markdown)" rows="14" :rules="[rules.required]" />
           </v-col>
@@ -55,10 +78,17 @@ export default defineComponent({
       slug: '',
       excerpt: '',
       image: '',
+      imageFile: null,
       type: '',
       published: false,
       content: ''
     })
+
+    const typeOptions = [
+      { title: 'TOFU - Top of Funnel', value: 'tofu' },
+      { title: 'MOFU - Middle of Funnel', value: 'mofu' },
+      { title: 'BOFU - Bottom of Funnel', value: 'bofu' }
+    ]
 
     const isCreate = computed(() => route.name === 'adminBlogCreate')
 
@@ -76,30 +106,33 @@ export default defineComponent({
 
     const onSubmit = async () => {
       if (!form.content) return
-      if (isCreate.value) {
-        await http.post('/admin/blogs', {
-          slug: form.slug || undefined,
-          excerpt: form.excerpt || undefined,
-          image: form.image || undefined,
-          type: form.type || undefined,
-          published: form.published,
-          published_at: undefined,
-          content: form.content
-        })
-      } else {
-        const slug = route.params.slug as string
-        await http.put(`/admin/blogs/${slug}`, {
-          title: form.title,
-          slug: form.slug || undefined,
-          excerpt: form.excerpt || undefined,
-          image: form.image || undefined,
-          type: form.type || undefined,
-          published: form.published,
-          published_at: form.published ? (form.published_at || undefined) : null,
-          content: form.content
-        })
+      
+      const formData = new FormData()
+      formData.append('title', form.title)
+      formData.append('content', form.content)
+      formData.append('published', form.published ? '1' : '0')
+      
+      if (form.slug) formData.append('slug', form.slug)
+      if (form.excerpt) formData.append('excerpt', form.excerpt)
+      if (form.type) formData.append('type', form.type)
+      if (form.imageFile) formData.append('image', form.imageFile)
+      
+      try {
+        if (isCreate.value) {
+          await http.post('/admin/blogs', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+        } else {
+          const slug = route.params.slug as string
+          formData.append('_method', 'PUT')
+          await http.post(`/admin/blogs/${slug}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+        }
+        router.push({ name: 'adminBlog' })
+      } catch (error) {
+        console.error('Erreur lors de la soumission:', error)
       }
-      router.push({ name: 'adminBlog' })
     }
 
     const reset = () => {
@@ -108,6 +141,7 @@ export default defineComponent({
         form.slug = ''
         form.excerpt = ''
         form.image = ''
+        form.imageFile = null
         form.type = ''
         form.published = false
         form.content = ''
@@ -116,9 +150,27 @@ export default defineComponent({
       }
     }
 
+    const handleImageUpload = (e: any) => {
+      form.imageFile = e.target.files[0]
+    }
+
+    const getImageUrl = (imageName: string) => {
+      return `http://localhost:8000/storage/blogs/${imageName}`
+    }
+
     onMounted(load)
 
-    return { form, valid, rules, onSubmit, reset, isCreate }
+    return { 
+      form, 
+      valid, 
+      rules, 
+      onSubmit, 
+      reset, 
+      isCreate, 
+      typeOptions,
+      handleImageUpload,
+      getImageUrl
+    }
   }
 })
 </script>

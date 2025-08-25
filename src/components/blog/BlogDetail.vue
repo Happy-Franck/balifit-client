@@ -17,13 +17,6 @@
     <!-- Article Hero Section -->
     <div class="article-hero" v-if="blog">
       <div class="hero-background">
-        <v-img 
-          v-if="blog.image" 
-          :src="blog.image" 
-          alt="Image de couverture"
-          class="hero-image"
-          cover
-        />
         <div class="hero-overlay"></div>
       </div>
       
@@ -35,6 +28,9 @@
             class="status-chip"
           >
             {{ blog.published ? 'Publié' : 'Brouillon' }}
+          </v-chip>
+          <v-chip v-if="blog.type" :color="getTypeColor(blog.type)" size="small" variant="outlined" class="type-chip">
+            {{ blog.type.toUpperCase() }}
           </v-chip>
           <span class="meta-separator">•</span>
           <span class="meta-text">{{ formatDate(blog.created_at) }}</span>
@@ -70,9 +66,20 @@
                 </li>
               </ul>
             </div>
+            
+            <!-- Article Image -->
             <div class="content-wrapper">
               <v-skeleton-loader v-if="loading" type="article" class="skeleton-article" />
               <div v-else class="article-body">
+
+                <div class="article-image-section d-flex justify-center" v-if="blog && blog.image">
+                  <v-img 
+                    :src="getImageUrl(blog.image)" 
+                    contain
+                    alt="Image de l'article"
+                    class="article-main-image"
+                  />
+                </div>
                 <MdxContent 
                   v-if="blog" 
                   :markdown="blog.content || ''" 
@@ -89,27 +96,32 @@
                 <h3 class="sidebar-title">Articles associés</h3>
                 <v-skeleton-loader v-if="loadingRelated" type="list-item-three-line@3" />
                 <div v-else-if="relatedArticles.length > 0" class="related-list">
-                  <v-card 
+                  <div 
                     v-for="article in relatedArticles" 
                     :key="article.id"
-                    class="related-card mb-4"
+                    class="related-item"
                     @click="goToArticle(article.slug)"
                   >
-                    <v-img 
-                      v-if="article.image" 
-                      :src="article.image" 
-                      height="120"
-                      cover
-                      class="related-image"
-                    />
-                    <v-card-text class="pa-3">
+                    <div class="related-thumbnail">
+                      <v-img 
+                        v-if="article.image" 
+                        :src="getImageUrl(article.image)" 
+                        width="40"
+                        height="40"
+                        cover
+                        class="thumbnail-image"
+                      />
+                      <div v-else class="thumbnail-placeholder">
+                        <v-icon size="20">mdi-image</v-icon>
+                      </div>
+                    </div>
+                    <div class="related-content">
                       <h4 class="related-title">{{ article.title }}</h4>
-                      <p class="related-excerpt">{{ article.excerpt || 'Découvrez cet article...' }}</p>
                       <div class="related-meta">
                         <small>{{ formatDate(article.created_at) }}</small>
                       </div>
-                    </v-card-text>
-                  </v-card>
+                    </div>
+                  </div>
                 </div>
                 <div v-else class="no-related">
                   <p>Aucun article associé pour le moment.</p>
@@ -144,6 +156,19 @@ const formatDate = (value?: string) => {
   return new Date(value).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+const getTypeColor = (type: string) => {
+  switch (type) {
+    case 'tofu': return 'blue'
+    case 'mofu': return 'orange'
+    case 'bofu': return 'green'
+    default: return 'grey'
+  }
+}
+
+const getImageUrl = (imageName: string) => {
+  return `http://localhost:8000/storage/blogs/${imageName}`
+}
+
 const load = async () => {
   const slug = route.params.slug as string
   if (!slug) return
@@ -162,8 +187,12 @@ const loadRelatedArticles = async () => {
   try {
     loadingRelated.value = true
     const prefix = props.endpointPrefix || ''
-    const { data } = await http.get(`${prefix}/blogs?limit=4`)
-    relatedArticles.value = data.data?.filter((article: any) => article.slug !== blog.value?.slug) || []
+    const { data } = await http.get(`${prefix}/blogs?limit=6`)
+    // Filter articles by same type and exclude current article
+    relatedArticles.value = data.data?.filter((article: any) => 
+      article.slug !== blog.value?.slug && 
+      article.type === blog.value?.type
+    ) || []
   } catch (error) {
     console.error('Error loading related articles:', error)
   } finally {
@@ -234,12 +263,7 @@ onMounted(load)
   right: 0;
   bottom: 0;
   z-index: 1;
-}
-
-.hero-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  background: rgb(var(--v-theme-primary));
 }
 
 .hero-overlay {
@@ -250,9 +274,9 @@ onMounted(load)
   bottom: 0;
   background: linear-gradient(
     135deg,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(0, 0, 0, 0.4) 50%,
-    rgba(0, 0, 0, 0.6) 100%
+    rgba(var(--v-theme-primary), 0.9) 0%,
+    rgba(var(--v-theme-primary), 0.7) 50%,
+    rgba(var(--v-theme-primary), 0.8) 100%
   );
   z-index: 2;
 }
@@ -278,6 +302,11 @@ onMounted(load)
 
 .status-chip {
   font-weight: 600;
+}
+
+.type-chip {
+  font-weight: 600;
+  color: white !important;
 }
 
 .meta-separator {
@@ -375,6 +404,25 @@ onMounted(load)
   opacity: 0.8;
 }
 
+.table-of-contents {
+  background: rgb(var(--v-theme-surface));
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(var(--v-theme-outline), 0.12);
+}
+
+.article-image-section {
+  margin-bottom: 2rem;
+}
+
+.article-main-image {
+  margin: 25px 0px;
+  max-height: 400px;
+  width: 100%;
+}
+
 /* Sidebar */
 .sidebar {
   position: sticky;
@@ -409,39 +457,55 @@ onMounted(load)
   border-radius: 1px;
 }
 
-.related-card {
+.related-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  margin-bottom: 0.5rem;
+}
+
+.related-item:hover {
+  background: rgba(var(--v-theme-primary), 0.05);
+  border-color: rgba(var(--v-theme-primary), 0.2);
+}
+
+.related-thumbnail {
+  flex-shrink: 0;
+}
+
+.thumbnail-image {
+  border-radius: 6px;
   border: 1px solid rgba(var(--v-theme-outline), 0.12);
 }
 
-.related-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  border-color: rgba(var(--v-theme-primary), 0.3);
+.thumbnail-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: rgba(var(--v-theme-outline), 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(var(--v-theme-on-surface), 0.4);
+  border: 1px solid rgba(var(--v-theme-outline), 0.12);
 }
 
-.related-image {
-  border-radius: 8px 8px 0 0;
+.related-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .related-title {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 0.5rem;
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
   color: rgb(var(--v-theme-on-surface));
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.related-excerpt {
-  font-size: 0.85rem;
-  color: rgba(var(--v-theme-on-surface), 0.7);
-  line-height: 1.4;
-  margin-bottom: 0.5rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -480,8 +544,9 @@ onMounted(load)
 
   .table-of-contents {
     padding: 1rem;
+    margin-bottom: 1.5rem;
   }
-
+  
   .sidebar {
     position: static;
     margin-top: 2rem;
